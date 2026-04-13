@@ -1,4 +1,7 @@
-use crate::Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable};
+use crate::Lib::IO::{
+    DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+    IUnpackable::IUnpackable,
+};
 use crate::Types::{ColorARGB::ColorARGB, SkyObjectReplace::SkyObjectReplace};
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -33,7 +36,8 @@ impl IUnpackable for SkyTimeOfDay {
         let count = reader.read_u32() as usize;
         self.sky_obj_replace.clear();
         for _ in 0..count {
-            self.sky_obj_replace.push(reader.read_item::<SkyObjectReplace>());
+            self.sky_obj_replace
+                .push(reader.read_item::<SkyObjectReplace>());
         }
         true
     }

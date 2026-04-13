@@ -1,4 +1,7 @@
-use crate::Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable};
+use crate::Lib::IO::{
+    DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+    IUnpackable::IUnpackable,
+};
 use crate::Types::{AC1LegacyString::AC1LegacyString, ColorARGB::ColorARGB};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]

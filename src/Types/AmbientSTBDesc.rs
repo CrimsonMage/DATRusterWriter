@@ -1,4 +1,7 @@
-use crate::Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable};
+use crate::Lib::IO::{
+    DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+    IUnpackable::IUnpackable,
+};
 use crate::Types::AmbientSoundDesc::AmbientSoundDesc;
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -13,7 +16,8 @@ impl IUnpackable for AmbientSTBDesc {
         let count = reader.read_u32() as usize;
         self.ambient_sounds.clear();
         for _ in 0..count {
-            self.ambient_sounds.push(reader.read_item::<AmbientSoundDesc>());
+            self.ambient_sounds
+                .push(reader.read_item::<AmbientSoundDesc>());
         }
         true
     }

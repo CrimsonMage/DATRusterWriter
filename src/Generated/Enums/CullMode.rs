@@ -6,9 +6,13 @@ impl CullMode {
 }
 
 impl From<i32> for CullMode {
-    fn from(value: i32) -> Self { Self(value) }
+    fn from(value: i32) -> Self {
+        Self(value)
+    }
 }
 
 impl From<CullMode> for i32 {
-    fn from(value: CullMode) -> Self { value.0 }
+    fn from(value: CullMode) -> Self {
+        value.0
+    }
 }

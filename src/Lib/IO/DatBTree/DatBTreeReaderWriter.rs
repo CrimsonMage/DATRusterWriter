@@ -5,8 +5,10 @@ use std::{
 };
 
 use crate::Lib::IO::{
-    BlockAllocators::IDatBlockAllocator::IDatBlockAllocator, DatBinReader::DatBinReader,
-    DatBTree::{DatBTreeFile::DatBTreeFile, DatBTreeNode::DatBTreeNode}, IUnpackable::IUnpackable,
+    BlockAllocators::IDatBlockAllocator::IDatBlockAllocator,
+    DatBTree::{DatBTreeFile::DatBTreeFile, DatBTreeNode::DatBTreeNode},
+    DatBinReader::DatBinReader,
+    IUnpackable::IUnpackable,
 };
 
 pub struct DatBTreeReaderWriter {
@@ -90,14 +92,22 @@ impl DatBTreeReaderWriter {
         }
 
         let mut buffer = vec![0_u8; DatBTreeNode::SIZE];
-        self.block_allocator.read_block(&mut buffer, block_offset as usize)?;
+        self.block_allocator
+            .read_block(&mut buffer, block_offset as usize)?;
         let mut node = DatBTreeNode::new(block_offset);
         let _ = node.unpack(&mut DatBinReader::new(&buffer));
-        self.node_cache.lock().unwrap().insert(block_offset, node.clone());
+        self.node_cache
+            .lock()
+            .unwrap()
+            .insert(block_offset, node.clone());
         Ok(Some(node))
     }
 
-    fn try_get_file_internal(&self, file_id: u32, starting_block: i32) -> io::Result<Option<DatBTreeFile>> {
+    fn try_get_file_internal(
+        &self,
+        file_id: u32,
+        starting_block: i32,
+    ) -> io::Result<Option<DatBTreeFile>> {
         let mut current_block = starting_block;
         while current_block != 0 && current_block != 0xCDCDCDCD_u32 as i32 {
             let Some(node) = self.try_get_node(current_block)? else {
@@ -143,7 +153,11 @@ impl DatBTreeReaderWriter {
         Ok(None)
     }
 
-    fn walk_collect(&self, starting_block: i32, map: &mut HashMap<u32, DatBTreeFile>) -> io::Result<()> {
+    fn walk_collect(
+        &self,
+        starting_block: i32,
+        map: &mut HashMap<u32, DatBTreeFile>,
+    ) -> io::Result<()> {
         let Some(node) = self.try_get_node(starting_block)? else {
             return Ok(());
         };

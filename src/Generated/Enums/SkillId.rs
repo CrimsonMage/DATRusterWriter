@@ -54,12 +54,18 @@ impl SkillId {
     pub const RECKLESSNESS: Self = Self(0x32);
     pub const SNEAK_ATTACK: Self = Self(0x33);
     pub const DIRTY_FIGHTING: Self = Self(0x34);
+    pub const CHALLENGE: Self = Self(0x35);
+    pub const SUMMONING: Self = Self(0x36);
 }
 
 impl From<i32> for SkillId {
-    fn from(value: i32) -> Self { Self(value) }
+    fn from(value: i32) -> Self {
+        Self(value)
+    }
 }
 
 impl From<SkillId> for i32 {
-    fn from(value: SkillId) -> Self { value.0 }
+    fn from(value: SkillId) -> Self {
+        value.0
+    }
 }

@@ -1,6 +1,9 @@
 use crate::{
     Generated::Enums::{DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType},
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable},
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
 };
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -31,7 +34,11 @@ impl IPackable for DBObjBase {
 }
 
 impl DBObjBase {
-    pub fn unpack_with_flags(&mut self, reader: &mut DatBinReader<'_>, header_flags: DBObjHeaderFlags) -> bool {
+    pub fn unpack_with_flags(
+        &mut self,
+        reader: &mut DatBinReader<'_>,
+        header_flags: DBObjHeaderFlags,
+    ) -> bool {
         if header_flags.contains(DBObjHeaderFlags::HasId) {
             self.id = reader.read_u32();
         }
@@ -41,7 +48,11 @@ impl DBObjBase {
         true
     }
 
-    pub fn pack_with_flags(&self, writer: &mut DatBinWriter<'_>, header_flags: DBObjHeaderFlags) -> bool {
+    pub fn pack_with_flags(
+        &self,
+        writer: &mut DatBinWriter<'_>,
+        header_flags: DBObjHeaderFlags,
+    ) -> bool {
         if header_flags.contains(DBObjHeaderFlags::HasId) {
             writer.write_u32(self.id);
         }

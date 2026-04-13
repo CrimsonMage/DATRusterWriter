@@ -1,5 +1,8 @@
 use crate::Generated::Enums::TerrainTextureType::TerrainTextureType;
-use crate::Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable};
+use crate::Lib::IO::{
+    DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+    IUnpackable::IUnpackable,
+};
 use crate::Types::TerrainTex::TerrainTex;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]

@@ -2,12 +2,32 @@ use std::any::Any;
 
 use crate::{
     DBObjs::GfxObj::GfxObj,
-    Generated::Enums::{DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType, EmitterType::EmitterType, ParticleType::ParticleType},
-    Lib::{Attributes::DBObjTypeAttribute::DBObjTypeAttribute, IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj, IPackable::IPackable, IUnpackable::IUnpackable, Numerics::Vector3}},
-    Types::{DBObj::{DBObj, DBObjBase}, QualifiedDataId::QualifiedDataId},
+    Generated::Enums::{
+        DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType,
+        EmitterType::EmitterType, ParticleType::ParticleType,
+    },
+    Lib::{
+        Attributes::DBObjTypeAttribute::DBObjTypeAttribute,
+        IO::{
+            DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj,
+            IPackable::IPackable, IUnpackable::IUnpackable, Numerics::Vector3,
+        },
+    },
+    Types::{
+        DBObj::{DBObj, DBObjBase},
+        QualifiedDataId::QualifiedDataId,
+    },
 };
 
-pub const PARTICLE_EMITTER_ATTR: DBObjTypeAttribute = DBObjTypeAttribute { rust_type_name: "ParticleEmitter", dat_file_type: DatFileType::Portal, db_obj_type: DBObjType::ParticleEmitter, header_flags: DBObjHeaderFlags::HasId, first_id: 0x32000000, last_id: 0x3200FFFF, mask_id: 0x00000000 };
+pub const PARTICLE_EMITTER_ATTR: DBObjTypeAttribute = DBObjTypeAttribute {
+    rust_type_name: "ParticleEmitter",
+    dat_file_type: DatFileType::Portal,
+    db_obj_type: DBObjType::ParticleEmitter,
+    header_flags: DBObjHeaderFlags::HasId,
+    first_id: 0x32000000,
+    last_id: 0x3200FFFF,
+    mask_id: 0x00000000,
+};
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct ParticleEmitter {
@@ -46,12 +66,24 @@ pub struct ParticleEmitter {
 }
 
 impl DBObj for ParticleEmitter {
-    fn header_flags(&self) -> DBObjHeaderFlags { DBObjHeaderFlags::HasId }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::ParticleEmitter }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn data_category(&self) -> u32 { self.base.data_category }
-    fn set_data_category(&mut self, data_category: u32) { self.base.data_category = data_category; }
+    fn header_flags(&self) -> DBObjHeaderFlags {
+        DBObjHeaderFlags::HasId
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::ParticleEmitter
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn data_category(&self) -> u32 {
+        self.base.data_category
+    }
+    fn set_data_category(&mut self, data_category: u32) {
+        self.base.data_category = data_category;
+    }
 }
 
 impl IUnpackable for ParticleEmitter {
@@ -131,9 +163,22 @@ impl IPackable for ParticleEmitter {
 }
 
 impl IDBObj for ParticleEmitter {
-    fn db_obj_type_attr() -> &'static DBObjTypeAttribute where Self: Sized { &PARTICLE_EMITTER_ATTR }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::ParticleEmitter }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn as_any(&self) -> &dyn Any { self }
+    fn db_obj_type_attr() -> &'static DBObjTypeAttribute
+    where
+        Self: Sized,
+    {
+        &PARTICLE_EMITTER_ATTR
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::ParticleEmitter
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }

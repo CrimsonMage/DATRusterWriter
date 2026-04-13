@@ -179,9 +179,13 @@ impl PlayScript {
 }
 
 impl From<u32> for PlayScript {
-    fn from(value: u32) -> Self { Self(value) }
+    fn from(value: u32) -> Self {
+        Self(value)
+    }
 }
 
 impl From<PlayScript> for u32 {
-    fn from(value: PlayScript) -> Self { value.0 }
+    fn from(value: PlayScript) -> Self {
+        value.0
+    }
 }

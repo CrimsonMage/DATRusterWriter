@@ -1,7 +1,13 @@
 use crate::{
     DBObjs::{RenderSurface::RenderSurface, Setup::Setup},
-    Types::{AC1LegacyString::AC1LegacyString, HashTable::HashTable, QualifiedDataId::QualifiedDataId, SexCG::SexCG, SkillCG::SkillCG, TemplateCG::TemplateCG},
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable},
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
+    Types::{
+        AC1LegacyString::AC1LegacyString, HashTable::HashTable, QualifiedDataId::QualifiedDataId,
+        SexCG::SexCG, SkillCG::SkillCG, TemplateCG::TemplateCG,
+    },
 };
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -30,19 +36,27 @@ impl IUnpackable for HeritageGroupCG {
 
         let primary_count = reader.read_compressed_uint() as usize;
         self.primary_start_areas.clear();
-        for _ in 0..primary_count { self.primary_start_areas.push(reader.read_i32()); }
+        for _ in 0..primary_count {
+            self.primary_start_areas.push(reader.read_i32());
+        }
 
         let secondary_count = reader.read_compressed_uint() as usize;
         self.secondary_start_areas.clear();
-        for _ in 0..secondary_count { self.secondary_start_areas.push(reader.read_i32()); }
+        for _ in 0..secondary_count {
+            self.secondary_start_areas.push(reader.read_i32());
+        }
 
         let skills_count = reader.read_compressed_uint() as usize;
         self.skills.clear();
-        for _ in 0..skills_count { self.skills.push(reader.read_item::<SkillCG>()); }
+        for _ in 0..skills_count {
+            self.skills.push(reader.read_item::<SkillCG>());
+        }
 
         let templates_count = reader.read_compressed_uint() as usize;
         self.templates.clear();
-        for _ in 0..templates_count { self.templates.push(reader.read_item::<TemplateCG>()); }
+        for _ in 0..templates_count {
+            self.templates.push(reader.read_item::<TemplateCG>());
+        }
 
         self.genders = reader.read_item::<HashTable<i32, SexCG>>();
         true
@@ -58,13 +72,21 @@ impl IPackable for HeritageGroupCG {
         writer.write_u32(self.attribute_credits);
         writer.write_u32(self.skill_credits);
         writer.write_compressed_uint(self.primary_start_areas.len() as u32);
-        for item in &self.primary_start_areas { writer.write_i32(*item); }
+        for item in &self.primary_start_areas {
+            writer.write_i32(*item);
+        }
         writer.write_compressed_uint(self.secondary_start_areas.len() as u32);
-        for item in &self.secondary_start_areas { writer.write_i32(*item); }
+        for item in &self.secondary_start_areas {
+            writer.write_i32(*item);
+        }
         writer.write_compressed_uint(self.skills.len() as u32);
-        for item in &self.skills { writer.write_item(item); }
+        for item in &self.skills {
+            writer.write_item(item);
+        }
         writer.write_compressed_uint(self.templates.len() as u32);
-        for item in &self.templates { writer.write_item(item); }
+        for item in &self.templates {
+            writer.write_item(item);
+        }
         writer.write_item(&self.genders);
         true
     }

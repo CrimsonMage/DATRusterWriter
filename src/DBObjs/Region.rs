@@ -1,8 +1,17 @@
 use std::any::Any;
 
 use crate::{
-    Generated::Enums::{DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType, PartsMask::PartsMask},
-    Lib::{Attributes::DBObjTypeAttribute::DBObjTypeAttribute, IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj, IPackable::IPackable, IUnpackable::IUnpackable}},
+    Generated::Enums::{
+        DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType,
+        PartsMask::PartsMask,
+    },
+    Lib::{
+        Attributes::DBObjTypeAttribute::DBObjTypeAttribute,
+        IO::{
+            DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj,
+            IPackable::IPackable, IUnpackable::IUnpackable,
+        },
+    },
     Types::{
         AC1LegacyString::AC1LegacyString,
         DBObj::{DBObj, DBObjBase},
@@ -16,7 +25,15 @@ use crate::{
     },
 };
 
-pub const REGION_ATTR: DBObjTypeAttribute = DBObjTypeAttribute { rust_type_name: "Region", dat_file_type: DatFileType::Portal, db_obj_type: DBObjType::Region, header_flags: DBObjHeaderFlags::HasId, first_id: 0x13000000, last_id: 0x1300FFFF, mask_id: 0x00000000 };
+pub const REGION_ATTR: DBObjTypeAttribute = DBObjTypeAttribute {
+    rust_type_name: "Region",
+    dat_file_type: DatFileType::Portal,
+    db_obj_type: DBObjType::Region,
+    header_flags: DBObjHeaderFlags::HasId,
+    first_id: 0x13000000,
+    last_id: 0x1300FFFF,
+    mask_id: 0x00000000,
+};
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Region {
@@ -36,12 +53,24 @@ pub struct Region {
 }
 
 impl DBObj for Region {
-    fn header_flags(&self) -> DBObjHeaderFlags { DBObjHeaderFlags::HasId }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::Region }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn data_category(&self) -> u32 { self.base.data_category }
-    fn set_data_category(&mut self, data_category: u32) { self.base.data_category = data_category; }
+    fn header_flags(&self) -> DBObjHeaderFlags {
+        DBObjHeaderFlags::HasId
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::Region
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn data_category(&self) -> u32 {
+        self.base.data_category
+    }
+    fn set_data_category(&mut self, data_category: u32) {
+        self.base.data_category = data_category;
+    }
 }
 
 impl IUnpackable for Region {
@@ -129,9 +158,22 @@ impl IPackable for Region {
 }
 
 impl IDBObj for Region {
-    fn db_obj_type_attr() -> &'static DBObjTypeAttribute where Self: Sized { &REGION_ATTR }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::Region }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn as_any(&self) -> &dyn Any { self }
+    fn db_obj_type_attr() -> &'static DBObjTypeAttribute
+    where
+        Self: Sized,
+    {
+        &REGION_ATTR
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::Region
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }

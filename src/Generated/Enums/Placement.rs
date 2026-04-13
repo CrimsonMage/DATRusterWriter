@@ -19,9 +19,13 @@ impl Placement {
 }
 
 impl From<u32> for Placement {
-    fn from(value: u32) -> Self { Self(value) }
+    fn from(value: u32) -> Self {
+        Self(value)
+    }
 }
 
 impl From<Placement> for u32 {
-    fn from(value: Placement) -> Self { value.0 }
+    fn from(value: Placement) -> Self {
+        value.0
+    }
 }

@@ -15,9 +15,13 @@ impl ParentLocation {
 }
 
 impl From<i32> for ParentLocation {
-    fn from(value: i32) -> Self { Self(value) }
+    fn from(value: i32) -> Self {
+        Self(value)
+    }
 }
 
 impl From<ParentLocation> for i32 {
-    fn from(value: ParentLocation) -> Self { value.0 }
+    fn from(value: ParentLocation) -> Self {
+        value.0
+    }
 }

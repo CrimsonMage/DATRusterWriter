@@ -1,12 +1,28 @@
 use std::any::Any;
 
 use crate::{
-    Generated::Enums::{DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType},
-    Lib::{Attributes::DBObjTypeAttribute::DBObjTypeAttribute, IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj, IPackable::IPackable, IUnpackable::IUnpackable}},
+    Generated::Enums::{
+        DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType,
+    },
+    Lib::{
+        Attributes::DBObjTypeAttribute::DBObjTypeAttribute,
+        IO::{
+            DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj,
+            IPackable::IPackable, IUnpackable::IUnpackable,
+        },
+    },
     Types::DBObj::{DBObj, DBObjBase},
 };
 
-pub const WAVE_ATTR: DBObjTypeAttribute = DBObjTypeAttribute { rust_type_name: "Wave", dat_file_type: DatFileType::Portal, db_obj_type: DBObjType::Wave, header_flags: DBObjHeaderFlags::HasId, first_id: 0x0A000000, last_id: 0x0A00FFFF, mask_id: 0x0A000000 };
+pub const WAVE_ATTR: DBObjTypeAttribute = DBObjTypeAttribute {
+    rust_type_name: "Wave",
+    dat_file_type: DatFileType::Portal,
+    db_obj_type: DBObjType::Wave,
+    header_flags: DBObjHeaderFlags::HasId,
+    first_id: 0x0A000000,
+    last_id: 0x0A00FFFF,
+    mask_id: 0x0A000000,
+};
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Wave {
@@ -16,12 +32,24 @@ pub struct Wave {
 }
 
 impl DBObj for Wave {
-    fn header_flags(&self) -> DBObjHeaderFlags { DBObjHeaderFlags::HasId }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::Wave }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn data_category(&self) -> u32 { self.base.data_category }
-    fn set_data_category(&mut self, data_category: u32) { self.base.data_category = data_category; }
+    fn header_flags(&self) -> DBObjHeaderFlags {
+        DBObjHeaderFlags::HasId
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::Wave
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn data_category(&self) -> u32 {
+        self.base.data_category
+    }
+    fn set_data_category(&mut self, data_category: u32) {
+        self.base.data_category = data_category;
+    }
 }
 
 impl IUnpackable for Wave {
@@ -47,9 +75,22 @@ impl IPackable for Wave {
 }
 
 impl IDBObj for Wave {
-    fn db_obj_type_attr() -> &'static DBObjTypeAttribute where Self: Sized { &WAVE_ATTR }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::Wave }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn as_any(&self) -> &dyn Any { self }
+    fn db_obj_type_attr() -> &'static DBObjTypeAttribute
+    where
+        Self: Sized,
+    {
+        &WAVE_ATTR
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::Wave
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }

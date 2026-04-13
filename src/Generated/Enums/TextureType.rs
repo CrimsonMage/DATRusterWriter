@@ -10,9 +10,13 @@ impl TextureType {
 }
 
 impl From<u8> for TextureType {
-    fn from(value: u8) -> Self { Self(value) }
+    fn from(value: u8) -> Self {
+        Self(value)
+    }
 }
 
 impl From<TextureType> for u8 {
-    fn from(value: TextureType) -> Self { value.0 }
+    fn from(value: TextureType) -> Self {
+        value.0
+    }
 }

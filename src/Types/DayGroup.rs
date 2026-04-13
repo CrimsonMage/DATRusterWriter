@@ -1,5 +1,10 @@
-use crate::Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable};
-use crate::Types::{AC1LegacyString::AC1LegacyString, SkyObject::SkyObject, SkyTimeOfDay::SkyTimeOfDay};
+use crate::Lib::IO::{
+    DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+    IUnpackable::IUnpackable,
+};
+use crate::Types::{
+    AC1LegacyString::AC1LegacyString, SkyObject::SkyObject, SkyTimeOfDay::SkyTimeOfDay,
+};
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct DayGroup {

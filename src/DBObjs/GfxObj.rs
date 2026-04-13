@@ -2,12 +2,35 @@ use std::{any::Any, collections::BTreeMap};
 
 use crate::{
     DBObjs::Surface::Surface,
-    Generated::Enums::{DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType, GfxObjFlags::GfxObjFlags},
-    Lib::{Attributes::DBObjTypeAttribute::DBObjTypeAttribute, IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj, IPackable::IPackable, IUnpackable::IUnpackable, Numerics::Vector3}},
-    Types::{BSPTrees::{DrawingBSPTree, PhysicsBSPTree}, DBObj::{DBObj, DBObjBase}, Polygon::Polygon, QualifiedDataId::QualifiedDataId, VertexArray::VertexArray},
+    Generated::Enums::{
+        DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType,
+        GfxObjFlags::GfxObjFlags,
+    },
+    Lib::{
+        Attributes::DBObjTypeAttribute::DBObjTypeAttribute,
+        IO::{
+            DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj,
+            IPackable::IPackable, IUnpackable::IUnpackable, Numerics::Vector3,
+        },
+    },
+    Types::{
+        BSPTrees::{DrawingBSPTree, PhysicsBSPTree},
+        DBObj::{DBObj, DBObjBase},
+        Polygon::Polygon,
+        QualifiedDataId::QualifiedDataId,
+        VertexArray::VertexArray,
+    },
 };
 
-pub const GFX_OBJ_ATTR: DBObjTypeAttribute = DBObjTypeAttribute { rust_type_name: "GfxObj", dat_file_type: DatFileType::Portal, db_obj_type: DBObjType::GfxObj, header_flags: DBObjHeaderFlags::HasId, first_id: 0x01000000, last_id: 0x0100FFFF, mask_id: 0x01000000 };
+pub const GFX_OBJ_ATTR: DBObjTypeAttribute = DBObjTypeAttribute {
+    rust_type_name: "GfxObj",
+    dat_file_type: DatFileType::Portal,
+    db_obj_type: DBObjType::GfxObj,
+    header_flags: DBObjHeaderFlags::HasId,
+    first_id: 0x01000000,
+    last_id: 0x0100FFFF,
+    mask_id: 0x01000000,
+};
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct GfxObj {
@@ -24,12 +47,24 @@ pub struct GfxObj {
 }
 
 impl DBObj for GfxObj {
-    fn header_flags(&self) -> DBObjHeaderFlags { DBObjHeaderFlags::HasId }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::GfxObj }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn data_category(&self) -> u32 { self.base.data_category }
-    fn set_data_category(&mut self, data_category: u32) { self.base.data_category = data_category; }
+    fn header_flags(&self) -> DBObjHeaderFlags {
+        DBObjHeaderFlags::HasId
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::GfxObj
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn data_category(&self) -> u32 {
+        self.base.data_category
+    }
+    fn set_data_category(&mut self, data_category: u32) {
+        self.base.data_category = data_category;
+    }
 }
 
 impl IUnpackable for GfxObj {
@@ -39,14 +74,16 @@ impl IUnpackable for GfxObj {
         let surface_count = reader.read_compressed_uint() as usize;
         self.surfaces.clear();
         for _ in 0..surface_count {
-            self.surfaces.push(reader.read_item::<QualifiedDataId<Surface>>());
+            self.surfaces
+                .push(reader.read_item::<QualifiedDataId<Surface>>());
         }
         self.vertex_array = reader.read_item::<VertexArray>();
         if self.flags.contains(GfxObjFlags::HasPhysics) {
             let count = reader.read_compressed_uint() as usize;
             self.physics_polygons.clear();
             for _ in 0..count {
-                self.physics_polygons.insert(reader.read_u16(), reader.read_item::<Polygon>());
+                self.physics_polygons
+                    .insert(reader.read_u16(), reader.read_item::<Polygon>());
             }
             self.physics_bsp = reader.read_item::<PhysicsBSPTree>();
         }
@@ -55,7 +92,8 @@ impl IUnpackable for GfxObj {
             let count = reader.read_compressed_uint() as usize;
             self.polygons.clear();
             for _ in 0..count {
-                self.polygons.insert(reader.read_u16(), reader.read_item::<Polygon>());
+                self.polygons
+                    .insert(reader.read_u16(), reader.read_item::<Polygon>());
             }
             self.drawing_bsp = reader.read_item::<DrawingBSPTree>();
         }
@@ -100,9 +138,22 @@ impl IPackable for GfxObj {
 }
 
 impl IDBObj for GfxObj {
-    fn db_obj_type_attr() -> &'static DBObjTypeAttribute where Self: Sized { &GFX_OBJ_ATTR }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::GfxObj }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn as_any(&self) -> &dyn Any { self }
+    fn db_obj_type_attr() -> &'static DBObjTypeAttribute
+    where
+        Self: Sized,
+    {
+        &GFX_OBJ_ATTR
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::GfxObj
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }

@@ -1,7 +1,10 @@
 use crate::{
     DBObjs::RenderSurface::RenderSurface,
     Generated::Enums::SkillId::SkillId,
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable},
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
     Types::{AC1LegacyString::AC1LegacyString, QualifiedDataId::QualifiedDataId},
 };
 
@@ -33,10 +36,14 @@ impl IUnpackable for TemplateCG {
         self.self_value = reader.read_i32();
         let normal_count = reader.read_compressed_uint() as usize;
         self.normal_skills.clear();
-        for _ in 0..normal_count { self.normal_skills.push(SkillId::from(reader.read_i32())); }
+        for _ in 0..normal_count {
+            self.normal_skills.push(SkillId::from(reader.read_i32()));
+        }
         let primary_count = reader.read_compressed_uint() as usize;
         self.primary_skills.clear();
-        for _ in 0..primary_count { self.primary_skills.push(SkillId::from(reader.read_i32())); }
+        for _ in 0..primary_count {
+            self.primary_skills.push(SkillId::from(reader.read_i32()));
+        }
         true
     }
 }
@@ -53,9 +60,13 @@ impl IPackable for TemplateCG {
         writer.write_i32(self.focus);
         writer.write_i32(self.self_value);
         writer.write_compressed_uint(self.normal_skills.len() as u32);
-        for item in &self.normal_skills { writer.write_i32((*item).into()); }
+        for item in &self.normal_skills {
+            writer.write_i32((*item).into());
+        }
         writer.write_compressed_uint(self.primary_skills.len() as u32);
-        for item in &self.primary_skills { writer.write_i32((*item).into()); }
+        for item in &self.primary_skills {
+            writer.write_i32((*item).into());
+        }
         true
     }
 }

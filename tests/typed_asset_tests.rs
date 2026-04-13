@@ -1,7 +1,22 @@
 use dat_reader_writer::{
-    DBObjs::{CharGen::CharGen, GfxObj::GfxObj, MotionTable::MotionTable, Palette::Palette, ParticleEmitter::ParticleEmitter, PhysicsScript::PhysicsScript, Region::Region, RenderSurface::RenderSurface, Scene::Scene, Surface::Surface, SurfaceTexture::SurfaceTexture, Wave::Wave},
-    Generated::Enums::{AnimationHookDir::AnimationHookDir, CullMode::CullMode, EmitterType::EmitterType, GfxObjFlags::GfxObjFlags, MotionCommand::MotionCommand, ParticleType::ParticleType, PartsMask::PartsMask, PixelFormat::PixelFormat, SkillId::SkillId, Sound::Sound, StipplingType::StipplingType, SurfaceType::SurfaceType, TerrainTextureType::TerrainTextureType, TextureType::TextureType, VertexType::VertexType},
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable},
+    DBObjs::{
+        CharGen::CharGen, ClothingTable::ClothingTable, CombatTable::CombatTable, GfxObj::GfxObj,
+        MotionTable::MotionTable, Palette::Palette, ParticleEmitter::ParticleEmitter,
+        PhysicsScript::PhysicsScript, Region::Region, RenderSurface::RenderSurface, Scene::Scene,
+        Surface::Surface, SurfaceTexture::SurfaceTexture, Wave::Wave,
+    },
+    Generated::Enums::{
+        AnimationHookDir::AnimationHookDir, AttackHeight::AttackHeight, AttackType::AttackType,
+        CullMode::CullMode, EmitterType::EmitterType, GfxObjFlags::GfxObjFlags,
+        MotionCommand::MotionCommand, MotionStance::MotionStance, ParticleType::ParticleType,
+        PartsMask::PartsMask, PixelFormat::PixelFormat, SkillId::SkillId, Sound::Sound,
+        StipplingType::StipplingType, SurfaceType::SurfaceType,
+        TerrainTextureType::TerrainTextureType, TextureType::TextureType, VertexType::VertexType,
+    },
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
     Types::{
         AC1LegacyString::AC1LegacyString,
         AmbientSTBDesc::AmbientSTBDesc,
@@ -20,26 +35,26 @@ use dat_reader_writer::{
         MotionData::MotionData,
         ObjDesc::{ObjDesc, SubPalette, TextureMapChange},
         ObjectDesc::ObjectDesc,
-        PhysicsScriptData::PhysicsScriptData,
         PackedQualifiedDataId::PackedQualifiedDataId,
+        PhysicsScriptData::PhysicsScriptData,
         Polygon::Polygon,
         Position::Position,
         QualifiedDataId::QualifiedDataId,
         RegionMisc::RegionMisc,
+        SWVertex::SWVertex,
         SceneDesc::SceneDesc,
         SceneType::SceneType,
         SexCG::SexCG,
         SkillCG::SkillCG,
         SoundDesc::SoundDesc,
         StartingArea::StartingArea,
-        SWVertex::SWVertex,
+        TMTerrainDesc::TMTerrainDesc,
         TemplateCG::TemplateCG,
         TerrainAlphaMap::TerrainAlphaMap,
         TerrainDesc::TerrainDesc,
         TerrainTex::TerrainTex,
         TerrainType::TerrainType,
         TexMerge::TexMerge,
-        TMTerrainDesc::TMTerrainDesc,
         Vec2Duv::Vec2Duv,
         VertexArray::VertexArray,
     },
@@ -47,7 +62,23 @@ use dat_reader_writer::{
 
 #[test]
 fn palette_roundtrip_reads_colors() {
-    let palette = Palette { colors: vec![ColorARGB { blue: 1, green: 2, red: 3, alpha: 4 }, ColorARGB { blue: 5, green: 6, red: 7, alpha: 8 }], ..Default::default() };
+    let palette = Palette {
+        colors: vec![
+            ColorARGB {
+                blue: 1,
+                green: 2,
+                red: 3,
+                alpha: 4,
+            },
+            ColorARGB {
+                blue: 5,
+                green: 6,
+                red: 7,
+                alpha: 8,
+            },
+        ],
+        ..Default::default()
+    };
     let mut bytes = vec![0u8; 4 + 4 + palette.colors.len() * 4];
     assert!(palette.pack(&mut DatBinWriter::new(&mut bytes)));
     let mut unpacked = Palette::default();
@@ -59,7 +90,14 @@ fn palette_roundtrip_reads_colors() {
 
 #[test]
 fn surface_texture_roundtrip_reads_texture_ids() {
-    let surface = SurfaceTexture { texture_type: TextureType::TEXTURE2D, textures: vec![QualifiedDataId::new(0x06000001), QualifiedDataId::new(0x06000002)], ..Default::default() };
+    let surface = SurfaceTexture {
+        texture_type: TextureType::TEXTURE2D,
+        textures: vec![
+            QualifiedDataId::new(0x06000001),
+            QualifiedDataId::new(0x06000002),
+        ],
+        ..Default::default()
+    };
     let mut bytes = vec![0u8; 4 + 4 + 1 + 4 + 8];
     assert!(surface.pack(&mut DatBinWriter::new(&mut bytes)));
     let mut unpacked = SurfaceTexture::default();
@@ -70,7 +108,14 @@ fn surface_texture_roundtrip_reads_texture_ids() {
 
 #[test]
 fn render_surface_reads_palette_tail_for_indexed_formats() {
-    let render = RenderSurface { width: 64, height: 32, format: PixelFormat::PFID_P8, source_data: vec![1,2,3], default_palette_id: 0x04000001, ..Default::default() };
+    let render = RenderSurface {
+        width: 64,
+        height: 32,
+        format: PixelFormat::PFID_P8,
+        source_data: vec![1, 2, 3],
+        default_palette_id: 0x04000001,
+        ..Default::default()
+    };
     let mut bytes = vec![0u8; 8 + 8 + 4 + 4 + 3 + 4];
     assert!(render.pack(&mut DatBinWriter::new(&mut bytes)));
     let mut unpacked = RenderSurface::default();
@@ -84,14 +129,19 @@ fn render_surface_reads_palette_tail_for_indexed_formats() {
 fn motion_table_reads_defaults_and_cycles() {
     let mut motion = MotionTable::default();
     motion.default_style = MotionCommand(0x12345678);
-    motion.style_defaults.insert(MotionCommand(1), MotionCommand(2));
+    motion
+        .style_defaults
+        .insert(MotionCommand(1), MotionCommand(2));
     motion.cycles.insert(10, MotionData::default());
     let mut bytes = vec![0u8; 2048];
     assert!(motion.pack(&mut DatBinWriter::new(&mut bytes)));
     let mut unpacked = MotionTable::default();
     assert!(unpacked.unpack(&mut DatBinReader::new(&bytes)));
     assert_eq!(MotionCommand(0x12345678), unpacked.default_style);
-    assert_eq!(Some(&MotionCommand(2)), unpacked.style_defaults.get(&MotionCommand(1)));
+    assert_eq!(
+        Some(&MotionCommand(2)),
+        unpacked.style_defaults.get(&MotionCommand(1))
+    );
     assert!(unpacked.cycles.contains_key(&10));
 }
 
@@ -100,8 +150,13 @@ fn region_reads_sound_scene_terrain_and_misc() {
     let region = Region {
         region_number: 7,
         version: 3,
-        region_name: AC1LegacyString { value: "Dereth".to_string() },
-        land_defs: LandDefs { land_height_table: vec![0.0; 256], ..Default::default() },
+        region_name: AC1LegacyString {
+            value: "Dereth".to_string(),
+        },
+        land_defs: LandDefs {
+            land_height_table: vec![0.0; 256],
+            ..Default::default()
+        },
         parts_mask: PartsMask::HasSoundInfo | PartsMask::HasSceneInfo | PartsMask::HasRegionMisc,
         sound_info: Some(SoundDesc {
             stb_desc: vec![AmbientSTBDesc {
@@ -123,15 +178,25 @@ fn region_reads_sound_scene_terrain_and_misc() {
         }),
         terrain_info: TerrainDesc {
             terrain_types: vec![TerrainType {
-                terrain_name: AC1LegacyString { value: "Grass".to_string() },
-                terrain_color: ColorARGB { blue: 1, green: 2, red: 3, alpha: 4 },
+                terrain_name: AC1LegacyString {
+                    value: "Grass".to_string(),
+                },
+                terrain_color: ColorARGB {
+                    blue: 1,
+                    green: 2,
+                    red: 3,
+                    alpha: 4,
+                },
                 scene_types: vec![5, 6],
             }],
             land_surfaces: LandSurf {
                 land_type: 9,
                 tex_merge: TexMerge {
                     base_tex_size: 32,
-                    corner_terrain_maps: vec![TerrainAlphaMap { t_code: 1, texture_id: QualifiedDataId::new(0x05000001) }],
+                    corner_terrain_maps: vec![TerrainAlphaMap {
+                        t_code: 1,
+                        texture_id: QualifiedDataId::new(0x05000001),
+                    }],
                     side_terrain_maps: vec![],
                     road_maps: vec![],
                     terrain_desc: vec![TMTerrainDesc {
@@ -173,12 +238,30 @@ fn region_reads_sound_scene_terrain_and_misc() {
     assert_eq!(7, unpacked.region_number);
     assert_eq!("Dereth", unpacked.region_name.value);
     assert_eq!(11, unpacked.sound_info.as_ref().unwrap().stb_desc[0].stb_id);
-    assert_eq!(Sound::AMBIENT1, unpacked.sound_info.as_ref().unwrap().stb_desc[0].ambient_sounds[0].s_type);
-    assert_eq!(5, unpacked.scene_info.as_ref().unwrap().scene_types[0].stb_index);
-    assert_eq!("Grass", unpacked.terrain_info.terrain_types[0].terrain_name.value);
-    assert_eq!(32, unpacked.terrain_info.land_surfaces.tex_merge.base_tex_size);
-    assert_eq!(TerrainTextureType(1), unpacked.terrain_info.land_surfaces.tex_merge.terrain_desc[0].terrain_type);
-    assert_eq!(0x0600127D, unpacked.region_misc.as_ref().unwrap().game_map_id);
+    assert_eq!(
+        Sound::AMBIENT1,
+        unpacked.sound_info.as_ref().unwrap().stb_desc[0].ambient_sounds[0].s_type
+    );
+    assert_eq!(
+        5,
+        unpacked.scene_info.as_ref().unwrap().scene_types[0].stb_index
+    );
+    assert_eq!(
+        "Grass",
+        unpacked.terrain_info.terrain_types[0].terrain_name.value
+    );
+    assert_eq!(
+        32,
+        unpacked.terrain_info.land_surfaces.tex_merge.base_tex_size
+    );
+    assert_eq!(
+        TerrainTextureType(1),
+        unpacked.terrain_info.land_surfaces.tex_merge.terrain_desc[0].terrain_type
+    );
+    assert_eq!(
+        0x0600127D,
+        unpacked.region_misc.as_ref().unwrap().game_map_id
+    );
     assert!(unpacked.raw_remainder.is_empty());
 }
 
@@ -242,17 +325,35 @@ fn gfx_obj_roundtrip_reads_surfaces_vertices_and_polygons() {
     let mut gfx = GfxObj {
         flags: GfxObjFlags::HasDrawing,
         surfaces: vec![QualifiedDataId::new(0x08000010)],
-        vertex_array: VertexArray { vertex_type: VertexType(1), vertices: [(1u16, SWVertex { uvs: vec![Vec2Duv { u: 1.0, v: 2.0 }], ..Default::default() })].into_iter().collect() },
-        polygons: [(7u16, Polygon {
-            stippling: StipplingType::Positive | StipplingType::NoNeg,
-            sides_type: CullMode::CLOCKWISE,
-            pos_surface: 1,
-            neg_surface: -1,
-            vertex_ids: vec![1, 2, 3],
-            pos_uv_indices: vec![0, 1, 2],
-            neg_uv_indices: vec![],
-        })].into_iter().collect(),
-        drawing_bsp: DrawingBSPTree { root: DrawingBSPNode::default() },
+        vertex_array: VertexArray {
+            vertex_type: VertexType(1),
+            vertices: [(
+                1u16,
+                SWVertex {
+                    uvs: vec![Vec2Duv { u: 1.0, v: 2.0 }],
+                    ..Default::default()
+                },
+            )]
+            .into_iter()
+            .collect(),
+        },
+        polygons: [(
+            7u16,
+            Polygon {
+                stippling: StipplingType::Positive | StipplingType::NoNeg,
+                sides_type: CullMode::CLOCKWISE,
+                pos_surface: 1,
+                neg_surface: -1,
+                vertex_ids: vec![1, 2, 3],
+                pos_uv_indices: vec![0, 1, 2],
+                neg_uv_indices: vec![],
+            },
+        )]
+        .into_iter()
+        .collect(),
+        drawing_bsp: DrawingBSPTree {
+            root: DrawingBSPNode::default(),
+        },
         ..Default::default()
     };
     gfx.sort_center.x = 9.0;
@@ -266,15 +367,18 @@ fn gfx_obj_roundtrip_reads_surfaces_vertices_and_polygons() {
     assert_eq!(1, unpacked.surfaces.len());
     assert_eq!(0x08000010, unpacked.surfaces[0].data_id);
     assert_eq!(1, unpacked.vertex_array.vertices.len());
-    assert_eq!(Some(&Polygon {
-        stippling: StipplingType::Positive | StipplingType::NoNeg,
-        sides_type: CullMode::CLOCKWISE,
-        pos_surface: 1,
-        neg_surface: -1,
-        vertex_ids: vec![1, 2, 3],
-        pos_uv_indices: vec![0, 1, 2],
-        neg_uv_indices: vec![],
-    }), unpacked.polygons.get(&7));
+    assert_eq!(
+        Some(&Polygon {
+            stippling: StipplingType::Positive | StipplingType::NoNeg,
+            sides_type: CullMode::CLOCKWISE,
+            pos_surface: 1,
+            neg_surface: -1,
+            vertex_ids: vec![1, 2, 3],
+            pos_uv_indices: vec![0, 1, 2],
+            neg_uv_indices: vec![],
+        }),
+        unpacked.polygons.get(&7)
+    );
 }
 
 #[test]
@@ -373,7 +477,12 @@ fn physics_script_roundtrip_reads_mixed_hooks() {
                 start_time: 5.0,
                 hook: AnimationHook::Attack {
                     direction: AnimationHookDir::FORWARD,
-                    attack_cone: AttackCone { part_index: 3, radius: 4.0, height: 5.0, ..Default::default() },
+                    attack_cone: AttackCone {
+                        part_index: 3,
+                        radius: 4.0,
+                        height: 5.0,
+                        ..Default::default()
+                    },
                 },
             },
         ],
@@ -388,15 +497,28 @@ fn physics_script_roundtrip_reads_mixed_hooks() {
     assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
     assert_eq!(4, unpacked.script_data.len());
     assert_eq!(
-        AnimationHook::Sound { direction: AnimationHookDir::FORWARD, id: QualifiedDataId::new(0x0A000010) },
+        AnimationHook::Sound {
+            direction: AnimationHookDir::FORWARD,
+            id: QualifiedDataId::new(0x0A000010)
+        },
         unpacked.script_data[0].hook
     );
     assert_eq!(
-        AnimationHook::ReplaceObject { direction: AnimationHookDir::BACKWARD, part_index: 7, part_id: PackedQualifiedDataId::new(0x01000022) },
+        AnimationHook::ReplaceObject {
+            direction: AnimationHookDir::BACKWARD,
+            part_index: 7,
+            part_id: PackedQualifiedDataId::new(0x01000022)
+        },
         unpacked.script_data[1].hook
     );
     assert_eq!(
-        AnimationHook::CreateParticle { direction: AnimationHookDir::BOTH, emitter_info_id: QualifiedDataId::new(0x32000011), part_index: 4, offset: Frame::default(), emitter_id: 99 },
+        AnimationHook::CreateParticle {
+            direction: AnimationHookDir::BOTH,
+            emitter_info_id: QualifiedDataId::new(0x32000011),
+            part_index: 4,
+            offset: Frame::default(),
+            emitter_id: 99
+        },
         unpacked.script_data[2].hook
     );
 }
@@ -408,8 +530,18 @@ fn sound_table_roundtrip_reads_hashes_and_entries() {
         Types::{SoundData::SoundData, SoundEntry::SoundEntry, SoundHashData::SoundHashData},
     };
 
-    let mut sound_table = SoundTable { hash_key: 77, ..Default::default() };
-    sound_table.hashes.insert(0x1234, SoundHashData { priority: 1.0, probability: 0.5, volume: 0.25 });
+    let mut sound_table = SoundTable {
+        hash_key: 77,
+        ..Default::default()
+    };
+    sound_table.hashes.insert(
+        0x1234,
+        SoundHashData {
+            priority: 1.0,
+            probability: 0.5,
+            volume: 0.25,
+        },
+    );
     sound_table.sounds.insert(
         Sound::AMBIENT1,
         SoundData {
@@ -431,8 +563,16 @@ fn sound_table_roundtrip_reads_hashes_and_entries() {
     let mut unpacked = SoundTable::default();
     assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
     assert_eq!(77, unpacked.hash_key);
-    assert_eq!(Some(&0.25), unpacked.hashes.get(&0x1234).map(|value| &value.volume));
-    assert_eq!(0x0A000020, unpacked.sounds.get(&Sound::AMBIENT1).unwrap().entries[0].id.data_id);
+    assert_eq!(
+        Some(&0.25),
+        unpacked.hashes.get(&0x1234).map(|value| &value.volume)
+    );
+    assert_eq!(
+        0x0A000020,
+        unpacked.sounds.get(&Sound::AMBIENT1).unwrap().entries[0]
+            .id
+            .data_id
+    );
 }
 
 #[test]
@@ -440,7 +580,9 @@ fn physics_script_table_roundtrip_reads_script_map() {
     use dat_reader_writer::{
         DBObjs::PhysicsScriptTable::PhysicsScriptTable,
         Generated::Enums::PlayScript::PlayScript,
-        Types::{PhysicsScriptTableData::PhysicsScriptTableData, ScriptAndModData::ScriptAndModData},
+        Types::{
+            PhysicsScriptTableData::PhysicsScriptTableData, ScriptAndModData::ScriptAndModData,
+        },
     };
 
     let mut script_table = PhysicsScriptTable::default();
@@ -462,15 +604,31 @@ fn physics_script_table_roundtrip_reads_script_map() {
     let mut unpacked = PhysicsScriptTable::default();
     assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
     assert_eq!(1, unpacked.script_table.len());
-    assert_eq!(1.5, unpacked.script_table.get(&PlayScript::LAUNCH).unwrap().scripts[0].mod_value);
-    assert_eq!(0x33000010, unpacked.script_table.get(&PlayScript::LAUNCH).unwrap().scripts[0].script_id.data_id);
+    assert_eq!(
+        1.5,
+        unpacked
+            .script_table
+            .get(&PlayScript::LAUNCH)
+            .unwrap()
+            .scripts[0]
+            .mod_value
+    );
+    assert_eq!(
+        0x33000010,
+        unpacked
+            .script_table
+            .get(&PlayScript::LAUNCH)
+            .unwrap()
+            .scripts[0]
+            .script_id
+            .data_id
+    );
 }
 
 #[test]
 fn animation_roundtrip_reads_pos_frames_and_hooks() {
     use dat_reader_writer::{
-        DBObjs::Animation::Animation,
-        Generated::Enums::AnimationFlags::AnimationFlags,
+        DBObjs::Animation::Animation, Generated::Enums::AnimationFlags::AnimationFlags,
         Types::AnimationFrame::AnimationFrame,
     };
 
@@ -480,7 +638,9 @@ fn animation_roundtrip_reads_pos_frames_and_hooks() {
         pos_frames: vec![Frame::default()],
         part_frames: vec![AnimationFrame {
             frames: vec![Frame::default(), Frame::default()],
-            hooks: vec![AnimationHook::AnimationDone { direction: AnimationHookDir::FORWARD }],
+            hooks: vec![AnimationHook::AnimationDone {
+                direction: AnimationHookDir::FORWARD,
+            }],
         }],
         ..Default::default()
     };
@@ -496,31 +656,57 @@ fn animation_roundtrip_reads_pos_frames_and_hooks() {
     assert_eq!(2, unpacked.num_parts);
     assert_eq!(1, unpacked.pos_frames.len());
     assert_eq!(2, unpacked.part_frames[0].frames.len());
-    assert_eq!(AnimationHook::AnimationDone { direction: AnimationHookDir::FORWARD }, unpacked.part_frames[0].hooks[0]);
+    assert_eq!(
+        AnimationHook::AnimationDone {
+            direction: AnimationHookDir::FORWARD
+        },
+        unpacked.part_frames[0].hooks[0]
+    );
 }
 
 #[test]
 fn setup_roundtrip_reads_optional_arrays_and_default_refs() {
+    use dat_reader_writer::Lib::IO::Numerics::Vector3;
     use dat_reader_writer::{
         DBObjs::Setup::Setup,
-        Generated::Enums::{ParentLocation::ParentLocation, Placement::Placement, SetupFlags::SetupFlags},
-        Types::{AnimationFrame::AnimationFrame, CylSphere::CylSphere, LightInfo::LightInfo, LocationType::LocationType, Sphere::Sphere},
+        Generated::Enums::{
+            ParentLocation::ParentLocation, Placement::Placement, SetupFlags::SetupFlags,
+        },
+        Types::{
+            AnimationFrame::AnimationFrame, CylSphere::CylSphere, LightInfo::LightInfo,
+            LocationType::LocationType, Sphere::Sphere,
+        },
     };
-    use dat_reader_writer::Lib::IO::Numerics::Vector3;
 
     let mut setup = Setup {
         flags: SetupFlags::HasParent | SetupFlags::HasDefaultScale,
-        parts: vec![QualifiedDataId::new(0x01000001), QualifiedDataId::new(0x01000002)],
+        parts: vec![
+            QualifiedDataId::new(0x01000001),
+            QualifiedDataId::new(0x01000002),
+        ],
         parent_index: vec![0, 1],
         default_scale: vec![Vector3::new(1.0, 1.0, 1.0), Vector3::new(2.0, 2.0, 2.0)],
-        cyl_spheres: vec![CylSphere { radius: 3.0, height: 4.0, ..Default::default() }],
-        spheres: vec![Sphere { radius: 5.0, ..Default::default() }],
+        cyl_spheres: vec![CylSphere {
+            radius: 3.0,
+            height: 4.0,
+            ..Default::default()
+        }],
+        spheres: vec![Sphere {
+            radius: 5.0,
+            ..Default::default()
+        }],
         height: 6.0,
         radius: 7.0,
         step_up_height: 8.0,
         step_down_height: 9.0,
-        sorting_sphere: Sphere { radius: 10.0, ..Default::default() },
-        selection_sphere: Sphere { radius: 11.0, ..Default::default() },
+        sorting_sphere: Sphere {
+            radius: 10.0,
+            ..Default::default()
+        },
+        selection_sphere: Sphere {
+            radius: 11.0,
+            ..Default::default()
+        },
         default_animation: QualifiedDataId::new(0x03000011),
         default_script: QualifiedDataId::new(0x33000012),
         default_motion_table: QualifiedDataId::new(0x09000013),
@@ -528,16 +714,38 @@ fn setup_roundtrip_reads_optional_arrays_and_default_refs() {
         default_script_table: QualifiedDataId::new(0x34000015),
         ..Default::default()
     };
-    setup.holding_locations.insert(ParentLocation::RIGHT_HAND, LocationType { part_id: 3, frame: Frame::default() });
-    setup.connection_points.insert(ParentLocation::LEFT_HAND, LocationType { part_id: 4, frame: Frame::default() });
+    setup.holding_locations.insert(
+        ParentLocation::RIGHT_HAND,
+        LocationType {
+            part_id: 3,
+            frame: Frame::default(),
+        },
+    );
+    setup.connection_points.insert(
+        ParentLocation::LEFT_HAND,
+        LocationType {
+            part_id: 4,
+            frame: Frame::default(),
+        },
+    );
     setup.placement_frames.insert(
         Placement::HOOK,
         AnimationFrame {
             frames: vec![Frame::default(), Frame::default()],
-            hooks: vec![AnimationHook::DefaultScript { direction: AnimationHookDir::BOTH }],
+            hooks: vec![AnimationHook::DefaultScript {
+                direction: AnimationHookDir::BOTH,
+            }],
         },
     );
-    setup.lights.insert(5, LightInfo { intensity: 1.5, falloff: 2.5, cone_angle: 3.5, ..Default::default() });
+    setup.lights.insert(
+        5,
+        LightInfo {
+            intensity: 1.5,
+            falloff: 2.5,
+            cone_angle: 3.5,
+            ..Default::default()
+        },
+    );
 
     let mut bytes = vec![0u8; 2048];
     let mut writer = DatBinWriter::new(&mut bytes);
@@ -549,8 +757,22 @@ fn setup_roundtrip_reads_optional_arrays_and_default_refs() {
     assert_eq!(2, unpacked.num_parts);
     assert_eq!(vec![0, 1], unpacked.parent_index);
     assert_eq!(2, unpacked.default_scale.len());
-    assert_eq!(Some(&3), unpacked.holding_locations.get(&ParentLocation::RIGHT_HAND).map(|value| &value.part_id));
-    assert_eq!(2, unpacked.placement_frames.get(&Placement::HOOK).unwrap().frames.len());
+    assert_eq!(
+        Some(&3),
+        unpacked
+            .holding_locations
+            .get(&ParentLocation::RIGHT_HAND)
+            .map(|value| &value.part_id)
+    );
+    assert_eq!(
+        2,
+        unpacked
+            .placement_frames
+            .get(&Placement::HOOK)
+            .unwrap()
+            .frames
+            .len()
+    );
     assert_eq!(1.5, unpacked.lights.get(&5).unwrap().intensity);
     assert_eq!(0x34000015, unpacked.default_script_table.data_id);
 }
@@ -570,10 +792,12 @@ fn obj_desc_roundtrip_reads_palette_texture_and_animation_changes() {
             old_texture: PackedQualifiedDataId::new(0x05000020),
             new_texture: PackedQualifiedDataId::new(0x05000021),
         }],
-        anim_part_changes: vec![dat_reader_writer::Types::AnimationPartChange::AnimationPartChange {
-            part_index: 5,
-            part_id: PackedQualifiedDataId::new(0x01000030),
-        }],
+        anim_part_changes: vec![
+            dat_reader_writer::Types::AnimationPartChange::AnimationPartChange {
+                part_index: 5,
+                part_id: PackedQualifiedDataId::new(0x01000030),
+            },
+        ],
     };
 
     let mut bytes = vec![0u8; 256];
@@ -596,69 +820,125 @@ fn char_gen_roundtrip_reads_heritage_groups() {
     use dat_reader_writer::Types::HairStyleCG::HairStyleCG;
 
     let mut genders = HashTable::<i32, SexCG>::default();
-    genders.insert(0, SexCG {
-        name: AC1LegacyString { value: "Male".to_string() },
-        scale: 100,
-        setup_id: QualifiedDataId::new(0x02000010),
-        sound_table: QualifiedDataId::new(0x20000011),
-        icon_id: QualifiedDataId::new(0x06000012),
-        base_palette: QualifiedDataId::new(0x04000013),
-        skin_pal_set: QualifiedDataId::new(0x0F000014),
-        physics_table: QualifiedDataId::new(0x34000015),
-        motion_table: QualifiedDataId::new(0x09000016),
-        combat_table: QualifiedDataId::new(0x30000017),
-        base_obj_desc: ObjDesc {
-            unknown_byte: 1,
-            palette_id: PackedQualifiedDataId::new(0x04000020),
-            sub_palettes: vec![SubPalette { sub_id: PackedQualifiedDataId::new(0x04000021), offset: 2, num_colors: 3 }],
-            texture_changes: vec![TextureMapChange { part_index: 4, old_texture: PackedQualifiedDataId::new(0x05000022), new_texture: PackedQualifiedDataId::new(0x05000023) }],
-            anim_part_changes: vec![dat_reader_writer::Types::AnimationPartChange::AnimationPartChange { part_index: 5, part_id: PackedQualifiedDataId::new(0x01000024) }],
+    genders.insert(
+        0,
+        SexCG {
+            name: AC1LegacyString {
+                value: "Male".to_string(),
+            },
+            scale: 100,
+            setup_id: QualifiedDataId::new(0x02000010),
+            sound_table: QualifiedDataId::new(0x20000011),
+            icon_id: QualifiedDataId::new(0x06000012),
+            base_palette: QualifiedDataId::new(0x04000013),
+            skin_pal_set: QualifiedDataId::new(0x0F000014),
+            physics_table: QualifiedDataId::new(0x34000015),
+            motion_table: QualifiedDataId::new(0x09000016),
+            combat_table: QualifiedDataId::new(0x30000017),
+            base_obj_desc: ObjDesc {
+                unknown_byte: 1,
+                palette_id: PackedQualifiedDataId::new(0x04000020),
+                sub_palettes: vec![SubPalette {
+                    sub_id: PackedQualifiedDataId::new(0x04000021),
+                    offset: 2,
+                    num_colors: 3,
+                }],
+                texture_changes: vec![TextureMapChange {
+                    part_index: 4,
+                    old_texture: PackedQualifiedDataId::new(0x05000022),
+                    new_texture: PackedQualifiedDataId::new(0x05000023),
+                }],
+                anim_part_changes: vec![
+                    dat_reader_writer::Types::AnimationPartChange::AnimationPartChange {
+                        part_index: 5,
+                        part_id: PackedQualifiedDataId::new(0x01000024),
+                    },
+                ],
+            },
+            hair_colors: vec![0x11223344],
+            hair_styles: vec![HairStyleCG {
+                icon_id: QualifiedDataId::new(0x06000030),
+                bald: false,
+                alternate_setup: 0x02000031,
+                obj_desc: ObjDesc::default(),
+            }],
+            eye_colors: vec![0x55667788],
+            eye_strips: vec![EyeStripCG {
+                icon_id: QualifiedDataId::new(0x06000032),
+                bald_icon_id: 0x06000033,
+                obj_desc: ObjDesc::default(),
+                bald_obj_desc: ObjDesc::default(),
+            }],
+            nose_strips: vec![FaceStripCG {
+                icon_id: QualifiedDataId::new(0x06000034),
+                obj_desc: ObjDesc::default(),
+            }],
+            mouth_strips: vec![FaceStripCG {
+                icon_id: QualifiedDataId::new(0x06000035),
+                obj_desc: ObjDesc::default(),
+            }],
+            headgears: vec![GearCG {
+                name: AC1LegacyString {
+                    value: "Helm".to_string(),
+                },
+                clothing_table: QualifiedDataId::new(0x10000040),
+                weenie_default: 0x02000041,
+            }],
+            shirts: vec![],
+            pants: vec![],
+            footwear: vec![],
+            clothing_colors: vec![0x99AABBCC],
         },
-        hair_colors: vec![0x11223344],
-        hair_styles: vec![HairStyleCG { icon_id: QualifiedDataId::new(0x06000030), bald: false, alternate_setup: 0x02000031, obj_desc: ObjDesc::default() }],
-        eye_colors: vec![0x55667788],
-        eye_strips: vec![EyeStripCG { icon_id: QualifiedDataId::new(0x06000032), bald_icon_id: 0x06000033, obj_desc: ObjDesc::default(), bald_obj_desc: ObjDesc::default() }],
-        nose_strips: vec![FaceStripCG { icon_id: QualifiedDataId::new(0x06000034), obj_desc: ObjDesc::default() }],
-        mouth_strips: vec![FaceStripCG { icon_id: QualifiedDataId::new(0x06000035), obj_desc: ObjDesc::default() }],
-        headgears: vec![GearCG { name: AC1LegacyString { value: "Helm".to_string() }, clothing_table: QualifiedDataId::new(0x10000040), weenie_default: 0x02000041 }],
-        shirts: vec![],
-        pants: vec![],
-        footwear: vec![],
-        clothing_colors: vec![0x99AABBCC],
-    });
+    );
 
     let mut heritage_groups = HashTable::<u32, HeritageGroupCG>::default();
-    heritage_groups.insert(1, HeritageGroupCG {
-        name: AC1LegacyString { value: "Aluvian".to_string() },
-        icon_id: QualifiedDataId::new(0x06000050),
-        setup_id: QualifiedDataId::new(0x02000051),
-        environment_setup_id: QualifiedDataId::new(0x02000052),
-        attribute_credits: 10,
-        skill_credits: 20,
-        primary_start_areas: vec![100, 101],
-        secondary_start_areas: vec![200],
-        skills: vec![SkillCG { id: SkillId::BOW, normal_cost: 5, primary_cost: 3 }],
-        templates: vec![TemplateCG {
-            name: AC1LegacyString { value: "Archer".to_string() },
-            icon_id: QualifiedDataId::new(0x06000053),
-            title: 7,
-            strength: 10,
-            endurance: 11,
-            coordination: 12,
-            quickness: 13,
-            focus: 14,
-            self_value: 15,
-            normal_skills: vec![SkillId::BOW],
-            primary_skills: vec![SkillId::MISSILE_DEFENSE],
-        }],
-        genders,
-    });
+    heritage_groups.insert(
+        1,
+        HeritageGroupCG {
+            name: AC1LegacyString {
+                value: "Aluvian".to_string(),
+            },
+            icon_id: QualifiedDataId::new(0x06000050),
+            setup_id: QualifiedDataId::new(0x02000051),
+            environment_setup_id: QualifiedDataId::new(0x02000052),
+            attribute_credits: 10,
+            skill_credits: 20,
+            primary_start_areas: vec![100, 101],
+            secondary_start_areas: vec![200],
+            skills: vec![SkillCG {
+                id: SkillId::BOW,
+                normal_cost: 5,
+                primary_cost: 3,
+            }],
+            templates: vec![TemplateCG {
+                name: AC1LegacyString {
+                    value: "Archer".to_string(),
+                },
+                icon_id: QualifiedDataId::new(0x06000053),
+                title: 7,
+                strength: 10,
+                endurance: 11,
+                coordination: 12,
+                quickness: 13,
+                focus: 14,
+                self_value: 15,
+                normal_skills: vec![SkillId::BOW],
+                primary_skills: vec![SkillId::MISSILE_DEFENSE],
+            }],
+            genders,
+        },
+    );
 
     let char_gen = CharGen {
         data_id: QualifiedDataId::new(0x0E000002),
         starting_areas: vec![StartingArea {
-            name: AC1LegacyString { value: "Training Hall".to_string() },
-            locations: vec![Position { cell_id: 0x01020304, frame: Frame::default() }],
+            name: AC1LegacyString {
+                value: "Training Hall".to_string(),
+            },
+            locations: vec![Position {
+                cell_id: 0x01020304,
+                frame: Frame::default(),
+            }],
         }],
         heritage_groups,
         ..Default::default()
@@ -678,7 +958,321 @@ fn char_gen_roundtrip_reads_heritage_groups() {
     assert_eq!("Aluvian", heritage.name.value);
     assert_eq!(SkillId::BOW, heritage.skills[0].id);
     assert_eq!("Male", heritage.genders.get(&0).unwrap().name.value);
-    assert_eq!(0x10000040, heritage.genders.get(&0).unwrap().headgears[0].clothing_table.data_id);
+    assert_eq!(
+        0x10000040,
+        heritage.genders.get(&0).unwrap().headgears[0]
+            .clothing_table
+            .data_id
+    );
 }
 
+#[test]
+fn clothing_table_roundtrip_reads_nested_effects() {
+    let mut clothing_base_effects = HashTable::<
+        QualifiedDataId<dat_reader_writer::DBObjs::Setup::Setup>,
+        dat_reader_writer::Types::ClothingBaseEffect::ClothingBaseEffect,
+    >::default();
+    clothing_base_effects.insert(
+        QualifiedDataId::new(0x02000039),
+        dat_reader_writer::Types::ClothingBaseEffect::ClothingBaseEffect {
+            clo_object_effects: vec![dat_reader_writer::Types::CloObjectEffect::CloObjectEffect {
+                index: 7,
+                model_id: QualifiedDataId::new(0x01000044),
+                clo_texture_effects: vec![
+                    dat_reader_writer::Types::CloTextureEffect::CloTextureEffect {
+                        old_texture: QualifiedDataId::new(0x05000001),
+                        new_texture: QualifiedDataId::new(0x05000002),
+                    },
+                ],
+            }],
+        },
+    );
 
+    let mut clothing_sub_pal_effects =
+        HashTable::<u32, dat_reader_writer::Types::CloSubPalEffect::CloSubPalEffect>::default();
+    clothing_sub_pal_effects.insert(
+        62,
+        dat_reader_writer::Types::CloSubPalEffect::CloSubPalEffect {
+            icon: QualifiedDataId::new(0x06000020),
+            clo_sub_palettes: vec![dat_reader_writer::Types::CloSubPalette::CloSubPalette {
+                ranges: vec![
+                    dat_reader_writer::Types::CloSubPaletteRange::CloSubPaletteRange {
+                        offset: 32,
+                        num_colors: 2048,
+                    },
+                ],
+                palette_set: QualifiedDataId::new(0x0F000010),
+            }],
+        },
+    );
+
+    let clothing = ClothingTable {
+        clothing_base_effects,
+        clothing_sub_pal_effects,
+        ..Default::default()
+    };
+
+    let mut bytes = vec![0u8; 1024];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    assert!(clothing.pack(&mut writer));
+    let used = writer.offset();
+
+    let mut unpacked = ClothingTable::default();
+    assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
+    assert_eq!(1, unpacked.clothing_base_effects.len());
+    assert_eq!(
+        0x02000039,
+        unpacked
+            .clothing_base_effects
+            .iter()
+            .next()
+            .unwrap()
+            .0
+            .data_id
+    );
+    assert_eq!(
+        0x01000044,
+        unpacked
+            .clothing_base_effects
+            .iter()
+            .next()
+            .unwrap()
+            .1
+            .clo_object_effects[0]
+            .model_id
+            .data_id
+    );
+    assert_eq!(
+        2048,
+        unpacked
+            .clothing_sub_pal_effects
+            .get(&62)
+            .unwrap()
+            .clo_sub_palettes[0]
+            .ranges[0]
+            .num_colors
+    );
+    assert_eq!(
+        0x0F000010,
+        unpacked
+            .clothing_sub_pal_effects
+            .get(&62)
+            .unwrap()
+            .clo_sub_palettes[0]
+            .palette_set
+            .data_id
+    );
+}
+
+#[test]
+fn combat_table_roundtrip_reads_maneuvers() {
+    let combat = CombatTable {
+        combat_maneuvers: vec![dat_reader_writer::Types::CombatManeuver::CombatManeuver {
+            style: MotionStance::BOW_COMBAT,
+            attack_height: AttackHeight::MEDIUM,
+            attack_type: AttackType::DOUBLE_STRIKE,
+            min_skill_level: 20,
+            motion: MotionCommand(0x41000001),
+        }],
+        ..Default::default()
+    };
+
+    let mut bytes = vec![0u8; 256];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    assert!(combat.pack(&mut writer));
+    let used = writer.offset();
+
+    let mut unpacked = CombatTable::default();
+    assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
+    assert_eq!(1, unpacked.combat_maneuvers.len());
+    assert_eq!(MotionStance::BOW_COMBAT, unpacked.combat_maneuvers[0].style);
+    assert_eq!(
+        AttackHeight::MEDIUM,
+        unpacked.combat_maneuvers[0].attack_height
+    );
+    assert_eq!(
+        AttackType::DOUBLE_STRIKE,
+        unpacked.combat_maneuvers[0].attack_type
+    );
+    assert_eq!(20, unpacked.combat_maneuvers[0].min_skill_level);
+}
+
+#[test]
+fn drawing_bsp_portal_roundtrip_reads_children_polygons_and_portals() {
+    use dat_reader_writer::Generated::Enums::BSPNodeType::BSPNodeType;
+    use dat_reader_writer::Lib::IO::Numerics::{Plane, Vector3};
+    use dat_reader_writer::Types::{
+        BSPTrees::{DrawingBSPNode, DrawingBSPTree},
+        PortalRef::PortalRef,
+        Sphere::Sphere,
+    };
+
+    let tree = DrawingBSPTree {
+        root: DrawingBSPNode {
+            node_type: BSPNodeType::PORTAL,
+            splitting_plane: Plane::new(Vector3::new(1.0, 0.0, 0.0), 2.5),
+            pos_node: Some(Box::new(DrawingBSPNode {
+                node_type: BSPNodeType::LEAF,
+                leaf_index: 10,
+                ..Default::default()
+            })),
+            neg_node: Some(Box::new(DrawingBSPNode {
+                node_type: BSPNodeType::LEAF,
+                leaf_index: 11,
+                ..Default::default()
+            })),
+            bounding_sphere: Sphere {
+                origin: Vector3::new(3.0, 4.0, 5.0),
+                radius: 6.0,
+            },
+            polygons: vec![7, 8],
+            portals: vec![PortalRef {
+                poly_id: 9,
+                portal_index: 2,
+            }],
+            ..Default::default()
+        },
+    };
+
+    let mut bytes = vec![0u8; 512];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    assert!(tree.pack(&mut writer));
+    let used = writer.offset();
+
+    let mut unpacked = DrawingBSPTree::default();
+    assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
+    assert_eq!(BSPNodeType::PORTAL, unpacked.root.node_type);
+    assert_eq!(
+        Some(10),
+        unpacked.root.pos_node.as_ref().map(|node| node.leaf_index)
+    );
+    assert_eq!(
+        Some(11),
+        unpacked.root.neg_node.as_ref().map(|node| node.leaf_index)
+    );
+    assert_eq!(vec![7, 8], unpacked.root.polygons);
+    assert_eq!(
+        PortalRef {
+            poly_id: 9,
+            portal_index: 2
+        },
+        unpacked.root.portals[0]
+    );
+}
+
+#[test]
+fn physics_bsp_portal_nodes_are_rejected_like_reference() {
+    use dat_reader_writer::Generated::Enums::BSPNodeType::BSPNodeType;
+    use dat_reader_writer::Types::BSPTrees::PhysicsBSPNode;
+
+    let mut bytes = vec![0u8; 8];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    writer.write_i32(BSPNodeType::PORTAL.into());
+    let used = writer.offset();
+
+    let mut node = PhysicsBSPNode::default();
+    assert!(!node.unpack(&mut DatBinReader::new(&bytes[..used])));
+}
+
+#[test]
+fn gfx_obj_roundtrip_reads_physics_drawing_and_degrade() {
+    use dat_reader_writer::Generated::Enums::BSPNodeType::BSPNodeType;
+    use dat_reader_writer::Lib::IO::Numerics::{Plane, Vector3};
+    use dat_reader_writer::Types::{
+        BSPTrees::{DrawingBSPNode, DrawingBSPTree, PhysicsBSPNode, PhysicsBSPTree},
+        Sphere::Sphere,
+    };
+
+    let gfx = GfxObj {
+        flags: GfxObjFlags::HasPhysics | GfxObjFlags::HasDrawing | GfxObjFlags::HasDIDDegrade,
+        surfaces: vec![QualifiedDataId::new(0x08000010)],
+        vertex_array: VertexArray::default(),
+        physics_polygons: [(3u16, Polygon::default())].into_iter().collect(),
+        physics_bsp: PhysicsBSPTree {
+            root: PhysicsBSPNode {
+                node_type: BSPNodeType::LEAF,
+                leaf_index: 4,
+                solid: 1,
+                bounding_sphere: Sphere {
+                    origin: Vector3::new(1.0, 2.0, 3.0),
+                    radius: 4.0,
+                },
+                polygons: vec![3],
+                ..Default::default()
+            },
+        },
+        sort_center: Vector3::new(9.0, 8.0, 7.0),
+        polygons: [(7u16, Polygon::default())].into_iter().collect(),
+        drawing_bsp: DrawingBSPTree {
+            root: DrawingBSPNode {
+                node_type: BSPNodeType::BPIN,
+                splitting_plane: Plane::new(Vector3::new(0.0, 1.0, 0.0), 1.5),
+                pos_node: Some(Box::new(DrawingBSPNode {
+                    node_type: BSPNodeType::LEAF,
+                    leaf_index: 12,
+                    ..Default::default()
+                })),
+                neg_node: Some(Box::new(DrawingBSPNode {
+                    node_type: BSPNodeType::LEAF,
+                    leaf_index: 13,
+                    ..Default::default()
+                })),
+                bounding_sphere: Sphere {
+                    origin: Vector3::new(5.0, 6.0, 7.0),
+                    radius: 8.0,
+                },
+                polygons: vec![7],
+                ..Default::default()
+            },
+        },
+        did_degrade: 0x01000099,
+        ..Default::default()
+    };
+
+    let mut bytes = vec![0u8; 2048];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    assert!(gfx.pack(&mut writer));
+    let used = writer.offset();
+
+    let mut unpacked = GfxObj::default();
+    assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
+    assert_eq!(
+        GfxObjFlags::HasPhysics | GfxObjFlags::HasDrawing | GfxObjFlags::HasDIDDegrade,
+        unpacked.flags
+    );
+    assert_eq!(Some(&Polygon::default()), unpacked.physics_polygons.get(&3));
+    assert_eq!(4, unpacked.physics_bsp.root.leaf_index);
+    assert_eq!(
+        Some(12),
+        unpacked
+            .drawing_bsp
+            .root
+            .pos_node
+            .as_ref()
+            .map(|node| node.leaf_index)
+    );
+    assert_eq!(
+        Some(13),
+        unpacked
+            .drawing_bsp
+            .root
+            .neg_node
+            .as_ref()
+            .map(|node| node.leaf_index)
+    );
+    assert_eq!(0x01000099, unpacked.did_degrade);
+}
+
+#[test]
+fn generated_enum_surfaces_cover_remaining_skill_and_terrain_constants() {
+    assert_eq!(SkillId::CHALLENGE, SkillId::from(0x35));
+    assert_eq!(SkillId::SUMMONING, SkillId::from(0x36));
+    assert_eq!(
+        TerrainTextureType::ROAD_TYPE,
+        TerrainTextureType::from(0x20)
+    );
+    assert_eq!(
+        TerrainTextureType::WATER_DEEP_SEA,
+        TerrainTextureType::from(0x14)
+    );
+}

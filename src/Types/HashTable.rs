@@ -1,8 +1,15 @@
-use std::collections::BTreeMap;
+use crate::{
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
+    Types::QualifiedDataId::QualifiedDataId,
+};
 
-use crate::Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable};
-
-const BUCKET_SIZES: [u32; 23] = [11, 23, 47, 89, 191, 383, 761, 1531, 3067, 6143, 12281, 24571, 49139, 98299, 196597, 393209, 786431, 1572853, 3145721, 6291449, 12582893, 25165813, 50331599];
+const BUCKET_SIZES: [u32; 23] = [
+    11, 23, 47, 89, 191, 383, 761, 1531, 3067, 6143, 12281, 24571, 49139, 98299, 196597, 393209,
+    786431, 1572853, 3145721, 6291449, 12582893, 25165813, 50331599,
+];
 
 pub trait HashTableKey: Copy + Ord {
     fn read_key(reader: &mut DatBinReader<'_>) -> Self;
@@ -11,26 +18,53 @@ pub trait HashTableKey: Copy + Ord {
 }
 
 impl HashTableKey for i32 {
-    fn read_key(reader: &mut DatBinReader<'_>) -> Self { reader.read_i32() }
-    fn write_key(&self, writer: &mut DatBinWriter<'_>) { writer.write_i32(*self); }
-    fn hash_key(&self) -> u64 { *self as u32 as u64 }
+    fn read_key(reader: &mut DatBinReader<'_>) -> Self {
+        reader.read_i32()
+    }
+    fn write_key(&self, writer: &mut DatBinWriter<'_>) {
+        writer.write_i32(*self);
+    }
+    fn hash_key(&self) -> u64 {
+        *self as u32 as u64
+    }
 }
 
 impl HashTableKey for u32 {
-    fn read_key(reader: &mut DatBinReader<'_>) -> Self { reader.read_u32() }
-    fn write_key(&self, writer: &mut DatBinWriter<'_>) { writer.write_u32(*self); }
-    fn hash_key(&self) -> u64 { *self as u64 }
+    fn read_key(reader: &mut DatBinReader<'_>) -> Self {
+        reader.read_u32()
+    }
+    fn write_key(&self, writer: &mut DatBinWriter<'_>) {
+        writer.write_u32(*self);
+    }
+    fn hash_key(&self) -> u64 {
+        *self as u64
+    }
+}
+
+impl<T> HashTableKey for QualifiedDataId<T> {
+    fn read_key(reader: &mut DatBinReader<'_>) -> Self {
+        QualifiedDataId::new(reader.read_u32())
+    }
+    fn write_key(&self, writer: &mut DatBinWriter<'_>) {
+        writer.write_u32(self.data_id);
+    }
+    fn hash_key(&self) -> u64 {
+        self.data_id as u64
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HashTable<K, V> {
     pub bucket_size_index: u8,
-    pub entries: BTreeMap<K, V>,
+    pub entries: std::collections::BTreeMap<K, V>,
 }
 
 impl<K, V> Default for HashTable<K, V> {
     fn default() -> Self {
-        Self { bucket_size_index: 1, entries: BTreeMap::new() }
+        Self {
+            bucket_size_index: 1,
+            entries: std::collections::BTreeMap::new(),
+        }
     }
 }
 
@@ -49,9 +83,15 @@ impl<K, V> HashTable<K, V> {
         self.entries.get(key)
     }
 
-    pub fn len(&self) -> usize { self.entries.len() }
-    pub fn is_empty(&self) -> bool { self.entries.is_empty() }
-    pub fn iter(&self) -> std::collections::btree_map::Iter<'_, K, V> { self.entries.iter() }
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+    pub fn iter(&self) -> std::collections::btree_map::Iter<'_, K, V> {
+        self.entries.iter()
+    }
 }
 
 impl<K, V> IUnpackable for HashTable<K, V>

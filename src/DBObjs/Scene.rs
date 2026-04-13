@@ -1,12 +1,31 @@
 use std::any::Any;
 
 use crate::{
-    Generated::Enums::{DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType},
-    Lib::{Attributes::DBObjTypeAttribute::DBObjTypeAttribute, IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj, IPackable::IPackable, IUnpackable::IUnpackable}},
-    Types::{DBObj::{DBObj, DBObjBase}, ObjectDesc::ObjectDesc},
+    Generated::Enums::{
+        DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType,
+    },
+    Lib::{
+        Attributes::DBObjTypeAttribute::DBObjTypeAttribute,
+        IO::{
+            DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj,
+            IPackable::IPackable, IUnpackable::IUnpackable,
+        },
+    },
+    Types::{
+        DBObj::{DBObj, DBObjBase},
+        ObjectDesc::ObjectDesc,
+    },
 };
 
-pub const SCENE_ATTR: DBObjTypeAttribute = DBObjTypeAttribute { rust_type_name: "Scene", dat_file_type: DatFileType::Portal, db_obj_type: DBObjType::Scene, header_flags: DBObjHeaderFlags::HasId, first_id: 0x12000000, last_id: 0x1200FFFF, mask_id: 0x00000000 };
+pub const SCENE_ATTR: DBObjTypeAttribute = DBObjTypeAttribute {
+    rust_type_name: "Scene",
+    dat_file_type: DatFileType::Portal,
+    db_obj_type: DBObjType::Scene,
+    header_flags: DBObjHeaderFlags::HasId,
+    first_id: 0x12000000,
+    last_id: 0x1200FFFF,
+    mask_id: 0x00000000,
+};
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Scene {
@@ -15,12 +34,24 @@ pub struct Scene {
 }
 
 impl DBObj for Scene {
-    fn header_flags(&self) -> DBObjHeaderFlags { DBObjHeaderFlags::HasId }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::Scene }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn data_category(&self) -> u32 { self.base.data_category }
-    fn set_data_category(&mut self, data_category: u32) { self.base.data_category = data_category; }
+    fn header_flags(&self) -> DBObjHeaderFlags {
+        DBObjHeaderFlags::HasId
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::Scene
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn data_category(&self) -> u32 {
+        self.base.data_category
+    }
+    fn set_data_category(&mut self, data_category: u32) {
+        self.base.data_category = data_category;
+    }
 }
 
 impl IUnpackable for Scene {
@@ -47,9 +78,22 @@ impl IPackable for Scene {
 }
 
 impl IDBObj for Scene {
-    fn db_obj_type_attr() -> &'static DBObjTypeAttribute where Self: Sized { &SCENE_ATTR }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::Scene }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn as_any(&self) -> &dyn Any { self }
+    fn db_obj_type_attr() -> &'static DBObjTypeAttribute
+    where
+        Self: Sized,
+    {
+        &SCENE_ATTR
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::Scene
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }

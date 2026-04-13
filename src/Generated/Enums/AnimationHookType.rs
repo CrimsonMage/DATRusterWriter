@@ -33,9 +33,13 @@ impl AnimationHookType {
 }
 
 impl From<u32> for AnimationHookType {
-    fn from(value: u32) -> Self { Self(value) }
+    fn from(value: u32) -> Self {
+        Self(value)
+    }
 }
 
 impl From<AnimationHookType> for u32 {
-    fn from(value: AnimationHookType) -> Self { value.0 }
+    fn from(value: AnimationHookType) -> Self {
+        value.0
+    }
 }

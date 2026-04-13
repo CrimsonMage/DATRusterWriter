@@ -1,5 +1,8 @@
 use crate::{
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable, Numerics::Vector3},
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable, Numerics::Vector3,
+    },
     Types::Vec2Duv::Vec2Duv,
 };
 

@@ -31,7 +31,10 @@ impl<'a> DatBinReader<'a> {
     }
 
     pub fn rewind(&mut self, num_bytes: usize) {
-        assert!(num_bytes <= self.offset, "Cannot rewind before start of buffer");
+        assert!(
+            num_bytes <= self.offset,
+            "Cannot rewind before start of buffer"
+        );
         self.offset -= num_bytes;
     }
 

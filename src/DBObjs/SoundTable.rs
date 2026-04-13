@@ -1,12 +1,33 @@
 use std::{any::Any, collections::BTreeMap};
 
 use crate::{
-    Generated::Enums::{DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType, Sound::Sound},
-    Lib::{Attributes::DBObjTypeAttribute::DBObjTypeAttribute, IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj, IPackable::IPackable, IUnpackable::IUnpackable}},
-    Types::{DBObj::{DBObj, DBObjBase}, SoundData::SoundData, SoundHashData::SoundHashData},
+    Generated::Enums::{
+        DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType,
+        Sound::Sound,
+    },
+    Lib::{
+        Attributes::DBObjTypeAttribute::DBObjTypeAttribute,
+        IO::{
+            DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj,
+            IPackable::IPackable, IUnpackable::IUnpackable,
+        },
+    },
+    Types::{
+        DBObj::{DBObj, DBObjBase},
+        SoundData::SoundData,
+        SoundHashData::SoundHashData,
+    },
 };
 
-pub const SOUND_TABLE_ATTR: DBObjTypeAttribute = DBObjTypeAttribute { rust_type_name: "SoundTable", dat_file_type: DatFileType::Portal, db_obj_type: DBObjType::SoundTable, header_flags: DBObjHeaderFlags::HasId, first_id: 0x20000000, last_id: 0x2000FFFF, mask_id: 0x00000000 };
+pub const SOUND_TABLE_ATTR: DBObjTypeAttribute = DBObjTypeAttribute {
+    rust_type_name: "SoundTable",
+    dat_file_type: DatFileType::Portal,
+    db_obj_type: DBObjType::SoundTable,
+    header_flags: DBObjHeaderFlags::HasId,
+    first_id: 0x20000000,
+    last_id: 0x2000FFFF,
+    mask_id: 0x00000000,
+};
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct SoundTable {
@@ -17,12 +38,24 @@ pub struct SoundTable {
 }
 
 impl DBObj for SoundTable {
-    fn header_flags(&self) -> DBObjHeaderFlags { DBObjHeaderFlags::HasId }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::SoundTable }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn data_category(&self) -> u32 { self.base.data_category }
-    fn set_data_category(&mut self, data_category: u32) { self.base.data_category = data_category; }
+    fn header_flags(&self) -> DBObjHeaderFlags {
+        DBObjHeaderFlags::HasId
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::SoundTable
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn data_category(&self) -> u32 {
+        self.base.data_category
+    }
+    fn set_data_category(&mut self, data_category: u32) {
+        self.base.data_category = data_category;
+    }
 }
 
 impl IUnpackable for SoundTable {
@@ -33,13 +66,17 @@ impl IUnpackable for SoundTable {
         let hash_count = reader.read_i32() as usize;
         self.hashes.clear();
         for _ in 0..hash_count {
-            self.hashes.insert(reader.read_u32(), reader.read_item::<SoundHashData>());
+            self.hashes
+                .insert(reader.read_u32(), reader.read_item::<SoundHashData>());
         }
 
         let sound_count = reader.read_i32() as usize;
         self.sounds.clear();
         for _ in 0..sound_count {
-            self.sounds.insert(Sound::from(reader.read_u32()), reader.read_item::<SoundData>());
+            self.sounds.insert(
+                Sound::from(reader.read_u32()),
+                reader.read_item::<SoundData>(),
+            );
         }
         true
     }
@@ -64,9 +101,22 @@ impl IPackable for SoundTable {
 }
 
 impl IDBObj for SoundTable {
-    fn db_obj_type_attr() -> &'static DBObjTypeAttribute where Self: Sized { &SOUND_TABLE_ATTR }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::SoundTable }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn as_any(&self) -> &dyn Any { self }
+    fn db_obj_type_attr() -> &'static DBObjTypeAttribute
+    where
+        Self: Sized,
+    {
+        &SOUND_TABLE_ATTR
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::SoundTable
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }

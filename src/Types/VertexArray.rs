@@ -2,7 +2,10 @@ use std::collections::BTreeMap;
 
 use crate::{
     Generated::Enums::VertexType::VertexType,
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable},
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
     Types::SWVertex::SWVertex,
 };
 
@@ -18,7 +21,8 @@ impl IUnpackable for VertexArray {
         let count = reader.read_u32() as usize;
         self.vertices.clear();
         for _ in 0..count {
-            self.vertices.insert(reader.read_u16(), reader.read_item::<SWVertex>());
+            self.vertices
+                .insert(reader.read_u16(), reader.read_item::<SWVertex>());
         }
         true
     }

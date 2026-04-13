@@ -1,12 +1,16 @@
-use std::marker::PhantomData;
+use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
+use std::marker::PhantomData;
 
 use crate::{
     DatCollection::DatCollection,
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj, IPackable::IPackable, IUnpackable::IUnpackable},
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj,
+        IPackable::IPackable, IUnpackable::IUnpackable,
+    },
 };
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Default)]
 pub struct QualifiedDataId<T> {
     pub data_id: u32,
     _marker: PhantomData<T>,
@@ -14,11 +18,22 @@ pub struct QualifiedDataId<T> {
 
 impl<T> QualifiedDataId<T> {
     pub fn new(data_id: u32) -> Self {
-        Self { data_id, _marker: PhantomData }
+        Self {
+            data_id,
+            _marker: PhantomData,
+        }
     }
 
     pub fn is_null(&self) -> bool {
         self.data_id == 0
+    }
+}
+
+impl<T> Copy for QualifiedDataId<T> {}
+
+impl<T> Clone for QualifiedDataId<T> {
+    fn clone(&self) -> Self {
+        *self
     }
 }
 
@@ -29,6 +44,18 @@ impl<T> PartialEq for QualifiedDataId<T> {
 }
 
 impl<T> Eq for QualifiedDataId<T> {}
+
+impl<T> PartialOrd for QualifiedDataId<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<T> Ord for QualifiedDataId<T> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.data_id.cmp(&other.data_id)
+    }
+}
 
 impl<T> Hash for QualifiedDataId<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {

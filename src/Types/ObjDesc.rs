@@ -1,7 +1,12 @@
 use crate::{
     DBObjs::{Palette::Palette, SurfaceTexture::SurfaceTexture},
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable},
-    Types::{AnimationPartChange::AnimationPartChange, PackedQualifiedDataId::PackedQualifiedDataId},
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
+    Types::{
+        AnimationPartChange::AnimationPartChange, PackedQualifiedDataId::PackedQualifiedDataId,
+    },
 };
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -32,12 +37,14 @@ impl IUnpackable for ObjDesc {
 
         self.texture_changes.clear();
         for _ in 0..num_texture_map_changes {
-            self.texture_changes.push(reader.read_item::<TextureMapChange>());
+            self.texture_changes
+                .push(reader.read_item::<TextureMapChange>());
         }
 
         self.anim_part_changes.clear();
         for _ in 0..num_anim_part_changes {
-            self.anim_part_changes.push(reader.read_item::<AnimationPartChange>());
+            self.anim_part_changes
+                .push(reader.read_item::<AnimationPartChange>());
         }
 
         reader.align(4);

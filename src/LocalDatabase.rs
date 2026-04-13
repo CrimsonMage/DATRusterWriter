@@ -1,7 +1,8 @@
 use std::io;
 
 use crate::{
-    DatDatabase::DatDatabase, Generated::Enums::DatFileType::DatFileType,
+    DatDatabase::DatDatabase,
+    Generated::Enums::DatFileType::DatFileType,
     Lib::IO::{DatBTree::DatBTreeFile::DatBTreeFile, IDBObj::IDBObj},
     Options::{DatAccessType::DatAccessType, DatDatabaseOptions::DatDatabaseOptions},
 };
@@ -27,7 +28,10 @@ impl LocalDatabase {
         Ok(Self { inner })
     }
 
-    pub fn from_path(dat_file_path: impl Into<String>, access_type: DatAccessType) -> io::Result<Self> {
+    pub fn from_path(
+        dat_file_path: impl Into<String>,
+        access_type: DatAccessType,
+    ) -> io::Result<Self> {
         let options = DatDatabaseOptions {
             file_path: dat_file_path.into(),
             access_type,
@@ -58,7 +62,11 @@ impl LocalDatabase {
         self.inner.try_get_file_entry(file_id)
     }
 
-    pub fn try_get_file_bytes(&self, file_id: u32, auto_decompress: bool) -> io::Result<Option<Vec<u8>>> {
+    pub fn try_get_file_bytes(
+        &self,
+        file_id: u32,
+        auto_decompress: bool,
+    ) -> io::Result<Option<Vec<u8>>> {
         self.inner.try_get_file_bytes(file_id, auto_decompress)
     }
 }

@@ -38,7 +38,8 @@ impl DatDatabase {
             options.access_type = DatAccessType::Read;
         }
 
-        let block_allocator = MemoryMappedBlockAllocator::new(&options)? as Arc<dyn IDatBlockAllocator>;
+        let block_allocator =
+            MemoryMappedBlockAllocator::new(&options)? as Arc<dyn IDatBlockAllocator>;
         let tree = DatBTreeReaderWriter::new(block_allocator.clone());
         if options.index_caching_strategy == IndexCachingStrategy::Upfront {
             tree.build_flat_index()?;
@@ -70,7 +71,11 @@ impl DatDatabase {
         self.tree.try_get_file(file_id)
     }
 
-    pub fn try_get_file_bytes(&self, file_id: u32, auto_decompress: bool) -> io::Result<Option<Vec<u8>>> {
+    pub fn try_get_file_bytes(
+        &self,
+        file_id: u32,
+        auto_decompress: bool,
+    ) -> io::Result<Option<Vec<u8>>> {
         let Some(file_entry) = self.tree.try_get_file(file_id)? else {
             return Ok(None);
         };
@@ -145,4 +150,3 @@ impl DatDatabase {
         Ok(output)
     }
 }
-

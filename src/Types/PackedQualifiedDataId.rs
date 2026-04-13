@@ -1,8 +1,14 @@
-use std::{hash::{Hash, Hasher}, marker::PhantomData};
+use std::{
+    hash::{Hash, Hasher},
+    marker::PhantomData,
+};
 
 use crate::{
     DatCollection::DatCollection,
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj, IPackable::IPackable, IUnpackable::IUnpackable},
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj,
+        IPackable::IPackable, IUnpackable::IUnpackable,
+    },
 };
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -13,7 +19,10 @@ pub struct PackedQualifiedDataId<T> {
 
 impl<T> PackedQualifiedDataId<T> {
     pub fn new(data_id: u32) -> Self {
-        Self { data_id, _marker: PhantomData }
+        Self {
+            data_id,
+            _marker: PhantomData,
+        }
     }
 }
 

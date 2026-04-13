@@ -1,4 +1,7 @@
-use crate::Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable};
+use crate::Lib::IO::{
+    DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+    IUnpackable::IUnpackable,
+};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct AC1LegacyString {
@@ -8,7 +11,11 @@ pub struct AC1LegacyString {
 impl IUnpackable for AC1LegacyString {
     fn unpack(&mut self, reader: &mut DatBinReader<'_>) -> bool {
         let length_marker = reader.read_u16();
-        let length = if length_marker == 0xFFFF { reader.read_u32() as usize } else { length_marker as usize };
+        let length = if length_marker == 0xFFFF {
+            reader.read_u32() as usize
+        } else {
+            length_marker as usize
+        };
         let bytes = reader.read_bytes(length);
         self.value = String::from_utf8_lossy(&bytes).to_string();
         reader.align(4);

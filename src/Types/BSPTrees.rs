@@ -1,6 +1,9 @@
 use crate::{
     Generated::Enums::BSPNodeType::BSPNodeType,
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable, Numerics::Plane},
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable, Numerics::Plane,
+    },
     Types::{PortalRef::PortalRef, Sphere::Sphere},
 };
 
@@ -38,12 +41,32 @@ pub struct DrawingBSPNode {
     pub portals: Vec<PortalRef>,
 }
 
-fn reads_pos(node_type: BSPNodeType) -> bool {
-    matches!(node_type, BSPNodeType::BPNN | BSPNodeType::BPIN_LOWER | BSPNodeType::BPIN | BSPNodeType::BPNN_UPPER | BSPNodeType::PORTAL)
+fn read_pos_physics(node_type: BSPNodeType) -> bool {
+    matches!(
+        node_type,
+        BSPNodeType::BPNN | BSPNodeType::BPIN_LOWER | BSPNodeType::BPIN | BSPNodeType::BPnN
+    )
 }
 
-fn reads_neg(node_type: BSPNodeType) -> bool {
-    matches!(node_type, BSPNodeType::BPIN_UPPER_ALT | BSPNodeType::BPNN_ALT | BSPNodeType::BPIN | BSPNodeType::BPNN_UPPER | BSPNodeType::PORTAL)
+fn read_neg_physics(node_type: BSPNodeType) -> bool {
+    matches!(
+        node_type,
+        BSPNodeType::BpIN | BSPNodeType::BpnN | BSPNodeType::BPIN | BSPNodeType::BPnN
+    )
+}
+
+fn read_pos_drawing(node_type: BSPNodeType) -> bool {
+    matches!(
+        node_type,
+        BSPNodeType::BPNN | BSPNodeType::BPIN_LOWER | BSPNodeType::BPIN | BSPNodeType::BPnN
+    )
+}
+
+fn read_neg_drawing(node_type: BSPNodeType) -> bool {
+    matches!(
+        node_type,
+        BSPNodeType::BpIN | BSPNodeType::BpnN | BSPNodeType::BPIN | BSPNodeType::BPnN
+    )
 }
 
 impl IUnpackable for PhysicsBSPTree {
@@ -81,46 +104,61 @@ impl IUnpackable for PhysicsBSPNode {
         self.neg_node = None;
         self.polygons.clear();
 
-        if self.node_type == BSPNodeType::LEAF {
-            self.leaf_index = reader.read_i32();
-            self.solid = reader.read_i32();
-            self.bounding_sphere = reader.read_item::<Sphere>();
-            let count = reader.read_u32() as usize;
-            for _ in 0..count {
-                self.polygons.push(reader.read_u16());
+        match self.node_type {
+            BSPNodeType::PORTAL => false,
+            BSPNodeType::LEAF => {
+                self.leaf_index = reader.read_i32();
+                self.solid = reader.read_i32();
+                self.bounding_sphere = reader.read_item::<Sphere>();
+                let count = reader.read_u32() as usize;
+                for _ in 0..count {
+                    self.polygons.push(reader.read_u16());
+                }
+                true
             }
-        } else {
-            self.splitting_plane = reader.read_plane();
-            if reads_pos(self.node_type) && self.node_type != BSPNodeType::PORTAL {
-                self.pos_node = Some(Box::new(reader.read_item::<PhysicsBSPNode>()));
+            _ => {
+                self.splitting_plane = reader.read_plane();
+                if read_pos_physics(self.node_type) {
+                    self.pos_node = Some(Box::new(reader.read_item::<PhysicsBSPNode>()));
+                }
+                if read_neg_physics(self.node_type) {
+                    self.neg_node = Some(Box::new(reader.read_item::<PhysicsBSPNode>()));
+                }
+                self.bounding_sphere = reader.read_item::<Sphere>();
+                true
             }
-            if reads_neg(self.node_type) && self.node_type != BSPNodeType::PORTAL {
-                self.neg_node = Some(Box::new(reader.read_item::<PhysicsBSPNode>()));
-            }
-            self.bounding_sphere = reader.read_item::<Sphere>();
         }
-        true
     }
 }
 
 impl IPackable for PhysicsBSPNode {
     fn pack(&self, writer: &mut DatBinWriter<'_>) -> bool {
         writer.write_i32(self.node_type.into());
-        if self.node_type == BSPNodeType::LEAF {
-            writer.write_i32(self.leaf_index);
-            writer.write_i32(self.solid);
-            writer.write_item(&self.bounding_sphere);
-            writer.write_u32(self.polygons.len() as u32);
-            for poly in &self.polygons {
-                writer.write_u16(*poly);
+
+        match self.node_type {
+            BSPNodeType::PORTAL => false,
+            BSPNodeType::LEAF => {
+                writer.write_i32(self.leaf_index);
+                writer.write_i32(self.solid);
+                writer.write_item(&self.bounding_sphere);
+                writer.write_u32(self.polygons.len() as u32);
+                for poly in &self.polygons {
+                    writer.write_u16(*poly);
+                }
+                true
             }
-        } else {
-            writer.write_plane(self.splitting_plane);
-            if let Some(pos) = &self.pos_node { writer.write_item(&**pos); }
-            if let Some(neg) = &self.neg_node { writer.write_item(&**neg); }
-            writer.write_item(&self.bounding_sphere);
+            _ => {
+                writer.write_plane(self.splitting_plane);
+                if let Some(pos) = &self.pos_node {
+                    writer.write_item(&**pos);
+                }
+                if let Some(neg) = &self.neg_node {
+                    writer.write_item(&**neg);
+                }
+                writer.write_item(&self.bounding_sphere);
+                true
+            }
         }
-        true
     }
 }
 
@@ -132,55 +170,87 @@ impl IUnpackable for DrawingBSPNode {
         self.polygons.clear();
         self.portals.clear();
 
-        if self.node_type == BSPNodeType::PORTAL {
-            self.splitting_plane = reader.read_plane();
-            self.pos_node = Some(Box::new(reader.read_item::<DrawingBSPNode>()));
-            self.neg_node = Some(Box::new(reader.read_item::<DrawingBSPNode>()));
-            self.bounding_sphere = reader.read_item::<Sphere>();
-            let poly_count = reader.read_u32() as usize;
-            let portal_count = reader.read_u32() as usize;
-            for _ in 0..poly_count { self.polygons.push(reader.read_u16()); }
-            for _ in 0..portal_count { self.portals.push(reader.read_item::<PortalRef>()); }
-        } else if self.node_type == BSPNodeType::LEAF {
-            self.leaf_index = reader.read_i32();
-        } else {
-            self.splitting_plane = reader.read_plane();
-            if reads_pos(self.node_type) {
+        match self.node_type {
+            BSPNodeType::PORTAL => {
+                self.splitting_plane = reader.read_plane();
                 self.pos_node = Some(Box::new(reader.read_item::<DrawingBSPNode>()));
-            }
-            if reads_neg(self.node_type) {
                 self.neg_node = Some(Box::new(reader.read_item::<DrawingBSPNode>()));
+                self.bounding_sphere = reader.read_item::<Sphere>();
+                let poly_count = reader.read_u32() as usize;
+                let portal_count = reader.read_u32() as usize;
+                for _ in 0..poly_count {
+                    self.polygons.push(reader.read_u16());
+                }
+                for _ in 0..portal_count {
+                    self.portals.push(reader.read_item::<PortalRef>());
+                }
+                true
             }
-            self.bounding_sphere = reader.read_item::<Sphere>();
-            let poly_count = reader.read_u32() as usize;
-            for _ in 0..poly_count { self.polygons.push(reader.read_u16()); }
+            BSPNodeType::LEAF => {
+                self.leaf_index = reader.read_i32();
+                true
+            }
+            _ => {
+                self.splitting_plane = reader.read_plane();
+                if read_pos_drawing(self.node_type) {
+                    self.pos_node = Some(Box::new(reader.read_item::<DrawingBSPNode>()));
+                }
+                if read_neg_drawing(self.node_type) {
+                    self.neg_node = Some(Box::new(reader.read_item::<DrawingBSPNode>()));
+                }
+                self.bounding_sphere = reader.read_item::<Sphere>();
+                let poly_count = reader.read_u32() as usize;
+                for _ in 0..poly_count {
+                    self.polygons.push(reader.read_u16());
+                }
+                true
+            }
         }
-        true
     }
 }
 
 impl IPackable for DrawingBSPNode {
     fn pack(&self, writer: &mut DatBinWriter<'_>) -> bool {
         writer.write_i32(self.node_type.into());
-        if self.node_type == BSPNodeType::PORTAL {
-            writer.write_plane(self.splitting_plane);
-            if let Some(pos) = &self.pos_node { writer.write_item(&**pos); }
-            if let Some(neg) = &self.neg_node { writer.write_item(&**neg); }
-            writer.write_item(&self.bounding_sphere);
-            writer.write_u32(self.polygons.len() as u32);
-            writer.write_u32(self.portals.len() as u32);
-            for poly in &self.polygons { writer.write_u16(*poly); }
-            for portal in &self.portals { writer.write_item(portal); }
-        } else if self.node_type == BSPNodeType::LEAF {
-            writer.write_i32(self.leaf_index);
-        } else {
-            writer.write_plane(self.splitting_plane);
-            if let Some(pos) = &self.pos_node { writer.write_item(&**pos); }
-            if let Some(neg) = &self.neg_node { writer.write_item(&**neg); }
-            writer.write_item(&self.bounding_sphere);
-            writer.write_u32(self.polygons.len() as u32);
-            for poly in &self.polygons { writer.write_u16(*poly); }
+        match self.node_type {
+            BSPNodeType::PORTAL => {
+                writer.write_plane(self.splitting_plane);
+                if let Some(pos) = &self.pos_node {
+                    writer.write_item(&**pos);
+                }
+                if let Some(neg) = &self.neg_node {
+                    writer.write_item(&**neg);
+                }
+                writer.write_item(&self.bounding_sphere);
+                writer.write_u32(self.polygons.len() as u32);
+                writer.write_u32(self.portals.len() as u32);
+                for poly in &self.polygons {
+                    writer.write_u16(*poly);
+                }
+                for portal in &self.portals {
+                    writer.write_item(portal);
+                }
+                true
+            }
+            BSPNodeType::LEAF => {
+                writer.write_i32(self.leaf_index);
+                true
+            }
+            _ => {
+                writer.write_plane(self.splitting_plane);
+                if let Some(pos) = &self.pos_node {
+                    writer.write_item(&**pos);
+                }
+                if let Some(neg) = &self.neg_node {
+                    writer.write_item(&**neg);
+                }
+                writer.write_item(&self.bounding_sphere);
+                writer.write_u32(self.polygons.len() as u32);
+                for poly in &self.polygons {
+                    writer.write_u16(*poly);
+                }
+                true
+            }
         }
-        true
     }
 }

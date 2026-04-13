@@ -1,5 +1,8 @@
 use crate::DBObjs::SurfaceTexture::SurfaceTexture;
-use crate::Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable};
+use crate::Lib::IO::{
+    DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+    IUnpackable::IUnpackable,
+};
 use crate::Types::QualifiedDataId::QualifiedDataId;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]

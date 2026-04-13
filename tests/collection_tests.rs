@@ -1,9 +1,13 @@
-use std::{fs, path::PathBuf, time::{SystemTime, UNIX_EPOCH}};
+use std::{
+    fs,
+    path::PathBuf,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use dat_reader_writer::{
     CellDatabase::CellDatabase,
-    DatCollection::DatCollection,
     DBObjs::Palette::Palette,
+    DatCollection::DatCollection,
     Generated::Enums::DatFileType::DatFileType,
     Lib::IO::{DatBinWriter::DatBinWriter, DatHeader::DatHeader, IPackable::IPackable},
     LocalDatabase::LocalDatabase,
@@ -14,14 +18,26 @@ use dat_reader_writer::{
 use uuid::Uuid;
 
 fn unique_temp_dir() -> PathBuf {
-    let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+    let stamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
     let dir = std::env::temp_dir().join(format!("dat_reader_writer_tests_{stamp}"));
     fs::create_dir_all(&dir).unwrap();
     dir
 }
 
 fn write_header_only_dat(path: &PathBuf, dat_type: DatFileType) {
-    let mut header = DatHeader::new(dat_type, 0, 1024, Some("test".to_string()), 1, 1, Uuid::nil(), 1);
+    let mut header = DatHeader::new(
+        dat_type,
+        0,
+        1024,
+        Some("test".to_string()),
+        1,
+        1,
+        Uuid::nil(),
+        1,
+    );
     header.file_size = DatHeader::SIZE as i32;
     let mut bytes = [0_u8; DatHeader::SIZE];
     assert!(header.pack(&mut DatBinWriter::new(&mut bytes)));
@@ -33,11 +49,21 @@ fn build_single_block_dat(dat_type: DatFileType, file_id: u32, payload: &[u8]) -
     let root_offset = 1024usize;
     let file_offset = 2048usize;
 
-    let mut header = DatHeader::new(dat_type, 0, block_size as i32, Some("test".to_string()), 1, 1, Uuid::nil(), 1);
+    let mut header = DatHeader::new(
+        dat_type,
+        0,
+        block_size as i32,
+        Some("test".to_string()),
+        1,
+        1,
+        Uuid::nil(),
+        1,
+    );
     header.root_block = root_offset as i32;
     header.file_size = (file_offset + block_size) as i32;
 
-    let mut root_node = dat_reader_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::new(root_offset as i32);
+    let mut root_node =
+        dat_reader_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::new(root_offset as i32);
     root_node.file_count = 1;
     root_node.files[0] = dat_reader_writer::Lib::IO::DatBTree::DatBTreeFile::DatBTreeFile {
         version: 2,
@@ -51,7 +77,8 @@ fn build_single_block_dat(dat_type: DatFileType, file_id: u32, payload: &[u8]) -
     let mut bytes = vec![0u8; file_offset + block_size];
     assert!(header.pack(&mut DatBinWriter::new(&mut bytes[..DatHeader::SIZE])));
 
-    let mut node_bytes = vec![0u8; dat_reader_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::SIZE];
+    let mut node_bytes =
+        vec![0u8; dat_reader_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::SIZE];
     assert!(root_node.pack(&mut DatBinWriter::new(&mut node_bytes)));
     bytes[root_offset + 4..root_offset + 4 + node_bytes.len()].copy_from_slice(&node_bytes);
     bytes[file_offset + 4..file_offset + 4 + payload.len()].copy_from_slice(payload);
@@ -69,11 +96,32 @@ fn specialized_databases_validate_header_type() {
     write_header_only_dat(&cell_path, DatFileType::Cell);
     write_header_only_dat(&local_path, DatFileType::Local);
 
-    assert!(PortalDatabase::from_path(portal_path.to_string_lossy().to_string(), DatAccessType::Read).is_ok());
-    assert!(CellDatabase::from_path(cell_path.to_string_lossy().to_string(), DatAccessType::Read).is_ok());
-    assert!(LocalDatabase::from_path(local_path.to_string_lossy().to_string(), DatAccessType::Read).is_ok());
+    assert!(
+        PortalDatabase::from_path(
+            portal_path.to_string_lossy().to_string(),
+            DatAccessType::Read
+        )
+        .is_ok()
+    );
+    assert!(
+        CellDatabase::from_path(cell_path.to_string_lossy().to_string(), DatAccessType::Read)
+            .is_ok()
+    );
+    assert!(
+        LocalDatabase::from_path(
+            local_path.to_string_lossy().to_string(),
+            DatAccessType::Read
+        )
+        .is_ok()
+    );
 
-    assert!(CellDatabase::from_path(portal_path.to_string_lossy().to_string(), DatAccessType::Read).is_err());
+    assert!(
+        CellDatabase::from_path(
+            portal_path.to_string_lossy().to_string(),
+            DatAccessType::Read
+        )
+        .is_err()
+    );
 }
 
 #[test]
@@ -84,11 +132,16 @@ fn dat_collection_opens_all_expected_dats() {
     write_header_only_dat(&dir.join("client_local_English.dat"), DatFileType::Local);
     write_header_only_dat(&dir.join("client_highres.dat"), DatFileType::Portal);
 
-    let collection = DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::Read).unwrap();
+    let collection =
+        DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::Read)
+            .unwrap();
     assert_eq!(DatFileType::Cell, collection.cell.inner.header().r#type);
     assert_eq!(DatFileType::Portal, collection.portal.inner.header().r#type);
     assert_eq!(DatFileType::Local, collection.local.inner.header().r#type);
-    assert_eq!(DatFileType::Portal, collection.high_res.inner.header().r#type);
+    assert_eq!(
+        DatFileType::Portal,
+        collection.high_res.inner.header().r#type
+    );
 }
 
 #[test]
@@ -114,7 +167,10 @@ fn dat_collection_uses_path_overrides() {
     assert_eq!(DatFileType::Portal, collection.portal.inner.header().r#type);
     assert_eq!(DatFileType::Cell, collection.cell.inner.header().r#type);
     assert_eq!(DatFileType::Local, collection.local.inner.header().r#type);
-    assert_eq!(DatFileType::Portal, collection.high_res.inner.header().r#type);
+    assert_eq!(
+        DatFileType::Portal,
+        collection.high_res.inner.header().r#type
+    );
 }
 
 #[test]
@@ -136,7 +192,9 @@ fn dat_collection_can_read_typed_asset_from_high_res_fallback() {
     )
     .unwrap();
 
-    let collection = DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::Read).unwrap();
+    let collection =
+        DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::Read)
+            .unwrap();
     let palette = collection.try_get::<Palette>(0x04000010).unwrap().unwrap();
     assert_eq!(1, palette.colors.len());
     assert_eq!(4, palette.colors[0].alpha);
@@ -169,7 +227,9 @@ fn dat_collection_can_enumerate_ids_across_portal_and_high_res() {
     )
     .unwrap();
 
-    let collection = DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::Read).unwrap();
+    let collection =
+        DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::Read)
+            .unwrap();
     let ids = collection.get_all_ids_of_type::<Palette>().unwrap();
     assert_eq!(vec![0x04000001, 0x04000002], ids);
 }
@@ -193,7 +253,9 @@ fn qualified_data_id_can_resolve_through_collection() {
     )
     .unwrap();
 
-    let collection = DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::Read).unwrap();
+    let collection =
+        DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::Read)
+            .unwrap();
     let qualified = QualifiedDataId::<Palette>::new(0x04000022);
     let palette = qualified.get(&collection).unwrap().unwrap();
     assert_eq!(1, palette.colors.len());

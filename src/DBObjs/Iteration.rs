@@ -1,8 +1,16 @@
 use std::{any::Any, collections::BTreeMap};
 
 use crate::{
-    Generated::Enums::{DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType},
-    Lib::{Attributes::DBObjTypeAttribute::DBObjTypeAttribute, IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj, IPackable::IPackable, IUnpackable::IUnpackable}},
+    Generated::Enums::{
+        DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType,
+    },
+    Lib::{
+        Attributes::DBObjTypeAttribute::DBObjTypeAttribute,
+        IO::{
+            DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj,
+            IPackable::IPackable, IUnpackable::IUnpackable,
+        },
+    },
     Types::DBObj::{DBObj, DBObjBase},
 };
 
@@ -24,12 +32,24 @@ pub struct Iteration {
 }
 
 impl DBObj for Iteration {
-    fn header_flags(&self) -> DBObjHeaderFlags { DBObjHeaderFlags::None }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::Iteration }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn data_category(&self) -> u32 { self.base.data_category }
-    fn set_data_category(&mut self, data_category: u32) { self.base.data_category = data_category; }
+    fn header_flags(&self) -> DBObjHeaderFlags {
+        DBObjHeaderFlags::None
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::Iteration
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn data_category(&self) -> u32 {
+        self.base.data_category
+    }
+    fn set_data_category(&mut self, data_category: u32) {
+        self.base.data_category = data_category;
+    }
 }
 
 impl IUnpackable for Iteration {
@@ -41,7 +61,8 @@ impl IUnpackable for Iteration {
         while num_iterations > 0 {
             let consecutive_iterations = reader.read_i32();
             let starting_iteration = reader.read_i32();
-            self.iterations.insert(starting_iteration, consecutive_iterations);
+            self.iterations
+                .insert(starting_iteration, consecutive_iterations);
             num_iterations += consecutive_iterations;
         }
         if self.base.id == 0 {
@@ -62,9 +83,26 @@ impl IPackable for Iteration {
 }
 
 impl IDBObj for Iteration {
-    fn db_obj_type_attr() -> &'static DBObjTypeAttribute where Self: Sized { &ITERATION_ATTR }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::Iteration }
-    fn id(&self) -> u32 { if self.base.id == 0 { 0xFFFF0001 } else { self.base.id } }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn as_any(&self) -> &dyn Any { self }
+    fn db_obj_type_attr() -> &'static DBObjTypeAttribute
+    where
+        Self: Sized,
+    {
+        &ITERATION_ATTR
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::Iteration
+    }
+    fn id(&self) -> u32 {
+        if self.base.id == 0 {
+            0xFFFF0001
+        } else {
+            self.base.id
+        }
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }

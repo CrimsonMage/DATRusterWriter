@@ -1,4 +1,10 @@
-use crate::{Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable}, Types::QualifiedDataId::QualifiedDataId};
+use crate::{
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
+    Types::QualifiedDataId::QualifiedDataId,
+};
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct AnimData {

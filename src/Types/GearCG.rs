@@ -1,6 +1,9 @@
 use crate::{
     DBObjs::ClothingTable::ClothingTable,
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable},
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
     Types::{AC1LegacyString::AC1LegacyString, QualifiedDataId::QualifiedDataId},
 };
 

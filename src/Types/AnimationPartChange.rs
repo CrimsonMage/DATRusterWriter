@@ -1,6 +1,9 @@
 use crate::{
     DBObjs::GfxObj::GfxObj,
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable},
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
     Types::PackedQualifiedDataId::PackedQualifiedDataId,
 };
 

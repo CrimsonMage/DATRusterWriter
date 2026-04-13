@@ -1,4 +1,10 @@
-use crate::{Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable}, Types::AC1LegacyString::AC1LegacyString};
+use crate::{
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
+    Types::AC1LegacyString::AC1LegacyString,
+};
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Season {

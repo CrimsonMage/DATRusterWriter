@@ -1,6 +1,9 @@
 use crate::{
     Generated::Enums::MotionDataFlags::MotionDataFlags,
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable, Numerics::Vector3},
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable, Numerics::Vector3,
+    },
     Types::AnimData::AnimData,
 };
 

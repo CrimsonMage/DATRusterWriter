@@ -1,6 +1,12 @@
 use std::collections::BTreeMap;
 
-use crate::{Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable}, Types::MotionData::MotionData};
+use crate::{
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
+    Types::MotionData::MotionData,
+};
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct MotionCommandData {

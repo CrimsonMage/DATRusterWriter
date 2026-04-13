@@ -1,8 +1,11 @@
 use dat_reader_writer::{
     Generated::Enums::DatFileType::DatFileType,
     Lib::IO::{
-        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, DatHeader::DatHeader,
-        IPackable::IPackable, IUnpackable::IUnpackable,
+        DatBinReader::DatBinReader,
+        DatBinWriter::DatBinWriter,
+        DatHeader::DatHeader,
+        IPackable::IPackable,
+        IUnpackable::IUnpackable,
         Numerics::{Plane, Quaternion, Vector3},
     },
 };

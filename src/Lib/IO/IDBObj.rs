@@ -2,7 +2,10 @@ use std::any::Any;
 
 use crate::{
     Generated::Enums::{DBObjType::DBObjType, DatFileType::DatFileType},
-    Lib::{Attributes::DBObjTypeAttribute::DBObjTypeAttribute, IO::{IPackable::IPackable, IUnpackable::IUnpackable}},
+    Lib::{
+        Attributes::DBObjTypeAttribute::DBObjTypeAttribute,
+        IO::{IPackable::IPackable, IUnpackable::IUnpackable},
+    },
 };
 
 pub trait IDBObj: IUnpackable + IPackable + Any + Send + Sync {
@@ -11,7 +14,10 @@ pub trait IDBObj: IUnpackable + IPackable + Any + Send + Sync {
         Self: Sized;
 
     fn db_obj_type(&self) -> DBObjType;
-    fn dat_file_type(&self) -> DatFileType where Self: Sized {
+    fn dat_file_type(&self) -> DatFileType
+    where
+        Self: Sized,
+    {
         Self::db_obj_type_attr().dat_file_type
     }
     fn id(&self) -> u32;

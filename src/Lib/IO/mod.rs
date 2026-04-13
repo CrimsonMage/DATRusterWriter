@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 
 pub mod BlockAllocators;
+pub mod DatBTree;
 #[path = "DatBinReader.rs"]
 pub mod DatBinReader;
-pub mod DatBTree;
 #[path = "DatBinWriter.rs"]
 pub mod DatBinWriter;
 #[path = "DatHeader.rs"]

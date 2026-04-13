@@ -1,12 +1,33 @@
 use std::any::Any;
 
 use crate::{
-    Generated::Enums::{AnimationFlags::AnimationFlags, DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType},
-    Lib::{Attributes::DBObjTypeAttribute::DBObjTypeAttribute, IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj, IPackable::IPackable, IUnpackable::IUnpackable}},
-    Types::{AnimationFrame::AnimationFrame, DBObj::{DBObj, DBObjBase}, Frame::Frame},
+    Generated::Enums::{
+        AnimationFlags::AnimationFlags, DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType,
+        DatFileType::DatFileType,
+    },
+    Lib::{
+        Attributes::DBObjTypeAttribute::DBObjTypeAttribute,
+        IO::{
+            DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj,
+            IPackable::IPackable, IUnpackable::IUnpackable,
+        },
+    },
+    Types::{
+        AnimationFrame::AnimationFrame,
+        DBObj::{DBObj, DBObjBase},
+        Frame::Frame,
+    },
 };
 
-pub const ANIMATION_ATTR: DBObjTypeAttribute = DBObjTypeAttribute { rust_type_name: "Animation", dat_file_type: DatFileType::Portal, db_obj_type: DBObjType::Animation, header_flags: DBObjHeaderFlags::HasId, first_id: 0x03000000, last_id: 0x0300FFFF, mask_id: 0x03000000 };
+pub const ANIMATION_ATTR: DBObjTypeAttribute = DBObjTypeAttribute {
+    rust_type_name: "Animation",
+    dat_file_type: DatFileType::Portal,
+    db_obj_type: DBObjType::Animation,
+    header_flags: DBObjHeaderFlags::HasId,
+    first_id: 0x03000000,
+    last_id: 0x0300FFFF,
+    mask_id: 0x03000000,
+};
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Animation {
@@ -18,12 +39,24 @@ pub struct Animation {
 }
 
 impl DBObj for Animation {
-    fn header_flags(&self) -> DBObjHeaderFlags { DBObjHeaderFlags::HasId }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::Animation }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn data_category(&self) -> u32 { self.base.data_category }
-    fn set_data_category(&mut self, data_category: u32) { self.base.data_category = data_category; }
+    fn header_flags(&self) -> DBObjHeaderFlags {
+        DBObjHeaderFlags::HasId
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::Animation
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn data_category(&self) -> u32 {
+        self.base.data_category
+    }
+    fn set_data_category(&mut self, data_category: u32) {
+        self.base.data_category = data_category;
+    }
 }
 
 impl IUnpackable for Animation {
@@ -69,9 +102,22 @@ impl IPackable for Animation {
 }
 
 impl IDBObj for Animation {
-    fn db_obj_type_attr() -> &'static DBObjTypeAttribute where Self: Sized { &ANIMATION_ATTR }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::Animation }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn as_any(&self) -> &dyn Any { self }
+    fn db_obj_type_attr() -> &'static DBObjTypeAttribute
+    where
+        Self: Sized,
+    {
+        &ANIMATION_ATTR
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::Animation
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }

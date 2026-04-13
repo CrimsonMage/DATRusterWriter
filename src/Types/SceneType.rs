@@ -1,5 +1,8 @@
 use crate::DBObjs::Scene::Scene;
-use crate::Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable};
+use crate::Lib::IO::{
+    DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+    IUnpackable::IUnpackable,
+};
 use crate::Types::QualifiedDataId::QualifiedDataId;
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -14,7 +17,8 @@ impl IUnpackable for SceneType {
         let count = reader.read_u32() as usize;
         self.scenes.clear();
         for _ in 0..count {
-            self.scenes.push(reader.read_item::<QualifiedDataId<Scene>>());
+            self.scenes
+                .push(reader.read_item::<QualifiedDataId<Scene>>());
         }
         true
     }

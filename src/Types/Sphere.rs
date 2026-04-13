@@ -1,9 +1,6 @@
 use crate::Lib::IO::{
-    DatBinReader::DatBinReader,
-    DatBinWriter::DatBinWriter,
-    IPackable::IPackable,
-    IUnpackable::IUnpackable,
-    Numerics::Vector3,
+    DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+    IUnpackable::IUnpackable, Numerics::Vector3,
 };
 
 #[derive(Debug, Clone, Copy, Default, PartialEq)]

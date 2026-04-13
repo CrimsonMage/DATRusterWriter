@@ -40,12 +40,13 @@ impl DatCollection {
             file_caching_strategy: options.local_file_caching_strategy(),
         })?;
 
-        let high_res = PortalDatabase::new(crate::Options::DatDatabaseOptions::DatDatabaseOptions {
-            file_path: options.high_res_dat_path(),
-            access_type: options.access_type,
-            index_caching_strategy: options.high_res_index_caching_strategy(),
-            file_caching_strategy: options.high_res_file_caching_strategy(),
-        })?;
+        let high_res =
+            PortalDatabase::new(crate::Options::DatDatabaseOptions::DatDatabaseOptions {
+                file_path: options.high_res_dat_path(),
+                access_type: options.access_type,
+                index_caching_strategy: options.high_res_index_caching_strategy(),
+                file_caching_strategy: options.high_res_file_caching_strategy(),
+            })?;
 
         Ok(Self {
             options,
@@ -56,7 +57,10 @@ impl DatCollection {
         })
     }
 
-    pub fn from_directory(dat_directory: impl Into<String>, dat_access_type: DatAccessType) -> io::Result<Self> {
+    pub fn from_directory(
+        dat_directory: impl Into<String>,
+        dat_access_type: DatAccessType,
+    ) -> io::Result<Self> {
         let mut options = DatCollectionOptions::default();
         options.dat_directory = dat_directory.into();
         options.access_type = dat_access_type;
@@ -70,7 +74,11 @@ impl DatCollection {
         self.high_res.clear_cache();
     }
 
-    pub fn try_get_file_entry(&self, dat_file_type: DatFileType, file_id: u32) -> io::Result<Option<DatBTreeFile>> {
+    pub fn try_get_file_entry(
+        &self,
+        dat_file_type: DatFileType,
+        file_id: u32,
+    ) -> io::Result<Option<DatBTreeFile>> {
         match dat_file_type {
             DatFileType::Cell => self.cell.inner.try_get_file_entry(file_id),
             DatFileType::Portal => {
@@ -86,18 +94,31 @@ impl DatCollection {
         }
     }
 
-    pub fn try_get_file_bytes(&self, dat_file_type: DatFileType, file_id: u32, auto_decompress: bool) -> io::Result<Option<Vec<u8>>> {
+    pub fn try_get_file_bytes(
+        &self,
+        dat_file_type: DatFileType,
+        file_id: u32,
+        auto_decompress: bool,
+    ) -> io::Result<Option<Vec<u8>>> {
         match dat_file_type {
             DatFileType::Cell => self.cell.inner.try_get_file_bytes(file_id, auto_decompress),
             DatFileType::Portal => {
-                let portal = self.portal.inner.try_get_file_bytes(file_id, auto_decompress)?;
+                let portal = self
+                    .portal
+                    .inner
+                    .try_get_file_bytes(file_id, auto_decompress)?;
                 if portal.is_some() {
                     Ok(portal)
                 } else {
-                    self.high_res.inner.try_get_file_bytes(file_id, auto_decompress)
+                    self.high_res
+                        .inner
+                        .try_get_file_bytes(file_id, auto_decompress)
                 }
             }
-            DatFileType::Local => self.local.inner.try_get_file_bytes(file_id, auto_decompress),
+            DatFileType::Local => self
+                .local
+                .inner
+                .try_get_file_bytes(file_id, auto_decompress),
             DatFileType::Undefined => Ok(None),
         }
     }

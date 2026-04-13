@@ -1,7 +1,18 @@
 use crate::{
-    DBObjs::{CombatTable::CombatTable, MotionTable::MotionTable, Palette::Palette, PalSet::PalSet, PhysicsScriptTable::PhysicsScriptTable, RenderSurface::RenderSurface, Setup::Setup, SoundTable::SoundTable},
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable},
-    Types::{AC1LegacyString::AC1LegacyString, EyeStripCG::EyeStripCG, FaceStripCG::FaceStripCG, GearCG::GearCG, HairStyleCG::HairStyleCG, ObjDesc::ObjDesc, QualifiedDataId::QualifiedDataId},
+    DBObjs::{
+        CombatTable::CombatTable, MotionTable::MotionTable, PalSet::PalSet, Palette::Palette,
+        PhysicsScriptTable::PhysicsScriptTable, RenderSurface::RenderSurface, Setup::Setup,
+        SoundTable::SoundTable,
+    },
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
+    Types::{
+        AC1LegacyString::AC1LegacyString, EyeStripCG::EyeStripCG, FaceStripCG::FaceStripCG,
+        GearCG::GearCG, HairStyleCG::HairStyleCG, ObjDesc::ObjDesc,
+        QualifiedDataId::QualifiedDataId,
+    },
 };
 
 #[derive(Debug, Clone, Default, PartialEq)]

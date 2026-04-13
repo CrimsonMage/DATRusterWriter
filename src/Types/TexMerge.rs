@@ -1,5 +1,10 @@
-use crate::Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable};
-use crate::Types::{RoadAlphaMap::RoadAlphaMap, TMTerrainDesc::TMTerrainDesc, TerrainAlphaMap::TerrainAlphaMap};
+use crate::Lib::IO::{
+    DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+    IUnpackable::IUnpackable,
+};
+use crate::Types::{
+    RoadAlphaMap::RoadAlphaMap, TMTerrainDesc::TMTerrainDesc, TerrainAlphaMap::TerrainAlphaMap,
+};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct TexMerge {
@@ -17,13 +22,15 @@ impl IUnpackable for TexMerge {
         let corner_count = reader.read_u32() as usize;
         self.corner_terrain_maps.clear();
         for _ in 0..corner_count {
-            self.corner_terrain_maps.push(reader.read_item::<TerrainAlphaMap>());
+            self.corner_terrain_maps
+                .push(reader.read_item::<TerrainAlphaMap>());
         }
 
         let side_count = reader.read_u32() as usize;
         self.side_terrain_maps.clear();
         for _ in 0..side_count {
-            self.side_terrain_maps.push(reader.read_item::<TerrainAlphaMap>());
+            self.side_terrain_maps
+                .push(reader.read_item::<TerrainAlphaMap>());
         }
 
         let road_count = reader.read_u32() as usize;

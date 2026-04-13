@@ -1,5 +1,8 @@
 use crate::DBObjs::{GfxObj::GfxObj, PhysicsScript::PhysicsScript};
-use crate::Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable};
+use crate::Lib::IO::{
+    DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+    IUnpackable::IUnpackable,
+};
 use crate::Types::QualifiedDataId::QualifiedDataId;
 
 #[derive(Debug, Clone, Default, PartialEq)]

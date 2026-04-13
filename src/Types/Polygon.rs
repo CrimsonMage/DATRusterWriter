@@ -1,6 +1,9 @@
 use crate::{
     Generated::Enums::{CullMode::CullMode, StipplingType::StipplingType},
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable},
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
 };
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -32,7 +35,8 @@ impl IUnpackable for Polygon {
                 self.pos_uv_indices.push(reader.read_byte());
             }
         }
-        if !self.stippling.contains(StipplingType::NoNeg) && self.sides_type == CullMode::CLOCKWISE {
+        if !self.stippling.contains(StipplingType::NoNeg) && self.sides_type == CullMode::CLOCKWISE
+        {
             for _ in 0..num_vertices {
                 self.neg_uv_indices.push(reader.read_byte());
             }
@@ -56,7 +60,8 @@ impl IPackable for Polygon {
                 writer.write_byte(*uv);
             }
         }
-        if !self.stippling.contains(StipplingType::NoNeg) && self.sides_type == CullMode::CLOCKWISE {
+        if !self.stippling.contains(StipplingType::NoNeg) && self.sides_type == CullMode::CLOCKWISE
+        {
             for uv in &self.neg_uv_indices {
                 writer.write_byte(*uv);
             }

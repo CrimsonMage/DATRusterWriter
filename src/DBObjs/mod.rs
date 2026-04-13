@@ -12,12 +12,14 @@ pub mod CombatTable;
 pub mod GfxObj;
 #[path = "Iteration.rs"]
 pub mod Iteration;
+#[path = "LanguageString.rs"]
+pub mod LanguageString;
 #[path = "MotionTable.rs"]
 pub mod MotionTable;
-#[path = "Palette.rs"]
-pub mod Palette;
 #[path = "PalSet.rs"]
 pub mod PalSet;
+#[path = "Palette.rs"]
+pub mod Palette;
 #[path = "ParticleEmitter.rs"]
 pub mod ParticleEmitter;
 #[path = "PhysicsScript.rs"]
@@ -34,6 +36,8 @@ pub mod Scene;
 pub mod Setup;
 #[path = "SoundTable.rs"]
 pub mod SoundTable;
+#[path = "StringTable.rs"]
+pub mod StringTable;
 #[path = "Surface.rs"]
 pub mod Surface;
 #[path = "SurfaceTexture.rs"]

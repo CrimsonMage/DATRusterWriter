@@ -1,13 +1,42 @@
 use std::{any::Any, collections::BTreeMap};
 
 use crate::{
-    DBObjs::{Animation::Animation, GfxObj::GfxObj, MotionTable::MotionTable, PhysicsScript::PhysicsScript, PhysicsScriptTable::PhysicsScriptTable, SoundTable::SoundTable},
-    Generated::Enums::{DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType, ParentLocation::ParentLocation, Placement::Placement, SetupFlags::SetupFlags},
-    Lib::{Attributes::DBObjTypeAttribute::DBObjTypeAttribute, IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj, IPackable::IPackable, IUnpackable::IUnpackable, Numerics::Vector3}},
-    Types::{AnimationFrame::AnimationFrame, CylSphere::CylSphere, DBObj::{DBObj, DBObjBase}, LightInfo::LightInfo, LocationType::LocationType, QualifiedDataId::QualifiedDataId, Sphere::Sphere},
+    DBObjs::{
+        Animation::Animation, GfxObj::GfxObj, MotionTable::MotionTable,
+        PhysicsScript::PhysicsScript, PhysicsScriptTable::PhysicsScriptTable,
+        SoundTable::SoundTable,
+    },
+    Generated::Enums::{
+        DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType,
+        ParentLocation::ParentLocation, Placement::Placement, SetupFlags::SetupFlags,
+    },
+    Lib::{
+        Attributes::DBObjTypeAttribute::DBObjTypeAttribute,
+        IO::{
+            DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj,
+            IPackable::IPackable, IUnpackable::IUnpackable, Numerics::Vector3,
+        },
+    },
+    Types::{
+        AnimationFrame::AnimationFrame,
+        CylSphere::CylSphere,
+        DBObj::{DBObj, DBObjBase},
+        LightInfo::LightInfo,
+        LocationType::LocationType,
+        QualifiedDataId::QualifiedDataId,
+        Sphere::Sphere,
+    },
 };
 
-pub const SETUP_ATTR: DBObjTypeAttribute = DBObjTypeAttribute { rust_type_name: "Setup", dat_file_type: DatFileType::Portal, db_obj_type: DBObjType::Setup, header_flags: DBObjHeaderFlags::HasId, first_id: 0x02000000, last_id: 0x0200FFFF, mask_id: 0x00000000 };
+pub const SETUP_ATTR: DBObjTypeAttribute = DBObjTypeAttribute {
+    rust_type_name: "Setup",
+    dat_file_type: DatFileType::Portal,
+    db_obj_type: DBObjType::Setup,
+    header_flags: DBObjHeaderFlags::HasId,
+    first_id: 0x02000000,
+    last_id: 0x0200FFFF,
+    mask_id: 0x00000000,
+};
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Setup {
@@ -37,12 +66,24 @@ pub struct Setup {
 }
 
 impl DBObj for Setup {
-    fn header_flags(&self) -> DBObjHeaderFlags { DBObjHeaderFlags::HasId }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::Setup }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn data_category(&self) -> u32 { self.base.data_category }
-    fn set_data_category(&mut self, data_category: u32) { self.base.data_category = data_category; }
+    fn header_flags(&self) -> DBObjHeaderFlags {
+        DBObjHeaderFlags::HasId
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::Setup
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn data_category(&self) -> u32 {
+        self.base.data_category
+    }
+    fn set_data_category(&mut self, data_category: u32) {
+        self.base.data_category = data_category;
+    }
 }
 
 impl IUnpackable for Setup {
@@ -53,7 +94,8 @@ impl IUnpackable for Setup {
 
         self.parts.clear();
         for _ in 0..self.num_parts {
-            self.parts.push(reader.read_item::<QualifiedDataId<GfxObj>>());
+            self.parts
+                .push(reader.read_item::<QualifiedDataId<GfxObj>>());
         }
 
         self.parent_index.clear();
@@ -73,13 +115,19 @@ impl IUnpackable for Setup {
         let holding_count = reader.read_i32() as usize;
         self.holding_locations.clear();
         for _ in 0..holding_count {
-            self.holding_locations.insert(ParentLocation::from(reader.read_i32()), reader.read_item::<LocationType>());
+            self.holding_locations.insert(
+                ParentLocation::from(reader.read_i32()),
+                reader.read_item::<LocationType>(),
+            );
         }
 
         let connection_count = reader.read_i32() as usize;
         self.connection_points.clear();
         for _ in 0..connection_count {
-            self.connection_points.insert(ParentLocation::from(reader.read_i32()), reader.read_item::<LocationType>());
+            self.connection_points.insert(
+                ParentLocation::from(reader.read_i32()),
+                reader.read_item::<LocationType>(),
+            );
         }
 
         let placement_count = reader.read_i32() as usize;
@@ -113,7 +161,8 @@ impl IUnpackable for Setup {
         let light_count = reader.read_i32() as usize;
         self.lights.clear();
         for _ in 0..light_count {
-            self.lights.insert(reader.read_i32(), reader.read_item::<LightInfo>());
+            self.lights
+                .insert(reader.read_i32(), reader.read_item::<LightInfo>());
         }
 
         self.default_animation = reader.read_item::<QualifiedDataId<Animation>>();
@@ -195,9 +244,22 @@ impl IPackable for Setup {
 }
 
 impl IDBObj for Setup {
-    fn db_obj_type_attr() -> &'static DBObjTypeAttribute where Self: Sized { &SETUP_ATTR }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::Setup }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn as_any(&self) -> &dyn Any { self }
+    fn db_obj_type_attr() -> &'static DBObjTypeAttribute
+    where
+        Self: Sized,
+    {
+        &SETUP_ATTR
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::Setup
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
