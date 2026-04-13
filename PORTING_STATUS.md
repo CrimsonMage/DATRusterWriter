@@ -37,13 +37,19 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/Enums/SurfaceType.generated.cs` | `src/Generated/Enums/SurfaceType.rs` | Ported | Surface/material bitflags |
 | `DatReaderWriter/Generated/Enums/AnimationHookType.generated.cs` | `src/Generated/Enums/AnimationHookType.rs` | Ported | Hook discriminator constants |
 | `DatReaderWriter/Generated/Enums/AnimationHookDir.generated.cs` | `src/Generated/Enums/AnimationHookDir.rs` | Ported | Hook direction constants |
+| `DatReaderWriter/Generated/Enums/AnimationFlags.generated.cs` | `src/Generated/Enums/AnimationFlags.rs` | Ported | Read-side animation presence bitflags |
+| `DatReaderWriter/Generated/Enums/ParentLocation.generated.cs` | `src/Generated/Enums/ParentLocation.rs` | Partial | Read-first numeric wrapper for setup attachment slots |
+| `DatReaderWriter/Generated/Enums/Placement.generated.cs` | `src/Generated/Enums/Placement.rs` | Partial | Read-first numeric wrapper for setup placement keys |
+| `DatReaderWriter/Generated/Enums/PlayScript.generated.cs` | `src/Generated/Enums/PlayScript.rs` | Ported | Explicit named play-script constants now mirrored into the Rust wrapper surface |
+| `DatReaderWriter/Generated/Enums/SetupFlags.generated.cs` | `src/Generated/Enums/SetupFlags.rs` | Ported | Setup optional-data bitflags |
+| DatReaderWriter/Generated/Enums/SkillId.generated.cs | src/Generated/Enums/SkillId.rs | Partial | Explicit named skill-id constants added for the CharGen read path; enum surface is not complete yet |
 | `DatReaderWriter/Generated/Enums/EmitterType.generated.cs` | `src/Generated/Enums/EmitterType.rs` | Partial | Read-first numeric wrapper for particle emitter mode |
 | `DatReaderWriter/Generated/Enums/ParticleType.generated.cs` | `src/Generated/Enums/ParticleType.rs` | Partial | Read-first numeric wrapper for particle motion mode |
 | `DatReaderWriter/Generated/Enums/VertexType.generated.cs` | `src/Generated/Enums/VertexType.rs` | Partial | Read-first numeric wrapper for vertex array type |
 | `DatReaderWriter/Generated/Enums/CullMode.generated.cs` | `src/Generated/Enums/CullMode.rs` | Partial | Read-first numeric wrapper for polygon cull mode |
 | `DatReaderWriter/Generated/Enums/StipplingType.generated.cs` | `src/Generated/Enums/StipplingType.rs` | Ported | Polygon stippling bitflags |
 | `DatReaderWriter/Enums/BSPNodeType.cs` | `src/Generated/Enums/BSPNodeType.rs` | Partial | Read-first numeric constants for BSP node decoding |
-| `DatReaderWriter/Generated/Enums/Sound.generated.cs` | `src/Generated/Enums/Sound.rs` | Partial | Read-first numeric wrapper, not the full generated named enum surface yet |
+| `DatReaderWriter/Generated/Enums/Sound.generated.cs` | `src/Generated/Enums/Sound.rs` | Ported | Explicit named sound constants now mirrored into the Rust wrapper surface |
 | `DatReaderWriter/Generated/Enums/TerrainTextureType.generated.cs` | `src/Generated/Enums/TerrainTextureType.rs` | Partial | Read-first numeric wrapper for terrain texture ids |
 | `DatReaderWriter/Options/DatAccessType.cs` | `src/Options/DatAccessType.rs` | Verified | Read-first access enum |
 | `DatReaderWriter/Options/FileCachingStrategy.cs` | `src/Options/FileCachingStrategy.rs` | Verified | File cache enum |
@@ -107,7 +113,31 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/Types/Polygon.generated.cs` | `src/Types/Polygon.rs` | Ported | Mesh polygon record |
 | `DatReaderWriter/Types/BSPTree.cs`, `DatReaderWriter/Types/PhysicsBSPNode.cs`, `DatReaderWriter/Types/DrawingBSPNode.cs` | `src/Types/BSPTrees.rs` | Partial | Read-side BSP tree/node port collapsed into one Rust module |
 | `DatReaderWriter/Generated/Types/AttackCone.generated.cs` | `src/Types/AttackCone.rs` | Ported | Physics script hook payload |
+| `DatReaderWriter/Generated/Types/AnimationFrame.generated.cs` | `src/Types/AnimationFrame.rs` | Ported | Read-side animation/setup frame payload with explicit part-count helper |
+| `DatReaderWriter/Generated/Types/AnimationPartChange.generated.cs` | `src/Types/AnimationPartChange.rs` | Ported | Read-side explicit packed part swap payload |
+| DatReaderWriter/Generated/Types/ObjDesc.generated.cs | src/Types/ObjDesc.rs | Ported | Explicit object-description payload with sub-palettes, texture swaps, and animation part changes |
+| DatReaderWriter/Generated/Types/SubPalette.generated.cs | src/Types/ObjDesc.rs | Ported | Collapsed into the explicit ObjDesc Rust module |
+| DatReaderWriter/Generated/Types/TextureMapChange.generated.cs | src/Types/ObjDesc.rs | Ported | Collapsed into the explicit ObjDesc Rust module |
+| `DatReaderWriter/Generated/Types/CylSphere.generated.cs` | `src/Types/CylSphere.rs` | Ported | Setup collision primitive |
+| `DatReaderWriter/Generated/Types/LightInfo.generated.cs` | `src/Types/LightInfo.rs` | Ported | Setup attached light payload |
+| `DatReaderWriter/Generated/Types/LocationType.generated.cs` | `src/Types/LocationType.rs` | Ported | Setup attachment point payload |
+| `DatReaderWriter/Generated/Types/PhysicsScriptTableData.generated.cs` | `src/Types/PhysicsScriptTableData.rs` | Ported | Physics script table entry list |
+| `DatReaderWriter/Generated/Types/ScriptAndModData.generated.cs` | `src/Types/ScriptAndModData.rs` | Ported | Physics script id plus modifier payload |
+| `DatReaderWriter/Generated/Types/SoundData.generated.cs` | `src/Types/SoundData.rs` | Ported | Sound-table sound entry list |
+| `DatReaderWriter/Generated/Types/SoundEntry.generated.cs` | `src/Types/SoundEntry.rs` | Ported | Wave reference with sound weights |
+| `DatReaderWriter/Generated/Types/SoundHashData.generated.cs` | `src/Types/SoundHashData.rs` | Ported | Hash-keyed sound weights |
 | `DatReaderWriter/Types/PackedQualifiedDataId.cs` | `src/Types/PackedQualifiedDataId.rs` | Ported | Packed known-type id wrapper with collection resolution helper |
+| DatReaderWriter/Types/HashTable.cs | src/Types/HashTable.rs | Partial | Explicit read/write hash-table wrapper currently supports primitive keys and unpackable values used by CharGen |
+| DatReaderWriter/Generated/Types/Position.generated.cs | src/Types/Position.rs | Ported | Position payload for starting-area locations |
+| DatReaderWriter/Generated/Types/StartingArea.generated.cs | src/Types/StartingArea.rs | Ported | Character-creation starting area payload |
+| DatReaderWriter/Generated/Types/SkillCG.generated.cs | src/Types/SkillCG.rs | Ported | Character-generation skill cost payload |
+| DatReaderWriter/Generated/Types/TemplateCG.generated.cs | src/Types/TemplateCG.rs | Ported | Character-generation template payload |
+| DatReaderWriter/Generated/Types/HairStyleCG.generated.cs | src/Types/HairStyleCG.rs | Ported | Character-generation hair style payload |
+| DatReaderWriter/Generated/Types/EyeStripCG.generated.cs | src/Types/EyeStripCG.rs | Ported | Character-generation eye strip payload |
+| DatReaderWriter/Generated/Types/FaceStripCG.generated.cs | src/Types/FaceStripCG.rs | Ported | Character-generation face strip payload |
+| DatReaderWriter/Generated/Types/GearCG.generated.cs | src/Types/GearCG.rs | Ported | Character-generation gear option payload |
+| DatReaderWriter/Generated/Types/SexCG.generated.cs | src/Types/SexCG.rs | Verified | Character-generation gender payload now reads setup/sound/motion/combat references and appearance options |
+| DatReaderWriter/Generated/Types/HeritageGroupCG.generated.cs | src/Types/HeritageGroupCG.rs | Verified | Character-generation heritage group payload now reads starting areas, templates, skills, and gender table |
 | `DatReaderWriter/Generated/Types/AnimationHook.generated.cs` and hook variants | `src/Types/AnimationHook.rs` | Partial | Read-side hook family collapsed into one Rust enum; unknown hook payloads are not preserved |
 | `DatReaderWriter/Generated/Types/PhysicsScriptData.generated.cs` | `src/Types/PhysicsScriptData.rs` | Ported | Physics script timing + hook record |
 | `DatReaderWriter/DatDatabase.cs` | `src/DatDatabase.rs` | Partial | Raw file entry lookup, byte/decompression read support, typed `try_get<T>()`, and typed id enumeration |
@@ -120,19 +150,27 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/DBObjs/SurfaceTexture.generated.cs` | `src/DBObjs/SurfaceTexture.rs` | Verified | Typed asset object |
 | `DatReaderWriter/Generated/DBObjs/RenderSurface.generated.cs` | `src/DBObjs/RenderSurface.rs` | Verified | Typed asset object |
 | `DatReaderWriter/Generated/DBObjs/MotionTable.generated.cs` | `src/DBObjs/MotionTable.rs` | Verified | Typed asset object |
+| `DatReaderWriter/Generated/DBObjs/Setup.generated.cs` | `src/DBObjs/Setup.rs` | Verified | Setup graph root now reads explicit part hierarchy, placements, collision primitives, lights, and default asset refs |
+| `DatReaderWriter/Generated/DBObjs/Animation.generated.cs` | `src/DBObjs/Animation.rs` | Verified | Animation root now reads positional frames and per-part animation frames with hooks |
 | `DatReaderWriter/Generated/DBObjs/Region.generated.cs` | `src/DBObjs/Region.rs` | Verified | Region now reads sound, scene, sky, terrain, and misc sections with nested typed coverage |
 | `DatReaderWriter/Generated/DBObjs/Scene.generated.cs` | `src/DBObjs/Scene.rs` | Verified | Scene object list now reads as typed DBObj |
 | `DatReaderWriter/Generated/DBObjs/Surface.generated.cs` | `src/DBObjs/Surface.rs` | Verified | Surface/material DBObj ported for mesh references |
 | `DatReaderWriter/Generated/DBObjs/GfxObj.generated.cs` | `src/DBObjs/GfxObj.rs` | Partial | Core mesh/surface/vertex/polygon/BSP read path ported |
 | `DatReaderWriter/Generated/DBObjs/Wave.generated.cs` | `src/DBObjs/Wave.rs` | Verified | Audio sample container ported |
+| DatReaderWriter/Generated/DBObjs/CharGen.generated.cs | src/DBObjs/CharGen.rs | Verified | Character-generation root now reads starting areas and heritage-group hash tables |
+| DatReaderWriter/Generated/DBObjs/PalSet.generated.cs | src/DBObjs/PalSet.rs | Ported | Palette-set DBObj ported for CharGen references |
+| DatReaderWriter/Generated/DBObjs/ClothingTable.generated.cs | src/DBObjs/ClothingTable.rs | Partial | Marker DBObj added so typed CharGen references stay explicit; full clothing effects remain pending |
+| DatReaderWriter/Generated/DBObjs/CombatTable.generated.cs | src/DBObjs/CombatTable.rs | Partial | Marker DBObj added so typed CharGen references stay explicit; full combat maneuver data remains pending |
 | `DatReaderWriter/Generated/DBObjs/ParticleEmitter.generated.cs` | `src/DBObjs/ParticleEmitter.rs` | Ported | Core particle emitter data ported for script references |
 | `DatReaderWriter/Generated/DBObjs/PhysicsScript.generated.cs` | `src/DBObjs/PhysicsScript.rs` | Verified | Physics script list + hook decoding ported |
+| `DatReaderWriter/Generated/DBObjs/SoundTable.generated.cs` | `src/DBObjs/SoundTable.rs` | Verified | Explicit read-side sound table port with hash and named sound maps |
+| `DatReaderWriter/Generated/DBObjs/PhysicsScriptTable.generated.cs` | `src/DBObjs/PhysicsScriptTable.rs` | Verified | Explicit play-script to script-list table now ported |
 | `DatReaderWriter.Tests/IO/DatBinReadWriteSelfTests.cs` | `tests/dat_bin_read_write_self_tests.rs` | Verified | Initial Rust equivalents passing |
 | `DatReaderWriter.Tests/IO/DatBTree/DatBTreeReaderWriterTests.cs` | `tests/btree_tests.rs` | Partial | Read-path node and traversal coverage via mock allocator |
 | `DatReaderWriter.Tests/*` options-adjacent behavior | `tests/options_tests.rs` | Verified | Rust-specific coverage for options defaults and overrides |
 | `DatReaderWriter` database/collection constructor behavior | `tests/collection_tests.rs` | Verified | Synthetic header-backed tests for wrapper validation, path resolution, high-res fallback, typed id enumeration, and qualified-id resolution |
 | typed DB object read behavior | `tests/typed_dbobj_tests.rs` | Verified | `Iteration` id resolution, typed read, and typed id enumeration |
-| typed asset object read behavior | `tests/typed_asset_tests.rs` | Verified | Palette / SurfaceTexture / RenderSurface / MotionTable / Region / Scene / Surface / GfxObj / Wave / ParticleEmitter / PhysicsScript coverage |
+| typed asset object read behavior | `tests/typed_asset_tests.rs` | Verified | Palette / SurfaceTexture / RenderSurface / MotionTable / Setup / Animation / SoundTable / PhysicsScriptTable / ObjDesc / CharGen / Region / Scene / Surface / GfxObj / Wave / ParticleEmitter / PhysicsScript coverage |
 
 ## What Works Now
 
@@ -152,6 +190,8 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 - Resolve and read typed `Iteration`, `Palette`, `SurfaceTexture`, `RenderSurface`, `MotionTable`, `Region`, `Scene`, and `Surface` objects.
 - Read the core `GfxObj` mesh layout including surfaces, vertex arrays, polygons, and drawing/physics BSP structures.
 - Read `Wave`, `ParticleEmitter`, and `PhysicsScript` objects with typed animation hook decoding.
+- Read `SoundTable` and `PhysicsScriptTable` objects with explicit typed map payloads.
+- Read `Setup` and `Animation` objects with explicit part/frame structures and default asset references.`r`n- Read `CharGen` objects with explicit heritage-group, gender, starting-area, and appearance payloads.
 - Read nested `Region` sound, scene, sky, terrain, and misc payloads through typed helper structs.
 
 ## Latest Progress
@@ -169,7 +209,12 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 - Expanded asset tests to cover `Scene`, `Surface`, and `GfxObj` roundtrips on the read path.
 - Ported the `AnimationHook` family into a read-side Rust enum, added `PackedQualifiedDataId`, and wired `PhysicsScriptData` / `PhysicsScript` on top of it.
 - Added real `Wave` and `ParticleEmitter` DBObjs so immediate hook references now resolve into typed data.
-- Expanded asset tests again to cover `Wave`, `ParticleEmitter`, and mixed-hook `PhysicsScript` roundtrips.
+- Expanded asset tests again to cover Wave, ParticleEmitter, and mixed-hook PhysicsScript roundtrips.
+- Ported the next explicit asset-graph slice around those hooks: `SoundTable`, `PhysicsScriptTable`, `Setup`, and `Animation`.
+- Added the supporting read-side enums and payload types for setup placements, sound tables, physics script tables, and animation frames without hardcoding any external DAT paths.
+- Replaced the thin read-first Sound and PlayScript wrappers with explicit named constant surfaces mirrored from the reference enums.
+- Ported ObjDesc, SubPalette, and TextureMapChange as the next explicit setup/animation-adjacent payload slice.
+- Expanded `typed_asset_tests.rs` to cover `SoundTable`, `PhysicsScriptTable`, `Animation`, `Setup`, `ObjDesc`, and `CharGen` roundtrips.
 
 ## Remaining Major Areas
 
@@ -181,3 +226,8 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 - Richer cache behavior and higher-level object graph traversal beyond direct `QualifiedDataId<T>` lookups
 - Write-path allocator and B-tree behavior if parity is still desired later
 - Broader test suite migration with real DAT-backed fixtures that remain external to the crate
+
+
+
+
+

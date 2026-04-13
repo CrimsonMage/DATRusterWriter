@@ -1,5 +1,13 @@
 #![allow(non_snake_case)]
 
+#[path = "Animation.rs"]
+pub mod Animation;
+#[path = "CharGen.rs"]
+pub mod CharGen;
+#[path = "ClothingTable.rs"]
+pub mod ClothingTable;
+#[path = "CombatTable.rs"]
+pub mod CombatTable;
 #[path = "GfxObj.rs"]
 pub mod GfxObj;
 #[path = "Iteration.rs"]
@@ -8,16 +16,24 @@ pub mod Iteration;
 pub mod MotionTable;
 #[path = "Palette.rs"]
 pub mod Palette;
+#[path = "PalSet.rs"]
+pub mod PalSet;
 #[path = "ParticleEmitter.rs"]
 pub mod ParticleEmitter;
 #[path = "PhysicsScript.rs"]
 pub mod PhysicsScript;
+#[path = "PhysicsScriptTable.rs"]
+pub mod PhysicsScriptTable;
 #[path = "Region.rs"]
 pub mod Region;
 #[path = "RenderSurface.rs"]
 pub mod RenderSurface;
 #[path = "Scene.rs"]
 pub mod Scene;
+#[path = "Setup.rs"]
+pub mod Setup;
+#[path = "SoundTable.rs"]
+pub mod SoundTable;
 #[path = "Surface.rs"]
 pub mod Surface;
 #[path = "SurfaceTexture.rs"]

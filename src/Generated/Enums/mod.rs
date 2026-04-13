@@ -10,6 +10,8 @@ pub mod DBObjType;
 pub mod AnimationHookDir;
 #[path = "AnimationHookType.rs"]
 pub mod AnimationHookType;
+#[path = "AnimationFlags.rs"]
+pub mod AnimationFlags;
 #[path = "EmitterType.rs"]
 pub mod EmitterType;
 #[path = "MotionCommand.rs"]
@@ -40,3 +42,13 @@ pub mod BSPNodeType;
 pub mod Sound;
 #[path = "TerrainTextureType.rs"]
 pub mod TerrainTextureType;
+#[path = "ParentLocation.rs"]
+pub mod ParentLocation;
+#[path = "Placement.rs"]
+pub mod Placement;
+#[path = "PlayScript.rs"]
+pub mod PlayScript;
+#[path = "SetupFlags.rs"]
+pub mod SetupFlags;
+#[path = "SkillId.rs"]
+pub mod SkillId;
