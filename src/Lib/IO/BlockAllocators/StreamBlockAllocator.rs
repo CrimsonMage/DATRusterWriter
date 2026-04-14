@@ -11,9 +11,11 @@ use uuid::Uuid;
 use crate::{
     Generated::Enums::DatFileType::DatFileType,
     Lib::IO::{
-        BlockAllocators::IDatBlockAllocator::IDatBlockAllocator, DatBinReader::DatBinReader,
-        DatBinWriter::DatBinWriter, DatHeader::DatHeader, IPackable::IPackable,
-        IUnpackable::IUnpackable,
+        BlockAllocators::{
+            BaseBlockAllocator::BaseBlockAllocator, IDatBlockAllocator::IDatBlockAllocator,
+        },
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, DatHeader::DatHeader,
+        IPackable::IPackable, IUnpackable::IUnpackable,
     },
     Options::DatDatabaseOptions::DatDatabaseOptions,
 };
@@ -63,7 +65,7 @@ impl StreamBlockAllocator {
     }
 
     fn unsupported_write() -> io::Error {
-        io::Error::new(io::ErrorKind::Unsupported, "allocator is not writable")
+        BaseBlockAllocator::unsupported_write()
     }
 
     fn try_read_header(state: &mut StreamState) -> io::Result<()> {
@@ -118,9 +120,8 @@ impl StreamBlockAllocator {
         }
 
         if state.header.first_free_block == 0 && state.header.last_free_block == 0 {
-            let first_block_offset = ((DatHeader::SIZE as i32 + state.header.block_size - 1)
-                / state.header.block_size)
-                * state.header.block_size;
+            let first_block_offset =
+                BaseBlockAllocator::first_aligned_block_offset(state.header.block_size);
             state.header.free_block_count = 0;
             state.header.first_free_block = first_block_offset;
             state.header.last_free_block = first_block_offset;
@@ -180,10 +181,8 @@ impl IDatBlockAllocator for StreamBlockAllocator {
             return Err(Self::unsupported_write());
         }
         let mut state = self.state.lock().unwrap();
-        let header_block_count = ((DatHeader::SIZE as i32 + block_size - 1) / block_size).max(1);
-        state.header = DatHeader::new(file_type, subset, block_size, None, 0, 0, Uuid::nil(), 0);
-        state.header.root_block = 0;
-        state.header.file_size = header_block_count * block_size;
+        let header_block_count = BaseBlockAllocator::header_block_count(block_size);
+        state.header = BaseBlockAllocator::init_new_header(file_type, subset, block_size);
         if num_blocks_to_allocate > 0 {
             Self::allocate_empty_blocks_locked(&mut state, num_blocks_to_allocate)?;
         } else {
@@ -205,18 +204,15 @@ impl IDatBlockAllocator for StreamBlockAllocator {
         if !self.can_write {
             return Err(Self::unsupported_write());
         }
-        if version.len() > 255 {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "version string can only be 255 characters max",
-            ));
-        }
         let mut state = self.state.lock().unwrap();
-        state.header.version = Some(version.to_string());
-        state.header.engine_version = engine_version;
-        state.header.game_version = game_version;
-        state.header.major_version = major_version;
-        state.header.minor_version = minor_version;
+        BaseBlockAllocator::set_version(
+            &mut state.header,
+            version,
+            engine_version,
+            game_version,
+            major_version,
+            minor_version,
+        )?;
         Self::write_header_locked(&mut state)
     }
 

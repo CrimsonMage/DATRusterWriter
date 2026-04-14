@@ -7,6 +7,7 @@ use std::{
 use dat_reader_writer::{
     Generated::Enums::DatFileType::DatFileType,
     Lib::IO::BlockAllocators::{
+        BaseBlockAllocator::BaseBlockAllocator,
         IDatBlockAllocator::IDatBlockAllocator,
         MemoryMappedBlockAllocator::MemoryMappedBlockAllocator,
         StreamBlockAllocator::StreamBlockAllocator,
@@ -179,4 +180,21 @@ fn memory_mapped_allocator_reads_existing_blocks_sync_and_async() {
     assert_eq!(payload, async_read);
 
     let _ = fs::remove_file(path);
+}
+
+#[test]
+fn base_block_allocator_helpers_match_reference_header_rules() {
+    let header = BaseBlockAllocator::init_new_header(DatFileType::Portal, 7, 64);
+    assert_eq!(DatFileType::Portal, header.r#type);
+    assert_eq!(7, header.subset);
+    assert_eq!(64, header.block_size);
+    assert_eq!(448, BaseBlockAllocator::first_aligned_block_offset(64));
+    assert_eq!(7, BaseBlockAllocator::header_block_count(64));
+
+    let mut versioned = header.clone();
+    BaseBlockAllocator::set_version(&mut versioned, "retail", 1, 2, Uuid::nil(), 3).unwrap();
+    assert_eq!(Some("retail".to_string()), versioned.version);
+    assert_eq!(1, versioned.engine_version);
+    assert_eq!(2, versioned.game_version);
+    assert_eq!(3, versioned.minor_version);
 }

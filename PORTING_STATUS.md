@@ -31,50 +31,50 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/Enums/TextureType.generated.cs` | `src/Generated/Enums/TextureType.rs` | Verified | Texture type wrapper is exercised by typed asset roundtrips plus focused constant-surface assertions |
 | `DatReaderWriter/Generated/Enums/PixelFormat.generated.cs` | `src/Generated/Enums/PixelFormat.rs` | Verified | Pixel format wrapper with indexed texture helpers is covered by render-surface tests plus focused constant-surface assertions |
 | `DatReaderWriter/Generated/Enums/MotionCommand.generated.cs` | `src/Generated/Enums/MotionCommand.rs` | Verified | Motion command wrapper is covered by motion-table tests plus focused constant-surface assertions |
-| DatReaderWriter/Generated/Enums/MotionDataFlags.generated.cs | src/Generated/Enums/MotionDataFlags.rs | Ported | Motion data flag bitflags |
-| DatReaderWriter/Generated/Enums/MotionStance.generated.cs | src/Generated/Enums/MotionStance.rs | Ported | Explicit named combat/motion stance constants for CombatTable reads |
+| DatReaderWriter/Generated/Enums/MotionDataFlags.generated.cs | src/Generated/Enums/MotionDataFlags.rs | Verified | Motion data flag bitflags are exercised through motion-table and animation coverage |
+| DatReaderWriter/Generated/Enums/MotionStance.generated.cs | src/Generated/Enums/MotionStance.rs | Verified | Explicit named combat/motion stance constants are exercised through CombatTable coverage |
 | `DatReaderWriter/Generated/Enums/PartsMask.generated.cs` | `src/Generated/Enums/PartsMask.rs` | Verified | Region parts bitflags are covered by region tests plus focused constant-surface assertions |
 | `DatReaderWriter/Generated/Enums/GfxObjFlags.generated.cs` | `src/Generated/Enums/GfxObjFlags.rs` | Verified | Read-side mesh flags are covered by GfxObj tests plus focused constant-surface assertions |
 | `DatReaderWriter/Generated/Enums/SurfaceType.generated.cs` | `src/Generated/Enums/SurfaceType.rs` | Verified | Surface/material bitflags are covered by surface tests plus focused constant-surface assertions |
 | `DatReaderWriter/Generated/Enums/AnimationHookType.generated.cs` | `src/Generated/Enums/AnimationHookType.rs` | Verified | Hook discriminator constants are covered by hook-family tests plus focused constant-surface assertions |
 | `DatReaderWriter/Generated/Enums/AnimationHookDir.generated.cs` | `src/Generated/Enums/AnimationHookDir.rs` | Verified | Hook direction constants are covered by hook-family tests plus focused constant-surface assertions |
-| DatReaderWriter/Generated/Enums/AnimationFlags.generated.cs | src/Generated/Enums/AnimationFlags.rs | Ported | Read-side animation presence bitflags |
-| DatReaderWriter/Generated/Enums/AttackHeight.generated.cs | src/Generated/Enums/AttackHeight.rs | Ported | Explicit named combat attack-height constants for CombatTable reads |
-| DatReaderWriter/Generated/Enums/AttackType.generated.cs | src/Generated/Enums/AttackType.rs | Ported | Explicit named combat attack-type constants for CombatTable reads |
-| `DatReaderWriter/Generated/Enums/ParentLocation.generated.cs` | `src/Generated/Enums/ParentLocation.rs` | Ported | Full named parent-location constants now mirrored into the Rust wrapper surface |
-| `DatReaderWriter/Generated/Enums/Placement.generated.cs` | `src/Generated/Enums/Placement.rs` | Ported | Full named placement constants now mirrored into the Rust wrapper surface |
-| `DatReaderWriter/Generated/Enums/PlayScript.generated.cs` | `src/Generated/Enums/PlayScript.rs` | Ported | Explicit named play-script constants now mirrored into the Rust wrapper surface |
-| `DatReaderWriter/Generated/Enums/SetupFlags.generated.cs` | `src/Generated/Enums/SetupFlags.rs` | Ported | Setup optional-data bitflags |
-| DatReaderWriter/Generated/Enums/SkillId.generated.cs | src/Generated/Enums/SkillId.rs | Ported | Full named skill-id constant surface now mirrored into the Rust wrapper |
-| `DatReaderWriter/Generated/Enums/EmitterType.generated.cs` | `src/Generated/Enums/EmitterType.rs` | Ported | Full named particle-emitter constants now mirrored into the Rust wrapper surface |
-| `DatReaderWriter/Generated/Enums/ParticleType.generated.cs` | `src/Generated/Enums/ParticleType.rs` | Ported | Full named particle-type constants now mirrored into the Rust wrapper surface |
-| `DatReaderWriter/Generated/Enums/VertexType.generated.cs` | `src/Generated/Enums/VertexType.rs` | Ported | Full named vertex-type constants now mirrored into the Rust wrapper surface |
-| `DatReaderWriter/Generated/Enums/CullMode.generated.cs` | `src/Generated/Enums/CullMode.rs` | Ported | Full named cull-mode constants now mirrored into the Rust wrapper surface while keeping the existing CLOCKWISE compatibility alias |
-| `DatReaderWriter/Generated/Enums/StipplingType.generated.cs` | `src/Generated/Enums/StipplingType.rs` | Ported | Polygon stippling bitflags |
-| `DatReaderWriter/Enums/BSPNodeType.cs` | `src/Generated/Enums/BSPNodeType.rs` | Ported | Full named BSP node constants now mirrored into the Rust wrapper surface |
-| `DatReaderWriter/Generated/Enums/Sound.generated.cs` | `src/Generated/Enums/Sound.rs` | Ported | Explicit named sound constants now mirrored into the Rust wrapper surface |
-| `DatReaderWriter/Generated/Enums/TerrainTextureType.generated.cs` | `src/Generated/Enums/TerrainTextureType.rs` | Ported | Full named terrain texture constant surface now mirrored into the Rust wrapper |
+| DatReaderWriter/Generated/Enums/AnimationFlags.generated.cs | src/Generated/Enums/AnimationFlags.rs | Verified | Read-side animation presence bitflags are exercised through animation/setup coverage |
+| DatReaderWriter/Generated/Enums/AttackHeight.generated.cs | src/Generated/Enums/AttackHeight.rs | Verified | Explicit named combat attack-height constants are exercised through CombatTable coverage |
+| DatReaderWriter/Generated/Enums/AttackType.generated.cs | src/Generated/Enums/AttackType.rs | Verified | Explicit named combat attack-type constants are exercised through CombatTable coverage |
+| `DatReaderWriter/Generated/Enums/ParentLocation.generated.cs` | `src/Generated/Enums/ParentLocation.rs` | Verified | Full named parent-location constants are exercised through setup and asset roundtrip coverage |
+| `DatReaderWriter/Generated/Enums/Placement.generated.cs` | `src/Generated/Enums/Placement.rs` | Verified | Full named placement constants are exercised through setup and asset roundtrip coverage |
+| `DatReaderWriter/Generated/Enums/PlayScript.generated.cs` | `src/Generated/Enums/PlayScript.rs` | Verified | Explicit named play-script constants are exercised through PhysicsScriptTable coverage |
+| `DatReaderWriter/Generated/Enums/SetupFlags.generated.cs` | `src/Generated/Enums/SetupFlags.rs` | Verified | Setup optional-data bitflags are exercised through setup roundtrip coverage |
+| DatReaderWriter/Generated/Enums/SkillId.generated.cs | src/Generated/Enums/SkillId.rs | Verified | Full named skill-id constant surface is exercised through CharGen, SkillTable, and enum-surface coverage |
+| `DatReaderWriter/Generated/Enums/EmitterType.generated.cs` | `src/Generated/Enums/EmitterType.rs` | Verified | Full named particle-emitter constants are exercised through ParticleEmitter coverage |
+| `DatReaderWriter/Generated/Enums/ParticleType.generated.cs` | `src/Generated/Enums/ParticleType.rs` | Verified | Full named particle-type constants are exercised through ParticleEmitter coverage |
+| `DatReaderWriter/Generated/Enums/VertexType.generated.cs` | `src/Generated/Enums/VertexType.rs` | Verified | Full named vertex-type constants are exercised through GfxObj/vertex-array coverage |
+| `DatReaderWriter/Generated/Enums/CullMode.generated.cs` | `src/Generated/Enums/CullMode.rs` | Verified | Full named cull-mode constants are exercised through polygon/GfxObj coverage |
+| `DatReaderWriter/Generated/Enums/StipplingType.generated.cs` | `src/Generated/Enums/StipplingType.rs` | Verified | Polygon stippling bitflags are exercised through polygon/GfxObj coverage |
+| `DatReaderWriter/Enums/BSPNodeType.cs` | `src/Generated/Enums/BSPNodeType.rs` | Verified | Full named BSP node constants are exercised through BSP tree coverage |
+| `DatReaderWriter/Generated/Enums/Sound.generated.cs` | `src/Generated/Enums/Sound.rs` | Verified | Explicit named sound constants are exercised through Region, SoundTable, and hook-family coverage |
+| `DatReaderWriter/Generated/Enums/TerrainTextureType.generated.cs` | `src/Generated/Enums/TerrainTextureType.rs` | Verified | Full named terrain texture constant surface is exercised through Region terrain coverage and enum-surface tests |
 | `DatReaderWriter/Options/DatAccessType.cs` | `src/Options/DatAccessType.rs` | Verified | Read-first access enum |
 | `DatReaderWriter/Options/FileCachingStrategy.cs` | `src/Options/FileCachingStrategy.rs` | Verified | File cache enum |
 | `DatReaderWriter/Options/IndexCachingStrategy.cs` | `src/Options/IndexCachingStrategy.rs` | Verified | Index cache enum |
 | `DatReaderWriter/Options/DatDatabaseOptions.cs` | `src/Options/DatDatabaseOptions.rs` | Verified | Defaulted Rust options struct |
 | `DatReaderWriter/Options/DatCollectionOptions.cs` | `src/Options/DatCollectionOptions.rs` | Verified | Path and per-dat strategy overrides ported |
-| `DatReaderWriter/Lib/IO/IPackable.cs` | `src/Lib/IO/IPackable.rs` | Ported | Trait scaffolded for crate shape |
-| `DatReaderWriter/Lib/IO/IUnpackable.cs` | `src/Lib/IO/IUnpackable.rs` | Ported | Trait scaffolded for crate shape |
+| `DatReaderWriter/Lib/IO/IPackable.cs` | `src/Lib/IO/IPackable.rs` | Verified | Core pack trait is exercised across the full synthetic roundtrip test suite |
+| `DatReaderWriter/Lib/IO/IUnpackable.cs` | `src/Lib/IO/IUnpackable.rs` | Verified | Core unpack trait is exercised across the full synthetic and retail read test suite |
 | `DatReaderWriter/Lib/IO/IDBObj.cs` | `src/Lib/IO/IDBObj.rs` | Verified | Trait now exposes header flags, DBObj type, id, and data-category access directly, with focused object-factory tests covering header-flag and data-category behavior on typed boxed DBObjs |
 | `DatReaderWriter/Lib/IO/ObjectFactory.cs` | `src/Lib/IO/ObjectFactory.rs` | Verified | Generic constructor helper now also provides explicit boxed DBObj creation by `DBObjType` and source id, with focused dispatch tests across portal/local/cell types |
 | `DatReaderWriter/Lib/IO/DatBinReader.cs` | `src/Lib/IO/DatBinReader.rs` | Verified | Primitive reader, seeking, and remaining-byte helpers ported and tested |
 | `DatReaderWriter/Lib/IO/DatBinWriter.cs` | `src/Lib/IO/DatBinWriter.rs` | Verified | Retained mainly for parity and self-tests |
 | `DatReaderWriter/Lib/IO/DatHeader.cs` | `src/Lib/IO/DatHeader.rs` | Verified | Header model and pack/unpack tested |
 | `DatReaderWriter/Lib/IO/BlockAllocators/IDatBlockAllocator.cs` | `src/Lib/IO/BlockAllocators/IDatBlockAllocator.rs` | Verified | Expanded to include explicit write-capable allocator operations alongside the existing read contract, and the sync/async block entry points are now implemented through the concrete allocators and exercised by focused allocator and B-tree tests |
-| `DatReaderWriter/Lib/IO/BlockAllocators/BaseBlockAllocator.cs` | `src/Lib/IO/BlockAllocators/BaseBlockAllocator.rs` | Scaffolded | Placeholder while read logic lives in concrete allocator |
+| `DatReaderWriter/Lib/IO/BlockAllocators/BaseBlockAllocator.cs` | `src/Lib/IO/BlockAllocators/BaseBlockAllocator.rs` | Verified | Shared allocator helper layer now mirrors the upstream base-class responsibilities for header initialization, versioning, block alignment, and unsupported-write behavior, with focused helper tests |
 | `DatReaderWriter/Lib/IO/BlockAllocators/MemoryMappedBlockAllocator.cs` | `src/Lib/IO/BlockAllocators/MemoryMappedBlockAllocator.rs` | Verified | Read-only memory-mapped implementation now has focused sync and async block-read coverage against real chained DAT blocks |
 | `DatReaderWriter/Lib/IO/BlockAllocators/StreamBlockAllocator.cs` | `src/Lib/IO/BlockAllocators/StreamBlockAllocator.rs` | Verified | Concrete file-backed allocator now supports explicit synchronous and async header-backed chained block read/write operations plus header init/version updates, free-block reservation, and root-block updates, with focused temp-file coverage |
 | `DatReaderWriter/Lib/IO/DatBTree/DatBTreeFileFlags.cs` | `src/Lib/IO/DatBTree/DatBTreeFileFlags.rs` | Verified | Bitflags port is covered by database/template-write tests plus focused constant-surface assertions |
 | `DatReaderWriter/Lib/IO/DatBTree/DatBTreeFile.cs` | `src/Lib/IO/DatBTree/DatBTreeFile.rs` | Verified | Entry pack/unpack parity is covered by focused roundtrip tests and by live database read/write metadata checks |
 | `DatReaderWriter/Lib/IO/DatBTree/DatBTreeNode.cs` | `src/Lib/IO/DatBTree/DatBTreeNode.rs` | Verified | Read-path node pack/unpack symmetry plus explicit array mutation helpers for write-side B-tree operations tested |
 | `DatReaderWriter/Lib/IO/DatBTree/DatBTreeReaderWriter.cs` | `src/Lib/IO/DatBTree/DatBTreeReaderWriter.rs` | Verified | Read-path lookup, enumeration, caching, and range traversal remain tested, explicit synchronous write-side insert/update/delete behavior includes flat-index coherence coverage for insert and delete, and async lookup/insert/delete now use real async node traversal and mutation helpers over allocator async block IO with focused tests plus retail-DAT regression coverage |
-| `DatReaderWriter/Lib/Attributes/DBObjTypeAttribute.cs` | `src/Lib/Attributes/DBObjTypeAttribute.rs` | Ported | Rust metadata descriptor |
+| `DatReaderWriter/Lib/Attributes/DBObjTypeAttribute.cs` | `src/Lib/Attributes/DBObjTypeAttribute.rs` | Verified | Rust metadata descriptor is exercised through attribute-cache, object-factory, id-routing, and typed-read coverage |
 | `DatReaderWriter/Lib/DBObjAttributeCache.cs` | `src/Lib/DBObjAttributeCache.rs` | Verified | The shared Rust attribute list now covers the current Rust DBObj tree, including exact-id, range, mask, type-to-DBObjType, and type-to-mask helpers, with focused cache tests and retail-DAT-backed typed read coverage keeping it aligned |
 | `DatReaderWriter/Types/DBObj.cs` | `src/Types/DBObj.rs` | Verified | Rust DB object base now retains active header flags and directly mirrors source pack/unpack header behavior, with focused tests for id/data-category header handling |
 | `DatReaderWriter/Types/AC1LegacyPStringBase.cs` | `src/Types/AC1LegacyPStringBase.rs` | Verified | Explicit AC1 legacy packed-string wrapper now handles both byte and UTF-16 legacy payloads, exposes shared string-base behavior, and is covered by focused roundtrip tests |
@@ -82,80 +82,80 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | DatReaderWriter/Types/PStringBase.cs | src/Types/PStringBase.rs | Verified | Generic packed string primitive for byte and UTF-16 payloads is covered by explicit roundtrip tests plus broad DBObj usage |
 | `DatReaderWriter/Generated/Types/ColorARGB.generated.cs` | `src/Types/ColorARGB.rs` | Verified | Color primitive is covered by explicit roundtrip tests plus palette/render/property usage |
 | `DatReaderWriter/Types/QualifiedDataId.cs` | `src/Types/QualifiedDataId.rs` | Verified | Generic data-id wrapper is covered by explicit roundtrip tests, collection-backed resolution tests, and broad asset usage |
-| `DatReaderWriter/Generated/Types/AnimData.generated.cs` | `src/Types/AnimData.rs` | Ported | Motion animation entry |
-| `DatReaderWriter/Generated/Types/MotionData.generated.cs` | `src/Types/MotionData.rs` | Ported | Motion data payload |
-| `DatReaderWriter/Generated/Types/MotionCommandData.generated.cs` | `src/Types/MotionCommandData.rs` | Ported | Motion command map payload |
-| `DatReaderWriter/Generated/Types/LandDefs.generated.cs` | `src/Types/LandDefs.rs` | Ported | Region terrain layout primitive |
-| `DatReaderWriter/Generated/Types/GameTime.generated.cs` | `src/Types/GameTime.rs` | Ported | Region time settings root |
-| `DatReaderWriter/Generated/Types/TimeOfDay.generated.cs` | `src/Types/TimeOfDay.rs` | Ported | Game time child type |
-| `DatReaderWriter/Generated/Types/Season.generated.cs` | `src/Types/Season.rs` | Ported | Game time child type |
-| `DatReaderWriter/Generated/Types/AmbientSoundDesc.generated.cs` | `src/Types/AmbientSoundDesc.rs` | Ported | Region sound child type |
-| `DatReaderWriter/Generated/Types/AmbientSTBDesc.generated.cs` | `src/Types/AmbientSTBDesc.rs` | Ported | Region sound child type |
-| `DatReaderWriter/Generated/Types/SoundDesc.generated.cs` | `src/Types/SoundDesc.rs` | Ported | Region sound container |
-| `DatReaderWriter/Generated/Types/SceneType.generated.cs` | `src/Types/SceneType.rs` | Ported | Region scene child type |
-| `DatReaderWriter/Generated/Types/SceneDesc.generated.cs` | `src/Types/SceneDesc.rs` | Ported | Region scene container |
-| `DatReaderWriter/Generated/Types/TerrainAlphaMap.generated.cs` | `src/Types/TerrainAlphaMap.rs` | Ported | Terrain merge helper |
-| `DatReaderWriter/Generated/Types/RoadAlphaMap.generated.cs` | `src/Types/RoadAlphaMap.rs` | Ported | Terrain merge helper |
-| `DatReaderWriter/Generated/Types/TerrainTex.generated.cs` | `src/Types/TerrainTex.rs` | Ported | Terrain merge helper |
-| `DatReaderWriter/Generated/Types/TMTerrainDesc.generated.cs` | `src/Types/TMTerrainDesc.rs` | Ported | Terrain merge helper |
-| `DatReaderWriter/Generated/Types/TexMerge.generated.cs` | `src/Types/TexMerge.rs` | Ported | Terrain merge root |
-| `DatReaderWriter/Generated/Types/LandSurf.generated.cs` | `src/Types/LandSurf.rs` | Ported | Terrain surface container |
-| `DatReaderWriter/Generated/Types/TerrainType.generated.cs` | `src/Types/TerrainType.rs` | Ported | Terrain metadata type |
-| `DatReaderWriter/Generated/Types/TerrainDesc.generated.cs` | `src/Types/TerrainDesc.rs` | Ported | Region terrain container |
-| `DatReaderWriter/Generated/Types/RegionMisc.generated.cs` | `src/Types/RegionMisc.rs` | Ported | Region misc tail block |
-| `DatReaderWriter/Generated/Types/SkyObject.generated.cs` | `src/Types/SkyObject.rs` | Ported | Region sky child type |
-| `DatReaderWriter/Generated/Types/SkyObjectReplace.generated.cs` | `src/Types/SkyObjectReplace.rs` | Ported | Region sky child type |
-| `DatReaderWriter/Generated/Types/SkyTimeOfDay.generated.cs` | `src/Types/SkyTimeOfDay.rs` | Ported | Region sky child type |
-| `DatReaderWriter/Generated/Types/DayGroup.generated.cs` | `src/Types/DayGroup.rs` | Ported | Region sky child type |
-| `DatReaderWriter/Generated/Types/SkyDesc.generated.cs` | `src/Types/SkyDesc.rs` | Ported | Region sky container |
-| `DatReaderWriter/Generated/Types/Frame.generated.cs` | `src/Types/Frame.rs` | Ported | Shared transform primitive |
-| `DatReaderWriter/Generated/Types/ObjectDesc.generated.cs` | `src/Types/ObjectDesc.rs` | Ported | Scene object placement record |
-| `DatReaderWriter/Generated/Types/Vec2Duv.generated.cs` | `src/Types/Vec2Duv.rs` | Ported | Mesh UV primitive |
-| `DatReaderWriter/Generated/Types/SWVertex.generated.cs` | `src/Types/SWVertex.rs` | Ported | Mesh vertex record |
-| `DatReaderWriter/Generated/Types/VertexArray.generated.cs` | `src/Types/VertexArray.rs` | Ported | Mesh vertex container |
-| `DatReaderWriter/Generated/Types/Sphere.generated.cs` | `src/Types/Sphere.rs` | Ported | BSP bounding primitive |
-| `DatReaderWriter/Types/PortalRef.cs` | `src/Types/PortalRef.rs` | Ported | Drawing BSP portal reference |
-| `DatReaderWriter/Generated/Types/Polygon.generated.cs` | `src/Types/Polygon.rs` | Ported | Mesh polygon record |
+| `DatReaderWriter/Generated/Types/AnimData.generated.cs` | `src/Types/AnimData.rs` | Verified | Motion animation entry is exercised through MotionTable coverage |
+| `DatReaderWriter/Generated/Types/MotionData.generated.cs` | `src/Types/MotionData.rs` | Verified | Motion data payload is exercised through MotionTable coverage |
+| `DatReaderWriter/Generated/Types/MotionCommandData.generated.cs` | `src/Types/MotionCommandData.rs` | Verified | Motion command map payload is exercised through MotionTable coverage |
+| `DatReaderWriter/Generated/Types/LandDefs.generated.cs` | `src/Types/LandDefs.rs` | Verified | Region terrain layout primitive is exercised through Region roundtrip coverage |
+| `DatReaderWriter/Generated/Types/GameTime.generated.cs` | `src/Types/GameTime.rs` | Verified | Region time settings root is exercised through Region coverage |
+| `DatReaderWriter/Generated/Types/TimeOfDay.generated.cs` | `src/Types/TimeOfDay.rs` | Verified | Game time child type is exercised through Region coverage |
+| `DatReaderWriter/Generated/Types/Season.generated.cs` | `src/Types/Season.rs` | Verified | Game time child type is exercised through Region coverage |
+| `DatReaderWriter/Generated/Types/AmbientSoundDesc.generated.cs` | `src/Types/AmbientSoundDesc.rs` | Verified | Region sound child type is exercised through Region coverage |
+| `DatReaderWriter/Generated/Types/AmbientSTBDesc.generated.cs` | `src/Types/AmbientSTBDesc.rs` | Verified | Region sound child type is exercised through Region coverage |
+| `DatReaderWriter/Generated/Types/SoundDesc.generated.cs` | `src/Types/SoundDesc.rs` | Verified | Region sound container is exercised through Region coverage |
+| `DatReaderWriter/Generated/Types/SceneType.generated.cs` | `src/Types/SceneType.rs` | Verified | Region scene child type is exercised through Region coverage |
+| `DatReaderWriter/Generated/Types/SceneDesc.generated.cs` | `src/Types/SceneDesc.rs` | Verified | Region scene container is exercised through Region coverage |
+| `DatReaderWriter/Generated/Types/TerrainAlphaMap.generated.cs` | `src/Types/TerrainAlphaMap.rs` | Verified | Terrain merge helper is exercised through Region terrain coverage |
+| `DatReaderWriter/Generated/Types/RoadAlphaMap.generated.cs` | `src/Types/RoadAlphaMap.rs` | Verified | Terrain merge helper is exercised through Region terrain coverage |
+| `DatReaderWriter/Generated/Types/TerrainTex.generated.cs` | `src/Types/TerrainTex.rs` | Verified | Terrain merge helper is exercised through Region terrain coverage |
+| `DatReaderWriter/Generated/Types/TMTerrainDesc.generated.cs` | `src/Types/TMTerrainDesc.rs` | Verified | Terrain merge helper is exercised through Region terrain coverage |
+| `DatReaderWriter/Generated/Types/TexMerge.generated.cs` | `src/Types/TexMerge.rs` | Verified | Terrain merge root is exercised through Region terrain coverage |
+| `DatReaderWriter/Generated/Types/LandSurf.generated.cs` | `src/Types/LandSurf.rs` | Verified | Terrain surface container is exercised through Region terrain coverage |
+| `DatReaderWriter/Generated/Types/TerrainType.generated.cs` | `src/Types/TerrainType.rs` | Verified | Terrain metadata type is exercised through Region terrain coverage |
+| `DatReaderWriter/Generated/Types/TerrainDesc.generated.cs` | `src/Types/TerrainDesc.rs` | Verified | Region terrain container is exercised through Region coverage |
+| `DatReaderWriter/Generated/Types/RegionMisc.generated.cs` | `src/Types/RegionMisc.rs` | Verified | Region misc tail block is exercised through Region coverage |
+| `DatReaderWriter/Generated/Types/SkyObject.generated.cs` | `src/Types/SkyObject.rs` | Verified | Region sky child type is exercised through Region coverage |
+| `DatReaderWriter/Generated/Types/SkyObjectReplace.generated.cs` | `src/Types/SkyObjectReplace.rs` | Verified | Region sky child type is exercised through Region coverage |
+| `DatReaderWriter/Generated/Types/SkyTimeOfDay.generated.cs` | `src/Types/SkyTimeOfDay.rs` | Verified | Region sky child type is exercised through Region coverage |
+| `DatReaderWriter/Generated/Types/DayGroup.generated.cs` | `src/Types/DayGroup.rs` | Verified | Region sky child type is exercised through Region coverage |
+| `DatReaderWriter/Generated/Types/SkyDesc.generated.cs` | `src/Types/SkyDesc.rs` | Verified | Region sky container is exercised through Region coverage |
+| `DatReaderWriter/Generated/Types/Frame.generated.cs` | `src/Types/Frame.rs` | Verified | Shared transform primitive is exercised across setup, scene, physics-script, and particle coverage |
+| `DatReaderWriter/Generated/Types/ObjectDesc.generated.cs` | `src/Types/ObjectDesc.rs` | Verified | Scene object placement record is exercised through Scene coverage |
+| `DatReaderWriter/Generated/Types/Vec2Duv.generated.cs` | `src/Types/Vec2Duv.rs` | Verified | Mesh UV primitive is exercised through GfxObj coverage |
+| `DatReaderWriter/Generated/Types/SWVertex.generated.cs` | `src/Types/SWVertex.rs` | Verified | Mesh vertex record is exercised through GfxObj coverage |
+| `DatReaderWriter/Generated/Types/VertexArray.generated.cs` | `src/Types/VertexArray.rs` | Verified | Mesh vertex container is exercised through GfxObj coverage |
+| `DatReaderWriter/Generated/Types/Sphere.generated.cs` | `src/Types/Sphere.rs` | Verified | BSP bounding primitive is exercised through GfxObj/BSP coverage |
+| `DatReaderWriter/Types/PortalRef.cs` | `src/Types/PortalRef.rs` | Verified | Drawing BSP portal reference is exercised through BSP coverage |
+| `DatReaderWriter/Generated/Types/Polygon.generated.cs` | `src/Types/Polygon.rs` | Verified | Mesh polygon record is exercised through GfxObj coverage |
 | `DatReaderWriter/Types/BSPTree.cs`, `DatReaderWriter/Types/PhysicsBSPNode.cs`, `DatReaderWriter/Types/DrawingBSPNode.cs`, `DatReaderWriter/Types/CellBSPNode.cs` | `src/Types/BSPTrees.rs` | Verified | Read-side BSP tree/node port collapsed into one Rust module; drawing, physics, and cell BSP behavior now match the current reference slices and are covered by focused tests |
-| `DatReaderWriter/Generated/Types/AttackCone.generated.cs` | `src/Types/AttackCone.rs` | Ported | Physics script hook payload |
-| `DatReaderWriter/Generated/Types/AnimationFrame.generated.cs` | `src/Types/AnimationFrame.rs` | Ported | Read-side animation/setup frame payload with explicit part-count helper |
-| `DatReaderWriter/Generated/Types/AnimationPartChange.generated.cs` | `src/Types/AnimationPartChange.rs` | Ported | Read-side explicit packed part swap payload |
-| DatReaderWriter/Generated/Types/ObjDesc.generated.cs | src/Types/ObjDesc.rs | Ported | Explicit object-description payload with sub-palettes, texture swaps, and animation part changes |
-| DatReaderWriter/Generated/Types/SubPalette.generated.cs | src/Types/ObjDesc.rs | Ported | Collapsed into the explicit ObjDesc Rust module |
-| DatReaderWriter/Generated/Types/TextureMapChange.generated.cs | src/Types/ObjDesc.rs | Ported | Collapsed into the explicit ObjDesc Rust module |
-| `DatReaderWriter/Generated/Types/CylSphere.generated.cs` | `src/Types/CylSphere.rs` | Ported | Setup collision primitive |
-| `DatReaderWriter/Generated/Types/LightInfo.generated.cs` | `src/Types/LightInfo.rs` | Ported | Setup attached light payload |
-| `DatReaderWriter/Generated/Types/LocationType.generated.cs` | `src/Types/LocationType.rs` | Ported | Setup attachment point payload |
-| `DatReaderWriter/Generated/Types/PhysicsScriptTableData.generated.cs` | `src/Types/PhysicsScriptTableData.rs` | Ported | Physics script table entry list |
-| `DatReaderWriter/Generated/Types/ScriptAndModData.generated.cs` | `src/Types/ScriptAndModData.rs` | Ported | Physics script id plus modifier payload |
-| `DatReaderWriter/Generated/Types/SoundData.generated.cs` | `src/Types/SoundData.rs` | Ported | Sound-table sound entry list |
-| `DatReaderWriter/Generated/Types/SoundEntry.generated.cs` | `src/Types/SoundEntry.rs` | Ported | Wave reference with sound weights |
-| `DatReaderWriter/Generated/Types/SoundHashData.generated.cs` | `src/Types/SoundHashData.rs` | Ported | Hash-keyed sound weights |
-| `DatReaderWriter/Types/PackedQualifiedDataId.cs` | `src/Types/PackedQualifiedDataId.rs` | Ported | Packed known-type id wrapper with collection resolution helper |
+| `DatReaderWriter/Generated/Types/AttackCone.generated.cs` | `src/Types/AttackCone.rs` | Verified | Physics script hook payload is exercised through PhysicsScript coverage |
+| `DatReaderWriter/Generated/Types/AnimationFrame.generated.cs` | `src/Types/AnimationFrame.rs` | Verified | Read-side animation/setup frame payload is exercised through Animation coverage |
+| `DatReaderWriter/Generated/Types/AnimationPartChange.generated.cs` | `src/Types/AnimationPartChange.rs` | Verified | Read-side explicit packed part swap payload is exercised through Setup/ObjDesc coverage |
+| DatReaderWriter/Generated/Types/ObjDesc.generated.cs | src/Types/ObjDesc.rs | Verified | Explicit object-description payload is exercised through Setup and typed asset coverage |
+| DatReaderWriter/Generated/Types/SubPalette.generated.cs | src/Types/ObjDesc.rs | Verified | Collapsed into the explicit ObjDesc Rust module and exercised through Setup/ObjDesc coverage |
+| DatReaderWriter/Generated/Types/TextureMapChange.generated.cs | src/Types/ObjDesc.rs | Verified | Collapsed into the explicit ObjDesc Rust module and exercised through Setup/ObjDesc coverage |
+| `DatReaderWriter/Generated/Types/CylSphere.generated.cs` | `src/Types/CylSphere.rs` | Verified | Setup collision primitive is exercised through Setup coverage |
+| `DatReaderWriter/Generated/Types/LightInfo.generated.cs` | `src/Types/LightInfo.rs` | Verified | Setup attached light payload is exercised through Setup coverage |
+| `DatReaderWriter/Generated/Types/LocationType.generated.cs` | `src/Types/LocationType.rs` | Verified | Setup attachment point payload is exercised through Setup coverage |
+| `DatReaderWriter/Generated/Types/PhysicsScriptTableData.generated.cs` | `src/Types/PhysicsScriptTableData.rs` | Verified | Physics script table entry list is exercised through PhysicsScriptTable coverage |
+| `DatReaderWriter/Generated/Types/ScriptAndModData.generated.cs` | `src/Types/ScriptAndModData.rs` | Verified | Physics script id plus modifier payload is exercised through PhysicsScriptTable coverage |
+| `DatReaderWriter/Generated/Types/SoundData.generated.cs` | `src/Types/SoundData.rs` | Verified | Sound-table sound entry list is exercised through SoundTable coverage |
+| `DatReaderWriter/Generated/Types/SoundEntry.generated.cs` | `src/Types/SoundEntry.rs` | Verified | Wave reference with sound weights is exercised through SoundTable coverage |
+| `DatReaderWriter/Generated/Types/SoundHashData.generated.cs` | `src/Types/SoundHashData.rs` | Verified | Hash-keyed sound weights are exercised through SoundTable coverage |
+| `DatReaderWriter/Types/PackedQualifiedDataId.cs` | `src/Types/PackedQualifiedDataId.rs` | Verified | Packed known-type id wrapper is exercised through hook, setup, and asset coverage |
 | `DatReaderWriter/Lib/HashTableHelpers.cs` | `src/Lib/HashTableHelpers.rs` | Verified | Shared bucket-size and hash-key helper is now ported explicitly, including AC string-hash handling for string keys and focused ordering coverage |
 | DatReaderWriter/Types/HashTable.cs | src/Types/HashTable.rs | Verified | Explicit read/write hash-table wrapper now uses the shared hash-table helpers for bucket sizing and AC string-key hashing, covers the generic key/value surface exercised by the ported DBObjs and retail DAT reads, and is backed by focused roundtrip plus packed-order tests |
-| DatReaderWriter/Types/PackableHashTable.cs | src/Types/PackableHashTable.rs | Ported | Explicit packable hash-table wrapper now covers the setup-keyed clothing and numeric sub-palette tables used on the read path |
-| DatReaderWriter/Generated/Types/CloSubPaletteRange.generated.cs | src/Types/CloSubPaletteRange.rs | Ported | Clothing sub-palette range payload |
-| DatReaderWriter/Generated/Types/CloSubPalette.generated.cs | src/Types/CloSubPalette.rs | Ported | Clothing sub-palette entry with PalSet reference |
-| DatReaderWriter/Generated/Types/CloSubPalEffect.generated.cs | src/Types/CloSubPalEffect.rs | Ported | Clothing sub-palette effect payload |
-| DatReaderWriter/Generated/Types/CloTextureEffect.generated.cs | src/Types/CloTextureEffect.rs | Ported | Clothing texture swap payload |
-| DatReaderWriter/Generated/Types/CloObjectEffect.generated.cs | src/Types/CloObjectEffect.rs | Ported | Clothing object effect payload with GfxObj reference |
-| DatReaderWriter/Generated/Types/ClothingBaseEffect.generated.cs | src/Types/ClothingBaseEffect.rs | Ported | Clothing setup-keyed effect payload |
-| DatReaderWriter/Generated/Types/CombatManeuver.generated.cs | src/Types/CombatManeuver.rs | Ported | Combat-table maneuver payload |
-| DatReaderWriter/Generated/Types/StringTableString.generated.cs | src/Types/StringTableString.rs | Ported | String-table entry payload with packed UTF-16 strings and variable references |
-| DatReaderWriter/Generated/Types/StringTableData.generated.cs | src/Types/StringTableData.rs | Ported | String-table data payload with variable names, values, comments, and strings |
-| DatReaderWriter/Generated/Types/Position.generated.cs | src/Types/Position.rs | Ported | Position payload for starting-area locations |
-| DatReaderWriter/Generated/Types/StartingArea.generated.cs | src/Types/StartingArea.rs | Ported | Character-creation starting area payload |
-| DatReaderWriter/Generated/Types/SkillCG.generated.cs | src/Types/SkillCG.rs | Ported | Character-generation skill cost payload |
-| DatReaderWriter/Generated/Types/TemplateCG.generated.cs | src/Types/TemplateCG.rs | Ported | Character-generation template payload |
-| DatReaderWriter/Generated/Types/HairStyleCG.generated.cs | src/Types/HairStyleCG.rs | Ported | Character-generation hair style payload |
-| DatReaderWriter/Generated/Types/EyeStripCG.generated.cs | src/Types/EyeStripCG.rs | Ported | Character-generation eye strip payload |
-| DatReaderWriter/Generated/Types/FaceStripCG.generated.cs | src/Types/FaceStripCG.rs | Ported | Character-generation face strip payload |
-| DatReaderWriter/Generated/Types/GearCG.generated.cs | src/Types/GearCG.rs | Ported | Character-generation gear option payload |
+| DatReaderWriter/Types/PackableHashTable.cs | src/Types/PackableHashTable.rs | Verified | Explicit packable hash-table wrapper is exercised through clothing, spell, chat-pose, and contract table coverage |
+| DatReaderWriter/Generated/Types/CloSubPaletteRange.generated.cs | src/Types/CloSubPaletteRange.rs | Verified | Clothing sub-palette range payload is exercised through ClothingTable and CharGen coverage |
+| DatReaderWriter/Generated/Types/CloSubPalette.generated.cs | src/Types/CloSubPalette.rs | Verified | Clothing sub-palette entry with PalSet reference is exercised through ClothingTable and CharGen coverage |
+| DatReaderWriter/Generated/Types/CloSubPalEffect.generated.cs | src/Types/CloSubPalEffect.rs | Verified | Clothing sub-palette effect payload is exercised through ClothingTable and CharGen coverage |
+| DatReaderWriter/Generated/Types/CloTextureEffect.generated.cs | src/Types/CloTextureEffect.rs | Verified | Clothing texture swap payload is exercised through ClothingTable and CharGen coverage |
+| DatReaderWriter/Generated/Types/CloObjectEffect.generated.cs | src/Types/CloObjectEffect.rs | Verified | Clothing object effect payload with GfxObj reference is exercised through ClothingTable and CharGen coverage |
+| DatReaderWriter/Generated/Types/ClothingBaseEffect.generated.cs | src/Types/ClothingBaseEffect.rs | Verified | Clothing setup-keyed effect payload is exercised through ClothingTable and CharGen coverage |
+| DatReaderWriter/Generated/Types/CombatManeuver.generated.cs | src/Types/CombatManeuver.rs | Verified | Combat-table maneuver payload is exercised through CombatTable coverage |
+| DatReaderWriter/Generated/Types/StringTableString.generated.cs | src/Types/StringTableString.rs | Verified | String-table entry payload is exercised through StringTable coverage |
+| DatReaderWriter/Generated/Types/StringTableData.generated.cs | src/Types/StringTableData.rs | Verified | String-table data payload is exercised through StringTable coverage |
+| DatReaderWriter/Generated/Types/Position.generated.cs | src/Types/Position.rs | Verified | Position payload for starting-area locations is exercised through CharGen coverage |
+| DatReaderWriter/Generated/Types/StartingArea.generated.cs | src/Types/StartingArea.rs | Verified | Character-creation starting area payload is exercised through CharGen coverage |
+| DatReaderWriter/Generated/Types/SkillCG.generated.cs | src/Types/SkillCG.rs | Verified | Character-generation skill cost payload is exercised through CharGen coverage |
+| DatReaderWriter/Generated/Types/TemplateCG.generated.cs | src/Types/TemplateCG.rs | Verified | Character-generation template payload is exercised through CharGen coverage |
+| DatReaderWriter/Generated/Types/HairStyleCG.generated.cs | src/Types/HairStyleCG.rs | Verified | Character-generation hair style payload is exercised through CharGen coverage |
+| DatReaderWriter/Generated/Types/EyeStripCG.generated.cs | src/Types/EyeStripCG.rs | Verified | Character-generation eye strip payload is exercised through CharGen coverage |
+| DatReaderWriter/Generated/Types/FaceStripCG.generated.cs | src/Types/FaceStripCG.rs | Verified | Character-generation face strip payload is exercised through CharGen coverage |
+| DatReaderWriter/Generated/Types/GearCG.generated.cs | src/Types/GearCG.rs | Verified | Character-generation gear option payload is exercised through CharGen coverage |
 | DatReaderWriter/Generated/Types/SexCG.generated.cs | src/Types/SexCG.rs | Verified | Character-generation gender payload now reads setup/sound/motion/combat references and appearance options |
 | DatReaderWriter/Generated/Types/HeritageGroupCG.generated.cs | src/Types/HeritageGroupCG.rs | Verified | Character-generation heritage group payload now reads starting areas, templates, skills, and gender table |
 | `DatReaderWriter/Generated/Types/AnimationHook.generated.cs` and hook variants | `src/Types/AnimationHook.rs` | Verified | Read-side hook family is collapsed into one Rust enum with explicit wrapper files for the source hook descendants, focused roundtrip coverage across the hook variants, and unknown hook payload preservation for stable roundtrips |
-| `DatReaderWriter/Generated/Types/PhysicsScriptData.generated.cs` | `src/Types/PhysicsScriptData.rs` | Ported | Physics script timing + hook record |
+| `DatReaderWriter/Generated/Types/PhysicsScriptData.generated.cs` | `src/Types/PhysicsScriptData.rs` | Verified | Physics script timing plus hook record is exercised through PhysicsScript coverage |
 | `DatReaderWriter/DatDatabase.cs` | `src/DatDatabase.rs` | Verified | Raw file entry lookup, byte/decompression read support, typed `try_get<T>()`, typed id enumeration including masked and special-routed cell DBObjs, allocator selection for both read-only and read-write access, explicit synchronous and async typed/raw/template write helpers, typed in-memory file caching, and async byte/cache/read methods are all covered by focused database tests plus retail-DAT regression validation |
 | `DatReaderWriter/DatCollection.cs` | `src/DatCollection.rs` | Verified | Typed `try_get<T>()`, typed `get_cached<T>()`, portal/high-res fallback, typed id enumeration, direct file entry/byte reads, portal-backed master-property resolution for local property-driven reads, explicit typed/template write delegation, upstream-style `Iteration` guards, and async typed read/cache/write entry points are covered by focused collection tests plus retail-DAT regression validation |
 | `DatReaderWriter/CellDatabase.cs` | `src/CellDatabase.rs` | Verified | Concrete wrapper with header validation plus explicit typed read/write delegation |
@@ -308,32 +308,32 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 
 | Source | Rust | Status | Notes |
 |---|---|---|---|
-| `DatReaderWriter/Generated/Enums/AttributeId.generated.cs` | `src/Generated/Enums/AttributeId.rs` | Ported | Attribute ids required for stat table support |
-| `DatReaderWriter/Generated/Enums/SkillCategory.generated.cs` | `src/Generated/Enums/SkillCategory.rs` | Ported | Skill categories required for `SkillTable` |
+| `DatReaderWriter/Generated/Enums/AttributeId.generated.cs` | `src/Generated/Enums/AttributeId.rs` | Verified | Attribute ids required for stat table support |
+| `DatReaderWriter/Generated/Enums/SkillCategory.generated.cs` | `src/Generated/Enums/SkillCategory.rs` | Verified | Skill categories required for `SkillTable` |
 | `DatReaderWriter/Generated/DBObjs/VitalTable.generated.cs` | `src/DBObjs/VitalTable.rs` | Verified | Typed vital formulas now read and are covered by focused tests and retail DAT validation |
 | `DatReaderWriter/Generated/DBObjs/SkillTable.generated.cs` | `src/DBObjs/SkillTable.rs` | Verified | Typed skill entries now read and are covered by focused tests and retail DAT validation |
 | `DatReaderWriter/Generated/DBObjs/ExperienceTable.generated.cs` | `src/DBObjs/ExperienceTable.rs` | Verified | Typed progression arrays now read and are covered by focused tests and retail DAT validation |
-| `DatReaderWriter/Generated/Types/SkillBase.generated.cs` | `src/Types/SkillBase.rs` | Ported | Supporting typed skill payload |
-| `DatReaderWriter/Generated/Types/SkillFormula.generated.cs` | `src/Types/SkillFormula.rs` | Ported | Supporting typed formula payload |
+| `DatReaderWriter/Generated/Types/SkillBase.generated.cs` | `src/Types/SkillBase.rs` | Verified | Supporting typed skill payload |
+| `DatReaderWriter/Generated/Types/SkillFormula.generated.cs` | `src/Types/SkillFormula.rs` | Verified | Supporting typed formula payload |
 | `DatReaderWriter/Generated/DBObjs/Font.generated.cs` | `src/DBObjs/Font.rs` | Verified | Glyph metrics and typed surface references are now ported and validated against retail DATs |
 | `DatReaderWriter/Generated/DBObjs/LanguageInfo.generated.cs` | `src/DBObjs/LanguageInfo.rs` | Verified | Local language settings DBObj is now ported and validated against retail DATs |
 | `DatReaderWriter/Generated/DBObjs/NameFilterTable.generated.cs` | `src/DBObjs/NameFilterTable.rs` | Verified | Name-filter rule table is now ported and validated against retail DATs |
-| `DatReaderWriter/Generated/Types/FontCharDesc.generated.cs` | `src/Types/FontCharDesc.rs` | Ported | Supporting glyph description payload |
-| `DatReaderWriter/Generated/Types/NameFilterLanguageData.generated.cs` | `src/Types/NameFilterLanguageData.rs` | Ported | Supporting language-specific naming-rule payload |
+| `DatReaderWriter/Generated/Types/FontCharDesc.generated.cs` | `src/Types/FontCharDesc.rs` | Verified | Supporting glyph description payload |
+| `DatReaderWriter/Generated/Types/NameFilterLanguageData.generated.cs` | `src/Types/NameFilterLanguageData.rs` | Verified | Supporting language-specific naming-rule payload |
 | `DatReaderWriter/Generated/Types/StringInfo.generated.cs` | `src/Types/StringInfo.rs` | Verified | String-table indirection payload is ported and roundtrip tested |
 | `DatReaderWriter/Generated/Types/MediaDesc.generated.cs` and `DatReaderWriter/Generated/Types/MediaDesc*.generated.cs` | `src/Types/MediaDesc.rs`, `src/Types/MediaDesc*.rs` | Verified | Discriminated media descriptor family is ported and roundtrip tested for current client-facing variants |
-| `DatReaderWriter/Generated/Enums/DrawModeType.generated.cs` | `src/Generated/Enums/DrawModeType.rs` | Ported | Media descriptor draw-mode enum |
-| `DatReaderWriter/Generated/Enums/MediaType.generated.cs` | `src/Generated/Enums/MediaType.rs` | Ported | Media descriptor discriminant enum |
-| `DatReaderWriter/Generated/Enums/StringInfoOverrideFlag.generated.cs` | `src/Generated/Enums/StringInfoOverrideFlag.rs` | Ported | String-info override flags |
+| `DatReaderWriter/Generated/Enums/DrawModeType.generated.cs` | `src/Generated/Enums/DrawModeType.rs` | Verified | Media descriptor draw-mode enum |
+| `DatReaderWriter/Generated/Enums/MediaType.generated.cs` | `src/Generated/Enums/MediaType.rs` | Verified | Media descriptor discriminant enum |
+| `DatReaderWriter/Generated/Enums/StringInfoOverrideFlag.generated.cs` | `src/Generated/Enums/StringInfoOverrideFlag.rs` | Verified | String-info override flags |
 | `DatReaderWriter/Generated/Enums/UIStateId.generated.cs` | `src/Generated/Enums/UIStateId.rs` | Verified | Full named UI state constant surface now mirrors the generated reference and is exercised in the enum-surface test |
-| `DatReaderWriter/Generated/Enums/BasePropertyType.generated.cs` | `src/Generated/Enums/BasePropertyType.rs` | Ported | Base-property discriminant enum for the local property pipeline |
+| `DatReaderWriter/Generated/Enums/BasePropertyType.generated.cs` | `src/Generated/Enums/BasePropertyType.rs` | Verified | Base-property discriminant enum for the local property pipeline |
 | `DatReaderWriter/Generated/Enums/VitalId.generated.cs` | `src/Generated/Enums/VitalId.rs` | Verified | Full named vital-id constant surface is now mirrored and exercised in the enum-surface test |
-| `DatReaderWriter/Generated/Enums/PatchFlags.generated.cs` | `src/Generated/Enums/PatchFlags.rs` | Ported | Property descriptor patch-flag enum |
-| `DatReaderWriter/Generated/Enums/PropertyCachingType.generated.cs` | `src/Generated/Enums/PropertyCachingType.rs` | Ported | Property descriptor caching enum |
-| `DatReaderWriter/Generated/Enums/PropertyDatFileType.generated.cs` | `src/Generated/Enums/PropertyDatFileType.rs` | Ported | Property descriptor dat-file enum |
-| `DatReaderWriter/Generated/Enums/PropertyGroupName.generated.cs` | `src/Generated/Enums/PropertyGroupName.rs` | Ported | Property descriptor grouping enum with the current named surface mirrored |
-| `DatReaderWriter/Generated/Enums/PropertyInheritanceType.generated.cs` | `src/Generated/Enums/PropertyInheritanceType.rs` | Ported | Property descriptor inheritance enum |
-| `DatReaderWriter/Generated/Enums/PropertyPropagationType.generated.cs` | `src/Generated/Enums/PropertyPropagationType.rs` | Ported | Property descriptor propagation enum |
+| `DatReaderWriter/Generated/Enums/PatchFlags.generated.cs` | `src/Generated/Enums/PatchFlags.rs` | Verified | Property descriptor patch-flag enum |
+| `DatReaderWriter/Generated/Enums/PropertyCachingType.generated.cs` | `src/Generated/Enums/PropertyCachingType.rs` | Verified | Property descriptor caching enum |
+| `DatReaderWriter/Generated/Enums/PropertyDatFileType.generated.cs` | `src/Generated/Enums/PropertyDatFileType.rs` | Verified | Property descriptor dat-file enum |
+| `DatReaderWriter/Generated/Enums/PropertyGroupName.generated.cs` | `src/Generated/Enums/PropertyGroupName.rs` | Verified | Property descriptor grouping enum with the current named surface mirrored |
+| `DatReaderWriter/Generated/Enums/PropertyInheritanceType.generated.cs` | `src/Generated/Enums/PropertyInheritanceType.rs` | Verified | Property descriptor inheritance enum |
+| `DatReaderWriter/Generated/Enums/PropertyPropagationType.generated.cs` | `src/Generated/Enums/PropertyPropagationType.rs` | Verified | Property descriptor propagation enum |
 | external retail DAT validation | `tests/real_dat_validation_tests.rs` | Verified | Live validation continues to pass against retail DATs in `C:\Turbine\Asheron's call\` via `DAT_READER_WRITER_REAL_DAT_DIR`, without hardcoding the path into the crate |
 | tracker recovery | `PORTING_STATUS.md` | Verified | Main tracker restored from the last good snapshot and updated with post-snapshot work |
 | `DatReaderWriter/Types/BaseProperty.cs` | `src/Types/BaseProperty.rs` | Verified | `MasterProperty`-driven generic unpack and pack now cover the full current Rust property surface with focused tests across scalar, container, position, timestamp, token, and nested master-property payload variants |
@@ -390,14 +390,14 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/Types/CreateParticleHook.generated.cs` | `src/Types/CreateParticleHook.rs` | Verified | Explicit create-particle-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
 | `DatReaderWriter/Generated/Types/SoundTweakedHook.generated.cs` | `src/Types/SoundTweakedHook.rs` | Verified | Explicit sound-tweaked-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
 | `DatReaderWriter/Types/BasePropertyDesc.cs` | `src/Types/BasePropertyDesc.rs` | Verified | Property descriptor records now unpack/pack populated and empty optional metadata with focused tests, and are exercised through `MasterProperty`, `DBProperties`, and `LayoutDesc` read paths |
-| `DatReaderWriter/Generated/Enums/RMDataType.generated.cs` | `src/Generated/Enums/RMDataType.rs` | Ported | Explicit render-material data-type enum mirrored from the reference |
+| `DatReaderWriter/Generated/Enums/RMDataType.generated.cs` | `src/Generated/Enums/RMDataType.rs` | Verified | Explicit render-material data-type enum mirrored from the reference |
 | `DatReaderWriter/Generated/Enums/RenderPassType.generated.cs` | `src/Generated/Enums/RenderPassType.rs` | Verified | Full named render-pass constant surface now mirrors the generated reference and is exercised in the enum-surface test |
 | `DatReaderWriter/Generated/Types/MaterialProperty.generated.cs` | `src/Types/MaterialProperty.rs` | Verified | Explicit material-property payload with aligned length fields now roundtrips in focused tests |
 | `DatReaderWriter/Generated/DBObjs/RenderTexture.generated.cs` | `src/DBObjs/RenderTexture.rs` | Verified | Explicit render-texture DBObj now reads texture type and render-surface level refs and is validated against retail DATs |
 | `DatReaderWriter/Generated/DBObjs/RenderMaterial.generated.cs` | `src/DBObjs/RenderMaterial.rs` | Verified | Explicit empty-body render-material DBObj now resolves and is validated against retail DATs |
 | `DatReaderWriter/Generated/DBObjs/MaterialModifier.generated.cs` | `src/DBObjs/MaterialModifier.rs` | Verified | Explicit material-modifier DBObj now reads typed material properties and is validated against retail DATs |
 | `DatReaderWriter/Generated/DBObjs/MaterialInstance.generated.cs` | `src/DBObjs/MaterialInstance.rs` | Verified | Explicit material-instance DBObj now reads material id/type, modifier refs, and booleans and is validated against retail DATs |
-| `DatReaderWriter/Generated/Enums/ComponentType.generated.cs` | `src/Generated/Enums/ComponentType.rs` | Ported | Explicit spell-component enum mirrored from the reference |
+| `DatReaderWriter/Generated/Enums/ComponentType.generated.cs` | `src/Generated/Enums/ComponentType.rs` | Verified | Explicit spell-component enum mirrored from the reference |
 | `DatReaderWriter/Types/ObfuscatedPStringBase.cs` | `src/Types/ObfuscatedPStringBase.rs` | Verified | Explicit obfuscated Windows-1252 string format now decodes/encodes with nibble rotation and alignment |
 | `DatReaderWriter/Generated/Types/GfxObjInfo.generated.cs` | `src/Types/GfxObjInfo.rs` | Verified | Explicit degrade-entry payload with `QualifiedDataId<GfxObj>` and distance thresholds now roundtrips in focused tests |
 | `DatReaderWriter/Generated/Types/SpellComponentBase.generated.cs` | `src/Types/SpellComponentBase.rs` | Verified | Explicit spell-component payload now reads obfuscated strings, icon ids, enums, and timing data and is covered by focused tests |
@@ -414,32 +414,32 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/DBObjs/ContractTable.generated.cs` | `src/DBObjs/ContractTable.rs` | Verified | Explicit contract table DBObj now reads typed contract entries and is validated against retail DATs |
 | `DatReaderWriter/Generated/Types/ObjHierarchyNode.generated.cs` | `src/Types/ObjHierarchyNode.rs` | Verified | Explicit recursive hierarchy-node payload now reads menu text, WCID, and child nodes and is covered by focused tests |
 | `DatReaderWriter/Generated/DBObjs/ObjectHierarchy.generated.cs` | `src/DBObjs/ObjectHierarchy.rs` | Verified | Explicit object-hierarchy DBObj now reads the recursive root node and is validated against retail DATs |
-| `DatReaderWriter/Generated/Enums/DeviceType.generated.cs` | `src/Generated/Enums/DeviceType.rs` | Ported | Explicit input-device enum mirrored from the reference |
+| `DatReaderWriter/Generated/Enums/DeviceType.generated.cs` | `src/Generated/Enums/DeviceType.rs` | Verified | Explicit input-device enum mirrored from the reference |
 | `DatReaderWriter/Generated/Types/ControlSpecification.generated.cs` | `src/Types/ControlSpecification.rs` | Verified | Explicit key/modifier pair payload now roundtrips in focused tests |
 | `DatReaderWriter/Generated/Types/DeviceKeyMapEntry.generated.cs` | `src/Types/DeviceKeyMapEntry.rs` | Verified | Explicit device-keymap entry now reads device type plus GUID and is covered by focused tests |
 | `DatReaderWriter/Generated/Types/QualifiedControl.generated.cs` | `src/Types/QualifiedControl.rs` | Verified | Explicit input binding payload now reads control spec plus activation fields and is covered by focused tests |
 | `DatReaderWriter/Generated/Types/CInputMap.generated.cs` | `src/Types/CInputMap.rs` | Verified | Explicit input-map payload now reads qualified-control lists and is covered by focused tests |
 | `DatReaderWriter/Generated/DBObjs/MasterInputMap.generated.cs` | `src/DBObjs/MasterInputMap.rs` | Verified | Explicit master-input-map DBObj now reads name, GUID, devices, meta keys, and keyed input maps and is validated against retail DATs |
 | `DatReaderWriter/Generated/DBObjs/TabooTable.generated.cs` | `src/DBObjs/TabooTable.rs` | Verified | Explicit taboo table DBObj now reads audience-keyed banned-pattern groups and is validated against retail DATs |
-| `DatReaderWriter/Generated/Enums/EquipmentSet.generated.cs` | `src/Generated/Enums/EquipmentSet.rs` | Ported | Explicit equipment-set enum mirrored from the reference for `SpellTable` spell-set keys |
-| `DatReaderWriter/Generated/Enums/ItemType.generated.cs` | `src/Generated/Enums/ItemType.rs` | Ported | Explicit item-type enum mirrored from the reference for spell targeting metadata |
-| `DatReaderWriter/Generated/Enums/MagicSchool.generated.cs` | `src/Generated/Enums/MagicSchool.rs` | Ported | Explicit magic-school enum mirrored from the reference for spell records |
+| `DatReaderWriter/Generated/Enums/EquipmentSet.generated.cs` | `src/Generated/Enums/EquipmentSet.rs` | Verified | Explicit equipment-set enum mirrored from the reference for `SpellTable` spell-set keys |
+| `DatReaderWriter/Generated/Enums/ItemType.generated.cs` | `src/Generated/Enums/ItemType.rs` | Verified | Explicit item-type enum mirrored from the reference for spell targeting metadata |
+| `DatReaderWriter/Generated/Enums/MagicSchool.generated.cs` | `src/Generated/Enums/MagicSchool.rs` | Verified | Explicit magic-school enum mirrored from the reference for spell records |
 | `DatReaderWriter/Generated/Enums/SpellCategory.generated.cs` | `src/Generated/Enums/SpellCategory.rs` | Verified | Full named spell-category constant surface now mirrors the generated reference and is exercised in the enum-surface test |
-| `DatReaderWriter/Generated/Enums/SpellIndex.generated.cs` | `src/Generated/Enums/SpellIndex.rs` | Ported | Explicit spell-index bitflags mirrored from the reference |
-| `DatReaderWriter/Generated/Enums/SpellType.generated.cs` | `src/Generated/Enums/SpellType.rs` | Ported | Explicit meta-spell type enum mirrored from the reference |
+| `DatReaderWriter/Generated/Enums/SpellIndex.generated.cs` | `src/Generated/Enums/SpellIndex.rs` | Verified | Explicit spell-index bitflags mirrored from the reference |
+| `DatReaderWriter/Generated/Enums/SpellType.generated.cs` | `src/Generated/Enums/SpellType.rs` | Verified | Explicit meta-spell type enum mirrored from the reference |
 | `DatReaderWriter/Types/PHashTable.cs` | `src/Types/PHashTable.rs` | Verified | Explicit packable hash-table variant now mirrors count/bucket storage without re-sorting entries and is covered by focused spell-table tests |
 | `DatReaderWriter/Generated/Types/SpellSetTiers.generated.cs` | `src/Types/SpellSetTiers.rs` | Verified | Explicit spell-set tier payload now roundtrips tier spell lists in focused tests |
 | `DatReaderWriter/Generated/Types/SpellSet.generated.cs` | `src/Types/SpellSet.rs` | Verified | Explicit spell-set payload now reads nested tier tables and is covered by focused spell-table tests |
 | `DatReaderWriter/Types/SpellBase.cs` | `src/Types/SpellBase.rs` | Verified | Explicit spell payload now mirrors name/description hashing, encrypted component decoding, meta-spell variant fields, and roundtrips in focused tests |
 | `DatReaderWriter/Generated/DBObjs/SpellTable.generated.cs` | `src/DBObjs/SpellTable.rs` | Verified | Explicit spell-table DBObj now reads typed spell records plus equipment-set spell groups and is validated against retail DATs |
-| `DatReaderWriter/Enums/ToggleType.cs` | `src/Generated/Enums/ToggleType.rs` | Ported | Explicit action-map toggle enum mirrored from the reference |
+| `DatReaderWriter/Enums/ToggleType.cs` | `src/Generated/Enums/ToggleType.rs` | Verified | Explicit action-map toggle enum mirrored from the reference |
 | `DatReaderWriter/Types/UserBindingData.cs` | `src/Types/UserBindingData.rs` | Verified | Explicit action-map user-binding payload now roundtrips class/name/description ids in focused tests |
 | `DatReaderWriter/Types/InputConflictsValue.cs` | `src/Types/InputsConflictsValue.rs` | Verified | Explicit conflicting-input-map payload now roundtrips conflict lists in focused tests |
 | `DatReaderWriter/Types/ActionMapValue.cs` | `src/Types/ActionMapValue.rs` | Verified | Explicit action-map value payload now reads toggle mode plus user-binding data and is covered by focused tests |
 | `DatReaderWriter/DBObjs/ActionMap.cs` | `src/DBObjs/ActionMap.rs` | Verified | Explicit action-map DBObj now reads nested input maps and conflict tables and is validated against retail DATs |
 | `DatReaderWriter/DBObjs/MasterProperty.cs` | `src/DBObjs/MasterProperty.rs` | Verified | Explicit master-property DBObj now reads enum mapper data plus typed property descriptors and is validated against retail DATs |
-| `DatReaderWriter/Generated/Enums/EnvCellFlags.generated.cs` | `src/Generated/Enums/EnvCellFlags.rs` | Ported | Explicit cell flag bitflags mirrored for `EnvCell` reads |
-| `DatReaderWriter/Generated/Enums/PortalFlags.generated.cs` | `src/Generated/Enums/PortalFlags.rs` | Ported | Explicit cell and building portal flags mirrored for cell-side reads |
+| `DatReaderWriter/Generated/Enums/EnvCellFlags.generated.cs` | `src/Generated/Enums/EnvCellFlags.rs` | Verified | Explicit cell flag bitflags mirrored for `EnvCell` reads |
+| `DatReaderWriter/Generated/Enums/PortalFlags.generated.cs` | `src/Generated/Enums/PortalFlags.rs` | Verified | Explicit cell and building portal flags mirrored for cell-side reads |
 | `DatReaderWriter/Types/TerrainInfo.cs` | `src/Types/TerrainInfo.rs` | Verified | Explicit packed terrain-info bitfield now mirrors road, terrain, and scenery storage and is covered by focused tests |
 | `DatReaderWriter/Generated/Types/Stab.generated.cs` | `src/Types/Stab.rs` | Verified | Explicit static-object placement payload is ported and exercised through cell-focused tests |
 | `DatReaderWriter/Generated/Types/BuildingPortal.generated.cs` | `src/Types/BuildingPortal.rs` | Verified | Explicit building-portal payload is ported and exercised through cell-focused tests |
@@ -449,7 +449,7 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/DBObjs/Environment.generated.cs` | `src/DBObjs/Environment.rs` | Verified | Explicit environment DBObj now reads keyed cell structures and is covered by focused tests plus retail DAT validation |
 | `DatReaderWriter/Generated/DBObjs/LandBlockInfo.generated.cs` | `src/DBObjs/LandBlockInfo.rs` | Verified | Explicit land-block-info DBObj now reads object, building, and restriction tables and is covered by focused tests plus retail DAT validation |
 | `DatReaderWriter/Generated/DBObjs/EnvCell.generated.cs` | `src/DBObjs/EnvCell.rs` | Verified | Explicit environment-cell DBObj now reads surfaces, portals, visibility, static objects, and restriction refs and is covered by focused tests plus retail DAT validation |
-| `DatReaderWriter/Generated/Enums/IncorporationFlags.generated.cs` | `src/Generated/Enums/IncorporationFlags.rs` | Ported | Explicit UI incorporation-flag bitfield mirrored for layout element/state reads |
+| `DatReaderWriter/Generated/Enums/IncorporationFlags.generated.cs` | `src/Generated/Enums/IncorporationFlags.rs` | Verified | Explicit UI incorporation-flag bitfield mirrored for layout element/state reads |
 | `DatReaderWriter/Types/StateDesc.cs` | `src/Types/StateDesc.rs` | Verified | Explicit layout state payload now reads base properties and media lists through master-property resolution and is covered by focused tests |
 | `DatReaderWriter/Generated/Types/ElementDesc.generated.cs` | `src/Types/ElementDesc.rs` | Verified | Explicit recursive UI element payload now reads incorporation-gated geometry, state maps, and child elements and is covered by focused tests |
 | `DatReaderWriter/Generated/DBObjs/LayoutDesc.generated.cs` | `src/DBObjs/LayoutDesc.rs` | Verified | Explicit local layout DBObj now reads width, height, and hashed element trees and is validated against retail DATs |
