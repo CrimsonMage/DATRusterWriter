@@ -28,8 +28,16 @@ pub mod BSPTrees;
 pub mod BaseProperty;
 #[path = "BasePropertyDesc.rs"]
 pub mod BasePropertyDesc;
+#[path = "BuildingInfo.rs"]
+pub mod BuildingInfo;
+#[path = "BuildingPortal.rs"]
+pub mod BuildingPortal;
 #[path = "CInputMap.rs"]
 pub mod CInputMap;
+#[path = "CellPortal.rs"]
+pub mod CellPortal;
+#[path = "CellStruct.rs"]
+pub mod CellStruct;
 #[path = "ChatEmoteData.rs"]
 pub mod ChatEmoteData;
 #[path = "CloObjectEffect.rs"]
@@ -204,6 +212,8 @@ pub mod SpellSet;
 pub mod SpellSetTiers;
 #[path = "Sphere.rs"]
 pub mod Sphere;
+#[path = "Stab.rs"]
+pub mod Stab;
 #[path = "StartingArea.rs"]
 pub mod StartingArea;
 #[path = "StringInfo.rs"]
@@ -224,6 +234,8 @@ pub mod TemplateCG;
 pub mod TerrainAlphaMap;
 #[path = "TerrainDesc.rs"]
 pub mod TerrainDesc;
+#[path = "TerrainInfo.rs"]
+pub mod TerrainInfo;
 #[path = "TerrainTex.rs"]
 pub mod TerrainTex;
 #[path = "TerrainType.rs"]

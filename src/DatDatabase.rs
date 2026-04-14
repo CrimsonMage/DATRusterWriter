@@ -126,7 +126,17 @@ impl DatDatabase {
         }
 
         if !attr.has_range_data() {
-            return Ok(Vec::new());
+            return Ok(self
+                .tree
+                .all_files()?
+                .into_iter()
+                .filter(|file| {
+                    DBObjAttributeCache::type_from_id(self.header().r#type, file.id)
+                        .map(|candidate| candidate.db_obj_type == attr.db_obj_type)
+                        .unwrap_or(false)
+                })
+                .map(|file| file.id)
+                .collect());
         }
 
         Ok(self

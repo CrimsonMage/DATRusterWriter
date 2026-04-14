@@ -1,6 +1,7 @@
 use std::{
     fs,
     path::PathBuf,
+    sync::atomic::{AtomicU64, Ordering},
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -8,8 +9,9 @@ use dat_reader_writer::{
     DBObjs::{
         ActionMap::ActionMap, BadDataTable::BadDataTable, ChatPoseTable::ChatPoseTable,
         ContractTable::ContractTable, DualEnumIDMap::DualEnumIDMap, EnumIDMap::EnumIDMap,
-        EnumMapper::EnumMapper, Font::Font, GfxObjDegradeInfo::GfxObjDegradeInfo,
-        Iteration::Iteration, LanguageInfo::LanguageInfo, LanguageString::LanguageString,
+        EnumMapper::EnumMapper, EnvCell::EnvCell, Environment::Environment, Font::Font,
+        GfxObjDegradeInfo::GfxObjDegradeInfo, Iteration::Iteration, LandBlock::LandBlock,
+        LandBlockInfo::LandBlockInfo, LanguageInfo::LanguageInfo, LanguageString::LanguageString,
         MasterInputMap::MasterInputMap, MasterProperty::MasterProperty,
         MaterialInstance::MaterialInstance, MaterialModifier::MaterialModifier,
         NameFilterTable::NameFilterTable, ObjectHierarchy::ObjectHierarchy, Palette::Palette,
@@ -19,10 +21,10 @@ use dat_reader_writer::{
     },
     DatDatabase::DatDatabase,
     Generated::Enums::{
-        DBObjType::DBObjType, DatFileType::DatFileType, EquipmentSet::EquipmentSet,
-        ItemType::ItemType, MagicSchool::MagicSchool, PlayScript::PlayScript,
-        SpellCategory::SpellCategory, SpellIndex::SpellIndex, SpellType::SpellType,
-        ToggleType::ToggleType,
+        DBObjType::DBObjType, DatFileType::DatFileType, EnvCellFlags::EnvCellFlags,
+        EquipmentSet::EquipmentSet, ItemType::ItemType, MagicSchool::MagicSchool,
+        PlayScript::PlayScript, PortalFlags::PortalFlags, SpellCategory::SpellCategory,
+        SpellIndex::SpellIndex, SpellType::SpellType, ToggleType::ToggleType,
     },
     Lib::{
         DBObjAttributeCache,
@@ -30,30 +32,58 @@ use dat_reader_writer::{
     },
     Options::DatDatabaseOptions::DatDatabaseOptions,
     Types::{
-        AC1LegacyPStringBase::AC1LegacyPStringBase, ActionMapValue::ActionMapValue,
-        AutoGrowHashTable::AutoGrowHashTable, BaseProperty::BaseProperty,
-        BasePropertyDesc::BasePropertyDesc, CInputMap::CInputMap, ChatEmoteData::ChatEmoteData,
-        Contract::Contract, DeviceKeyMapEntry::DeviceKeyMapEntry, EnumMapperData::EnumMapperData,
-        FontCharDesc::FontCharDesc, Frame::Frame, HashTable::HashTable,
-        InputsConflictsValue::InputsConflictsValue, IntrusiveHashTable::IntrusiveHashTable,
-        MaterialProperty::MaterialProperty, NameFilterLanguageData::NameFilterLanguageData,
-        ObfuscatedPStringBase::ObfuscatedPStringBase, ObjHierarchyNode::ObjHierarchyNode,
-        PHashTable::PHashTable, PStringBase::PStringBase, Position::Position,
-        QualifiedControl::QualifiedControl, QualifiedDataId::QualifiedDataId, SpellBase::SpellBase,
-        SpellComponentBase::SpellComponentBase, SpellSet::SpellSet, SpellSetTiers::SpellSetTiers,
-        StringTableString::StringTableString, TabooTableEntry::TabooTableEntry,
+        AC1LegacyPStringBase::AC1LegacyPStringBase,
+        ActionMapValue::ActionMapValue,
+        AutoGrowHashTable::AutoGrowHashTable,
+        BSPTrees::{CellBSPNode, CellBSPTree},
+        BaseProperty::BaseProperty,
+        BasePropertyDesc::BasePropertyDesc,
+        BuildingInfo::BuildingInfo,
+        BuildingPortal::BuildingPortal,
+        CInputMap::CInputMap,
+        CellPortal::CellPortal,
+        CellStruct::CellStruct,
+        ChatEmoteData::ChatEmoteData,
+        Contract::Contract,
+        DeviceKeyMapEntry::DeviceKeyMapEntry,
+        EnumMapperData::EnumMapperData,
+        FontCharDesc::FontCharDesc,
+        Frame::Frame,
+        HashTable::HashTable,
+        InputsConflictsValue::InputsConflictsValue,
+        IntrusiveHashTable::IntrusiveHashTable,
+        MaterialProperty::MaterialProperty,
+        NameFilterLanguageData::NameFilterLanguageData,
+        ObfuscatedPStringBase::ObfuscatedPStringBase,
+        ObjHierarchyNode::ObjHierarchyNode,
+        PHashTable::PHashTable,
+        PStringBase::PStringBase,
+        Position::Position,
+        QualifiedControl::QualifiedControl,
+        QualifiedDataId::QualifiedDataId,
+        SpellBase::SpellBase,
+        SpellComponentBase::SpellComponentBase,
+        SpellSet::SpellSet,
+        SpellSetTiers::SpellSetTiers,
+        Stab::Stab,
+        StringTableString::StringTableString,
+        TabooTableEntry::TabooTableEntry,
+        TerrainInfo::TerrainInfo,
         UserBindingData::UserBindingData,
     },
 };
 use uuid::Uuid;
+
+static UNIQUE_TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 fn unique_temp_file() -> PathBuf {
     let stamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_nanos();
+    let counter = UNIQUE_TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
     let dir = std::env::temp_dir();
-    dir.join(format!("dat_reader_writer_typed_{stamp}.dat"))
+    dir.join(format!("dat_reader_writer_typed_{stamp}_{counter}.dat"))
 }
 
 fn build_single_block_dat(dat_file_type: DatFileType, file_id: u32, payload: &[u8]) -> Vec<u8> {
@@ -140,6 +170,10 @@ fn db_obj_attribute_cache_resolves_ported_range_and_singular_types() {
         DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E000007).unwrap();
     let contract_table =
         DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E00001D).unwrap();
+    let environment = DBObjAttributeCache::type_from_id(DatFileType::Cell, 0x0D000123).unwrap();
+    let land_block_info = DBObjAttributeCache::type_from_id(DatFileType::Cell, 0x0001FFFE).unwrap();
+    let land_block = DBObjAttributeCache::type_from_id(DatFileType::Cell, 0x0001FFFF).unwrap();
+    let env_cell = DBObjAttributeCache::type_from_id(DatFileType::Cell, 0x00010123).unwrap();
     let master_input_map =
         DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x14000010).unwrap();
     let master_property =
@@ -177,6 +211,10 @@ fn db_obj_attribute_cache_resolves_ported_range_and_singular_types() {
     assert_eq!(DBObjType::BadDataTable, bad_data_table.db_obj_type);
     assert_eq!(DBObjType::ChatPoseTable, chat_pose_table.db_obj_type);
     assert_eq!(DBObjType::ContractTable, contract_table.db_obj_type);
+    assert_eq!(DBObjType::Environment, environment.db_obj_type);
+    assert_eq!(DBObjType::LandBlockInfo, land_block_info.db_obj_type);
+    assert_eq!(DBObjType::LandBlock, land_block.db_obj_type);
+    assert_eq!(DBObjType::EnvCell, env_cell.db_obj_type);
     assert_eq!(DBObjType::MasterInputMap, master_input_map.db_obj_type);
     assert_eq!(DBObjType::MasterProperty, master_property.db_obj_type);
     assert_eq!(DBObjType::ObjectHierarchy, object_hierarchy.db_obj_type);
@@ -296,6 +334,26 @@ fn db_obj_attribute_cache_tracks_current_ported_dbobjs() {
         attrs
             .iter()
             .any(|attr| attr.db_obj_type == DBObjType::ContractTable)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::EnvCell)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::Environment)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::LandBlock)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::LandBlockInfo)
     );
     assert!(
         attrs
@@ -1185,6 +1243,242 @@ fn dat_database_can_read_action_map_and_master_property() {
         BaseProperty::Integer { value, .. } => assert_eq!(42, *value),
         other => panic!("unexpected default property variant: {other:?}"),
     }
+}
+
+#[test]
+fn dat_database_can_read_cell_environment_types() {
+    use dat_reader_writer::Generated::Enums::BSPNodeType::BSPNodeType;
+    use dat_reader_writer::Lib::IO::Numerics::{Plane, Quaternion, Vector3};
+
+    let frame = Frame {
+        origin: Vector3::new(1.0, 2.0, 3.0),
+        orientation: Quaternion::new(0.0, 0.0, 0.0, 1.0),
+    };
+
+    let cell_struct = CellStruct {
+        vertex_array: Default::default(),
+        polygons: std::collections::BTreeMap::new(),
+        portals: vec![3, 4],
+        cell_bsp: CellBSPTree {
+            root: CellBSPNode {
+                node_type: BSPNodeType::LEAF,
+                splitting_plane: Plane::default(),
+                pos_node: None,
+                neg_node: None,
+                leaf_index: 7,
+            },
+        },
+        physics_polygons: std::collections::BTreeMap::new(),
+        physics_bsp: Default::default(),
+        drawing_bsp: None,
+    };
+
+    let environment = Environment {
+        cells: std::collections::BTreeMap::from([(0x0001_0001, cell_struct.clone())]),
+        ..Default::default()
+    };
+
+    let land_block_info = LandBlockInfo {
+        num_cells: 2,
+        objects: vec![Stab {
+            id: 0x01000010,
+            frame: frame.clone(),
+        }],
+        buildings: vec![BuildingInfo {
+            model_id: 0x02000010,
+            frame: frame.clone(),
+            num_leaves: 3,
+            portals: vec![BuildingPortal {
+                flags: PortalFlags::ExactMatch,
+                other_cell_id: 5,
+                other_portal_id: 6,
+                stab_list: vec![1, 2],
+            }],
+        }],
+        restriction_table: std::collections::BTreeMap::from([(1, 2)]),
+        ..Default::default()
+    };
+
+    let mut terrain = [TerrainInfo::default(); 81];
+    terrain[0].set_road(2);
+    terrain[0].set_terrain_type(
+        dat_reader_writer::Generated::Enums::TerrainTextureType::TerrainTextureType::LUSH_GRASS,
+    );
+    terrain[0].set_scenery(7);
+    terrain[1].set_terrain_type(
+        dat_reader_writer::Generated::Enums::TerrainTextureType::TerrainTextureType::SAND_YELLOW,
+    );
+    let mut height = [0u8; 81];
+    height[0] = 9;
+    height[80] = 27;
+    let land_block = LandBlock {
+        has_objects: true,
+        terrain,
+        height,
+        ..Default::default()
+    };
+
+    let env_cell = EnvCell {
+        base: dat_reader_writer::Types::DBObj::DBObjBase {
+            id: 0x0001_0123,
+            ..Default::default()
+        },
+        flags: EnvCellFlags::HasStaticObjs | EnvCellFlags::HasRestrictionObj,
+        surfaces: vec![10, 11],
+        environment_id: 0x0001,
+        cell_structure: 0x0002,
+        position: frame.clone(),
+        cell_portals: vec![CellPortal {
+            flags: PortalFlags::PortalSide,
+            polygon_id: 12,
+            other_cell_id: 13,
+            other_portal_id: 14,
+        }],
+        visible_cells: vec![21, 22],
+        static_objects: vec![Stab {
+            id: 0x03000010,
+            frame,
+        }],
+        restriction_obj: 0x04000010,
+    };
+
+    let mut environment_payload = vec![0u8; 4096];
+    let mut writer = DatBinWriter::new(&mut environment_payload);
+    assert!(environment.pack(&mut writer));
+    let environment_used = writer.offset();
+
+    let mut landblock_payload = vec![0u8; 4096];
+    let mut writer = DatBinWriter::new(&mut landblock_payload);
+    assert!(land_block_info.pack(&mut writer));
+    let landblock_used = writer.offset();
+
+    let mut envcell_payload = vec![0u8; 4096];
+    let mut writer = DatBinWriter::new(&mut envcell_payload);
+    assert!(env_cell.pack(&mut writer));
+    let envcell_used = writer.offset();
+
+    let mut land_payload = vec![0u8; 4096];
+    let mut writer = DatBinWriter::new(&mut land_payload);
+    assert!(land_block.pack(&mut writer));
+    let land_used = writer.offset();
+
+    let environment_path = unique_temp_file();
+    let landblock_path = unique_temp_file();
+    let land_path = unique_temp_file();
+    let envcell_path = unique_temp_file();
+
+    fs::write(
+        &environment_path,
+        build_single_block_dat(
+            DatFileType::Cell,
+            0x0D000123,
+            &environment_payload[..environment_used],
+        ),
+    )
+    .unwrap();
+    fs::write(
+        &landblock_path,
+        build_single_block_dat(
+            DatFileType::Cell,
+            0x0001FFFE,
+            &landblock_payload[..landblock_used],
+        ),
+    )
+    .unwrap();
+    fs::write(
+        &land_path,
+        build_single_block_dat(DatFileType::Cell, 0x0001FFFF, &land_payload[..land_used]),
+    )
+    .unwrap();
+    fs::write(
+        &envcell_path,
+        build_single_block_dat(
+            DatFileType::Cell,
+            0x00010123,
+            &envcell_payload[..envcell_used],
+        ),
+    )
+    .unwrap();
+
+    let environment_db = DatDatabase::new(DatDatabaseOptions {
+        file_path: environment_path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+    let landblock_db = DatDatabase::new(DatDatabaseOptions {
+        file_path: landblock_path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+    let land_db = DatDatabase::new(DatDatabaseOptions {
+        file_path: land_path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+    let envcell_db = DatDatabase::new(DatDatabaseOptions {
+        file_path: envcell_path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+
+    let read_environment = environment_db
+        .try_get::<Environment>(0x0D000123)
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        vec![0x0D000123],
+        environment_db.get_all_ids_of_type::<Environment>().unwrap()
+    );
+    assert_eq!(1, read_environment.cells.len());
+    assert_eq!(
+        vec![3, 4],
+        read_environment.cells.get(&0x00010001).unwrap().portals
+    );
+    assert_eq!(
+        7,
+        read_environment
+            .cells
+            .get(&0x00010001)
+            .unwrap()
+            .cell_bsp
+            .root
+            .leaf_index
+    );
+
+    let read_landblock = landblock_db
+        .try_get::<LandBlockInfo>(0x0001FFFE)
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        vec![0x0001FFFE],
+        landblock_db.get_all_ids_of_type::<LandBlockInfo>().unwrap()
+    );
+    assert_eq!(2, read_landblock.num_cells);
+    assert_eq!(1, read_landblock.objects.len());
+    assert_eq!(1, read_landblock.buildings.len());
+    assert_eq!(2, *read_landblock.restriction_table.get(&1).unwrap());
+
+    let read_land = land_db.try_get::<LandBlock>(0x0001FFFF).unwrap().unwrap();
+    assert_eq!(
+        vec![0x0001FFFF],
+        land_db.get_all_ids_of_type::<LandBlock>().unwrap()
+    );
+    assert!(read_land.has_objects);
+    assert_eq!(2, read_land.terrain[0].road());
+    assert_eq!(7, read_land.terrain[0].scenery());
+    assert_eq!(9, read_land.height[0]);
+    assert_eq!(27, read_land.height[80]);
+
+    let read_envcell = envcell_db.try_get::<EnvCell>(0x00010123).unwrap().unwrap();
+    assert_eq!(
+        vec![0x00010123],
+        envcell_db.get_all_ids_of_type::<EnvCell>().unwrap()
+    );
+    assert_eq!(vec![10, 11], read_envcell.surfaces);
+    assert_eq!(1, read_envcell.cell_portals.len());
+    assert_eq!(vec![21, 22], read_envcell.visible_cells);
+    assert_eq!(1, read_envcell.static_objects.len());
+    assert_eq!(0x04000010, read_envcell.restriction_obj);
 }
 
 #[test]

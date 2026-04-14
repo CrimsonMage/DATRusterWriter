@@ -8,6 +8,11 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Default, PartialEq)]
+pub struct CellBSPTree {
+    pub root: CellBSPNode,
+}
+
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct PhysicsBSPTree {
     pub root: PhysicsBSPNode,
 }
@@ -15,6 +20,15 @@ pub struct PhysicsBSPTree {
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct DrawingBSPTree {
     pub root: DrawingBSPNode,
+}
+
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct CellBSPNode {
+    pub node_type: BSPNodeType,
+    pub splitting_plane: Plane,
+    pub pos_node: Option<Box<CellBSPNode>>,
+    pub neg_node: Option<Box<CellBSPNode>>,
+    pub leaf_index: i32,
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -69,6 +83,20 @@ fn read_neg_drawing(node_type: BSPNodeType) -> bool {
     )
 }
 
+impl IUnpackable for CellBSPTree {
+    fn unpack(&mut self, reader: &mut DatBinReader<'_>) -> bool {
+        self.root = reader.read_item::<CellBSPNode>();
+        true
+    }
+}
+
+impl IPackable for CellBSPTree {
+    fn pack(&self, writer: &mut DatBinWriter<'_>) -> bool {
+        writer.write_item(&self.root);
+        true
+    }
+}
+
 impl IUnpackable for PhysicsBSPTree {
     fn unpack(&mut self, reader: &mut DatBinReader<'_>) -> bool {
         self.root = reader.read_item::<PhysicsBSPNode>();
@@ -94,6 +122,55 @@ impl IPackable for DrawingBSPTree {
     fn pack(&self, writer: &mut DatBinWriter<'_>) -> bool {
         writer.write_item(&self.root);
         true
+    }
+}
+
+impl IUnpackable for CellBSPNode {
+    fn unpack(&mut self, reader: &mut DatBinReader<'_>) -> bool {
+        self.node_type = BSPNodeType::from(reader.read_u32() as i32);
+        self.pos_node = None;
+        self.neg_node = None;
+
+        match self.node_type {
+            BSPNodeType::PORTAL => false,
+            BSPNodeType::LEAF => {
+                self.leaf_index = reader.read_i32();
+                true
+            }
+            _ => {
+                self.splitting_plane = reader.read_plane();
+                if read_pos_drawing(self.node_type) {
+                    self.pos_node = Some(Box::new(reader.read_item::<CellBSPNode>()));
+                }
+                if read_neg_drawing(self.node_type) {
+                    self.neg_node = Some(Box::new(reader.read_item::<CellBSPNode>()));
+                }
+                true
+            }
+        }
+    }
+}
+
+impl IPackable for CellBSPNode {
+    fn pack(&self, writer: &mut DatBinWriter<'_>) -> bool {
+        writer.write_u32(i32::from(self.node_type) as u32);
+        match self.node_type {
+            BSPNodeType::PORTAL => false,
+            BSPNodeType::LEAF => {
+                writer.write_i32(self.leaf_index);
+                true
+            }
+            _ => {
+                writer.write_plane(self.splitting_plane);
+                if let Some(pos) = &self.pos_node {
+                    writer.write_item(&**pos);
+                }
+                if let Some(neg) = &self.neg_node {
+                    writer.write_item(&**neg);
+                }
+                true
+            }
+        }
     }
 }
 

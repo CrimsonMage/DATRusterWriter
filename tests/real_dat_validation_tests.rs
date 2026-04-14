@@ -2,18 +2,19 @@ use dat_reader_writer::{
     DBObjs::{
         ActionMap::ActionMap, Animation::Animation, BadDataTable::BadDataTable, CharGen::CharGen,
         ChatPoseTable::ChatPoseTable, ClothingTable::ClothingTable, CombatTable::CombatTable,
-        ContractTable::ContractTable, ExperienceTable::ExperienceTable, Font::Font, GfxObj::GfxObj,
-        GfxObjDegradeInfo::GfxObjDegradeInfo, Iteration::Iteration, LanguageInfo::LanguageInfo,
-        MasterInputMap::MasterInputMap, MasterProperty::MasterProperty,
-        MaterialInstance::MaterialInstance, MaterialModifier::MaterialModifier,
-        MotionTable::MotionTable, NameFilterTable::NameFilterTable,
-        ObjectHierarchy::ObjectHierarchy, Palette::Palette, ParticleEmitter::ParticleEmitter,
-        PhysicsScript::PhysicsScript, PhysicsScriptTable::PhysicsScriptTable,
-        QualityFilter::QualityFilter, Region::Region, RenderMaterial::RenderMaterial,
-        RenderSurface::RenderSurface, RenderTexture::RenderTexture, Scene::Scene, Setup::Setup,
-        SkillTable::SkillTable, SoundTable::SoundTable, SpellComponentTable::SpellComponentTable,
-        SpellTable::SpellTable, Surface::Surface, SurfaceTexture::SurfaceTexture,
-        TabooTable::TabooTable, VitalTable::VitalTable, Wave::Wave,
+        ContractTable::ContractTable, EnvCell::EnvCell, Environment::Environment,
+        ExperienceTable::ExperienceTable, Font::Font, GfxObj::GfxObj,
+        GfxObjDegradeInfo::GfxObjDegradeInfo, Iteration::Iteration, LandBlock::LandBlock,
+        LandBlockInfo::LandBlockInfo, LanguageInfo::LanguageInfo, MasterInputMap::MasterInputMap,
+        MasterProperty::MasterProperty, MaterialInstance::MaterialInstance,
+        MaterialModifier::MaterialModifier, MotionTable::MotionTable,
+        NameFilterTable::NameFilterTable, ObjectHierarchy::ObjectHierarchy, Palette::Palette,
+        ParticleEmitter::ParticleEmitter, PhysicsScript::PhysicsScript,
+        PhysicsScriptTable::PhysicsScriptTable, QualityFilter::QualityFilter, Region::Region,
+        RenderMaterial::RenderMaterial, RenderSurface::RenderSurface, RenderTexture::RenderTexture,
+        Scene::Scene, Setup::Setup, SkillTable::SkillTable, SoundTable::SoundTable,
+        SpellComponentTable::SpellComponentTable, SpellTable::SpellTable, Surface::Surface,
+        SurfaceTexture::SurfaceTexture, TabooTable::TabooTable, VitalTable::VitalTable, Wave::Wave,
     },
     DatCollection::DatCollection,
     Options::DatAccessType::DatAccessType,
@@ -101,6 +102,10 @@ fn validates_ported_types_against_real_dats() {
     validate_sample::<MaterialModifier>(&collection, 3);
     validate_sample::<MaterialInstance>(&collection, 3);
     validate_sample::<ActionMap>(&collection, 1);
+    validate_sample::<Environment>(&collection, 1);
+    validate_sample::<LandBlockInfo>(&collection, 1);
+    validate_sample::<LandBlock>(&collection, 1);
+    validate_sample::<EnvCell>(&collection, 1);
     validate_sample::<MasterInputMap>(&collection, 1);
     validate_sample::<MasterProperty>(&collection, 1);
     validate_sample::<GfxObjDegradeInfo>(&collection, 3);

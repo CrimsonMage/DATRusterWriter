@@ -22,6 +22,10 @@ pub mod DualEnumIDMap;
 pub mod EnumIDMap;
 #[path = "EnumMapper.rs"]
 pub mod EnumMapper;
+#[path = "EnvCell.rs"]
+pub mod EnvCell;
+#[path = "Environment.rs"]
+pub mod Environment;
 #[path = "ExperienceTable.rs"]
 pub mod ExperienceTable;
 #[path = "Font.rs"]
@@ -32,6 +36,10 @@ pub mod GfxObj;
 pub mod GfxObjDegradeInfo;
 #[path = "Iteration.rs"]
 pub mod Iteration;
+#[path = "LandBlock.rs"]
+pub mod LandBlock;
+#[path = "LandBlockInfo.rs"]
+pub mod LandBlockInfo;
 #[path = "LanguageInfo.rs"]
 pub mod LanguageInfo;
 #[path = "LanguageString.rs"]

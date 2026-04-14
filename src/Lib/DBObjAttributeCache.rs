@@ -47,6 +47,10 @@ const PORTED_ATTRIBUTES: &[&DBObjTypeAttribute] = &[
     &crate::DBObjs::BadDataTable::BAD_DATA_TABLE_ATTR,
     &crate::DBObjs::ChatPoseTable::CHAT_POSE_TABLE_ATTR,
     &crate::DBObjs::ContractTable::CONTRACT_TABLE_ATTR,
+    &crate::DBObjs::LandBlock::LAND_BLOCK_ATTR,
+    &crate::DBObjs::EnvCell::ENV_CELL_ATTR,
+    &crate::DBObjs::Environment::ENVIRONMENT_ATTR,
+    &crate::DBObjs::LandBlockInfo::LAND_BLOCK_INFO_ATTR,
     &crate::DBObjs::MasterInputMap::MASTER_INPUT_MAP_ATTR,
     &crate::DBObjs::MasterProperty::MASTER_PROPERTY_ATTR,
     &crate::DBObjs::ObjectHierarchy::OBJECT_HIERARCHY_ATTR,
@@ -86,8 +90,18 @@ pub fn type_from_id(dat_type: DatFileType, id: u32) -> Option<&'static DBObjType
     }
 
     match dat_type {
-        DatFileType::Cell => attrs_for_dat_type(dat_type)
-            .find(|attr| exact_id_matches(attr, id) || mask_matches(attr, id)),
+        DatFileType::Cell => {
+            if (id & 0xFF00_0000) == 0x0D00_0000 {
+                return Some(&crate::DBObjs::Environment::ENVIRONMENT_ATTR);
+            }
+            if (id & 0x0000_FFFF) == 0x0000_FFFE {
+                return Some(&crate::DBObjs::LandBlockInfo::LAND_BLOCK_INFO_ATTR);
+            }
+            if (id & 0x0000_FFFF) == 0x0000_FFFF {
+                return Some(&crate::DBObjs::LandBlock::LAND_BLOCK_ATTR);
+            }
+            Some(&crate::DBObjs::EnvCell::ENV_CELL_ATTR)
+        }
         DatFileType::Portal => attrs_for_dat_type(dat_type)
             .find(|attr| exact_id_matches(attr, id) || range_matches(attr, id)),
         DatFileType::Local => attrs_for_dat_type(dat_type).find(|attr| {

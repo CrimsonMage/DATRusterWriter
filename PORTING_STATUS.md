@@ -115,7 +115,7 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/Types/Sphere.generated.cs` | `src/Types/Sphere.rs` | Ported | BSP bounding primitive |
 | `DatReaderWriter/Types/PortalRef.cs` | `src/Types/PortalRef.rs` | Ported | Drawing BSP portal reference |
 | `DatReaderWriter/Generated/Types/Polygon.generated.cs` | `src/Types/Polygon.rs` | Ported | Mesh polygon record |
-| `DatReaderWriter/Types/BSPTree.cs`, `DatReaderWriter/Types/PhysicsBSPNode.cs`, `DatReaderWriter/Types/DrawingBSPNode.cs` | `src/Types/BSPTrees.rs` | Partial | Read-side BSP tree/node port collapsed into one Rust module; drawing/physics node behavior now matches the reference, while `CellBSPTree` remains unported |
+| `DatReaderWriter/Types/BSPTree.cs`, `DatReaderWriter/Types/PhysicsBSPNode.cs`, `DatReaderWriter/Types/DrawingBSPNode.cs`, `DatReaderWriter/Types/CellBSPNode.cs` | `src/Types/BSPTrees.rs` | Verified | Read-side BSP tree/node port collapsed into one Rust module; drawing, physics, and cell BSP behavior now match the current reference slices and are covered by focused tests |
 | `DatReaderWriter/Generated/Types/AttackCone.generated.cs` | `src/Types/AttackCone.rs` | Ported | Physics script hook payload |
 | `DatReaderWriter/Generated/Types/AnimationFrame.generated.cs` | `src/Types/AnimationFrame.rs` | Ported | Read-side animation/setup frame payload with explicit part-count helper |
 | `DatReaderWriter/Generated/Types/AnimationPartChange.generated.cs` | `src/Types/AnimationPartChange.rs` | Ported | Read-side explicit packed part swap payload |
@@ -154,7 +154,7 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | DatReaderWriter/Generated/Types/HeritageGroupCG.generated.cs | src/Types/HeritageGroupCG.rs | Verified | Character-generation heritage group payload now reads starting areas, templates, skills, and gender table |
 | `DatReaderWriter/Generated/Types/AnimationHook.generated.cs` and hook variants | `src/Types/AnimationHook.rs` | Partial | Read-side hook family collapsed into one Rust enum; unknown hook payloads are not preserved |
 | `DatReaderWriter/Generated/Types/PhysicsScriptData.generated.cs` | `src/Types/PhysicsScriptData.rs` | Ported | Physics script timing + hook record |
-| `DatReaderWriter/DatDatabase.cs` | `src/DatDatabase.rs` | Partial | Raw file entry lookup, byte/decompression read support, typed `try_get<T>()`, typed id enumeration, and allocator selection for both read-only and read-write access |
+| `DatReaderWriter/DatDatabase.cs` | `src/DatDatabase.rs` | Partial | Raw file entry lookup, byte/decompression read support, typed `try_get<T>()`, typed id enumeration including masked and special-routed cell DBObjs, and allocator selection for both read-only and read-write access |
 | `DatReaderWriter/DatCollection.cs` | `src/DatCollection.rs` | Partial | Typed `try_get<T>()`, portal/high-res fallback, and typed id enumeration now ported for read use |
 | `DatReaderWriter/CellDatabase.cs` | `src/CellDatabase.rs` | Verified | Read-first concrete wrapper with header validation and typed read delegation |
 | `DatReaderWriter/PortalDatabase.cs` | `src/PortalDatabase.rs` | Verified | Read-first concrete wrapper with header validation and typed read delegation |
@@ -178,6 +178,7 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | DatReaderWriter/Generated/DBObjs/StringTable.generated.cs | src/DBObjs/StringTable.rs | Verified | Local string-table DBObj now reads language plus hashed string entries and is covered by typed DBObj tests |
 | DatReaderWriter/Generated/DBObjs/LanguageString.generated.cs | src/DBObjs/LanguageString.rs | Verified | Portal-language string DBObj now reads packed byte strings and is covered by typed DBObj tests |
 | DatReaderWriter/Generated/DBObjs/ParticleEmitter.generated.cs | src/DBObjs/ParticleEmitter.rs | Ported | Core particle emitter data ported for script references |
+| `DatReaderWriter/DBObjs/LandBlock.cs` | `src/DBObjs/LandBlock.rs` | Verified | Cell land-block DBObj now reads packed terrain and height grids and is covered by focused tests plus retail DAT validation |
 | `DatReaderWriter/Generated/DBObjs/PhysicsScript.generated.cs` | `src/DBObjs/PhysicsScript.rs` | Verified | Physics script list + hook decoding ported |
 | `DatReaderWriter/Generated/DBObjs/SoundTable.generated.cs` | `src/DBObjs/SoundTable.rs` | Verified | Explicit read-side sound table port with hash and named sound maps |
 | `DatReaderWriter/Generated/DBObjs/PhysicsScriptTable.generated.cs` | `src/DBObjs/PhysicsScriptTable.rs` | Verified | Explicit play-script to script-list table now ported |
@@ -202,7 +203,7 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 - Open the standard four DATs through `DatCollection`.
 - Validate specialized database wrappers against the header's DAT type.
 - Resolve typed objects through `DatCollection` with portal-to-high-res fallback.
-- Enumerate ids by DB object type through both `DatDatabase` and `DatCollection`.
+- Enumerate ids by DB object type through both `DatDatabase` and `DatCollection`, including masked and special-routed cell DBObjs like `Environment`, `LandBlockInfo`, `LandBlock`, and `EnvCell`.
 - Resolve `QualifiedDataId<T>` references through `DatCollection`.
 - Resolve packed qualified ids for known-mask DBObj references.
 - Resolve and read typed `Iteration`, `Palette`, `SurfaceTexture`, `RenderSurface`, `MotionTable`, `Region`, `Scene`, and `Surface` objects.
@@ -378,6 +379,17 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Types/ActionMapValue.cs` | `src/Types/ActionMapValue.rs` | Verified | Explicit action-map value payload now reads toggle mode plus user-binding data and is covered by focused tests |
 | `DatReaderWriter/DBObjs/ActionMap.cs` | `src/DBObjs/ActionMap.rs` | Verified | Explicit action-map DBObj now reads nested input maps and conflict tables and is validated against retail DATs |
 | `DatReaderWriter/DBObjs/MasterProperty.cs` | `src/DBObjs/MasterProperty.rs` | Verified | Explicit master-property DBObj now reads enum mapper data plus typed property descriptors and is validated against retail DATs |
+| `DatReaderWriter/Generated/Enums/EnvCellFlags.generated.cs` | `src/Generated/Enums/EnvCellFlags.rs` | Ported | Explicit cell flag bitflags mirrored for `EnvCell` reads |
+| `DatReaderWriter/Generated/Enums/PortalFlags.generated.cs` | `src/Generated/Enums/PortalFlags.rs` | Ported | Explicit cell and building portal flags mirrored for cell-side reads |
+| `DatReaderWriter/Types/TerrainInfo.cs` | `src/Types/TerrainInfo.rs` | Verified | Explicit packed terrain-info bitfield now mirrors road, terrain, and scenery storage and is covered by focused tests |
+| `DatReaderWriter/Generated/Types/Stab.generated.cs` | `src/Types/Stab.rs` | Verified | Explicit static-object placement payload is ported and exercised through cell-focused tests |
+| `DatReaderWriter/Generated/Types/BuildingPortal.generated.cs` | `src/Types/BuildingPortal.rs` | Verified | Explicit building-portal payload is ported and exercised through cell-focused tests |
+| `DatReaderWriter/Generated/Types/BuildingInfo.generated.cs` | `src/Types/BuildingInfo.rs` | Verified | Explicit building payload is ported and exercised through cell-focused tests |
+| `DatReaderWriter/Generated/Types/CellPortal.generated.cs` | `src/Types/CellPortal.rs` | Verified | Explicit cell-portal payload is ported and exercised through cell-focused tests |
+| `DatReaderWriter/Generated/Types/CellStruct.generated.cs` | `src/Types/CellStruct.rs` | Verified | Explicit environment cell-structure payload with portals and BSP refs is ported and exercised through cell-focused tests |
+| `DatReaderWriter/Generated/DBObjs/Environment.generated.cs` | `src/DBObjs/Environment.rs` | Verified | Explicit environment DBObj now reads keyed cell structures and is covered by focused tests plus retail DAT validation |
+| `DatReaderWriter/Generated/DBObjs/LandBlockInfo.generated.cs` | `src/DBObjs/LandBlockInfo.rs` | Verified | Explicit land-block-info DBObj now reads object, building, and restriction tables and is covered by focused tests plus retail DAT validation |
+| `DatReaderWriter/Generated/DBObjs/EnvCell.generated.cs` | `src/DBObjs/EnvCell.rs` | Verified | Explicit environment-cell DBObj now reads surfaces, portals, visibility, static objects, and restriction refs and is covered by focused tests plus retail DAT validation |
 
 ## Updated Remaining Major Areas
 

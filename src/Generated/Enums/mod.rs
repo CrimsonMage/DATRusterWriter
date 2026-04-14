@@ -32,6 +32,8 @@ pub mod DeviceType;
 pub mod DrawModeType;
 #[path = "EmitterType.rs"]
 pub mod EmitterType;
+#[path = "EnvCellFlags.rs"]
+pub mod EnvCellFlags;
 #[path = "EquipmentSet.rs"]
 pub mod EquipmentSet;
 #[path = "GfxObjFlags.rs"]
@@ -62,6 +64,8 @@ pub mod PixelFormat;
 pub mod Placement;
 #[path = "PlayScript.rs"]
 pub mod PlayScript;
+#[path = "PortalFlags.rs"]
+pub mod PortalFlags;
 #[path = "PropertyCachingType.rs"]
 pub mod PropertyCachingType;
 #[path = "PropertyDatFileType.rs"]
