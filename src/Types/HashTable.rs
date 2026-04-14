@@ -52,6 +52,8 @@ impl_hash_item_numeric!(i16, read_i16, write_i16, |v: i16| v as u16 as u64);
 impl_hash_item_numeric!(u16, read_u16, write_u16, |v: u16| v as u64);
 impl_hash_item_numeric!(i32, read_i32, write_i32, |v: i32| v as u32 as u64);
 impl_hash_item_numeric!(u32, read_u32, write_u32, |v: u32| v as u64);
+impl_hash_item_numeric!(i64, read_i64, write_i64, |v: i64| v as u64);
+impl_hash_item_numeric!(u64, read_u64, write_u64, |v: u64| v);
 
 impl HashTableItem for bool {
     fn read_item(reader: &mut DatBinReader<'_>) -> Self {

@@ -4,6 +4,8 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+use futures::executor::block_on;
+
 use dat_reader_writer::{
     Generated::Enums::DatFileType::DatFileType,
     Lib::IO::{
@@ -371,6 +373,32 @@ fn btree_try_get_file_and_range_walk_across_branches() {
 }
 
 #[test]
+fn block_allocator_async_wrappers_match_sync_behavior() {
+    let mut root = DatBTreeNode::new(500);
+    root.file_count = 1;
+    root.files[0] = sample_file(15, 15, 1);
+
+    let mut blocks = HashMap::new();
+    blocks.insert(500usize, encode_node(&root));
+
+    let read_allocator = ReadOnlyMockBlockAllocator::new(500, blocks);
+    let mut read_buffer = vec![0u8; DatBTreeNode::SIZE];
+    block_on(read_allocator.read_block_async(&mut read_buffer, 500)).unwrap();
+    assert_eq!(encode_node(&root), read_buffer);
+
+    let write_allocator = WritableMockBlockAllocator::empty();
+    let payload = [0x11, 0x22, 0x33, 0x44];
+    let written_offset = block_on(write_allocator.write_block_async(&payload, payload.len(), 0)).unwrap();
+    assert!(written_offset > 0);
+
+    let mut roundtrip = vec![0u8; payload.len()];
+    write_allocator
+        .read_block(&mut roundtrip, written_offset as usize)
+        .unwrap();
+    assert_eq!(payload, roundtrip.as_slice());
+}
+
+#[test]
 fn btree_flat_index_preserves_sorted_range_results() {
     let mut root = DatBTreeNode::new(500);
     root.file_count = 3;
@@ -462,6 +490,22 @@ fn btree_insert_updates_existing_flat_index() {
         .map(|file| file.id)
         .collect();
     assert_eq!(vec![10, 20, 30], ids);
+}
+
+#[test]
+fn btree_async_wrappers_cover_lookup_insert_and_delete() {
+    let allocator = Arc::new(WritableMockBlockAllocator::empty());
+    let tree = DatBTreeReaderWriter::new(allocator.clone());
+
+    let inserted = sample_file(0x1010, 0x2020, 64);
+    assert!(block_on(tree.insert_async(inserted)).unwrap().is_none());
+
+    let found = block_on(tree.try_get_file_async(0x1010)).unwrap().unwrap();
+    assert_eq!(inserted, found);
+
+    let deleted = block_on(tree.try_delete_async(0x1010)).unwrap().unwrap();
+    assert_eq!(0x1010, deleted.id);
+    assert!(block_on(tree.try_get_file_async(0x1010)).unwrap().is_none());
 }
 
 #[test]

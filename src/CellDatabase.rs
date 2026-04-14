@@ -53,11 +53,25 @@ impl CellDatabase {
         self.inner.try_get::<T>(file_id)
     }
 
+    pub async fn try_get_async<T>(&self, file_id: u32) -> io::Result<Option<T>>
+    where
+        T: IDBObj + Default + Send,
+    {
+        self.inner.try_get_async::<T>(file_id).await
+    }
+
     pub fn get_cached<T>(&self, file_id: u32) -> io::Result<Option<T>>
     where
         T: IDBObj + Default + Clone + Send + 'static,
     {
         self.inner.get_cached::<T>(file_id)
+    }
+
+    pub async fn get_cached_async<T>(&self, file_id: u32) -> io::Result<Option<T>>
+    where
+        T: IDBObj + Default + Clone + Send + 'static,
+    {
+        self.inner.get_cached_async::<T>(file_id).await
     }
 
     pub fn try_write_file<T>(&self, value: &T) -> io::Result<bool>
@@ -67,11 +81,73 @@ impl CellDatabase {
         self.inner.try_write_file(value)
     }
 
+    pub async fn try_write_file_async<T>(&self, value: &T) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable + Sync,
+    {
+        self.inner.try_write_file_async(value).await
+    }
+
+    pub fn try_write_file_with_template<T>(
+        &self,
+        value: &T,
+        template: DatBTreeFile,
+    ) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable,
+    {
+        self.inner.try_write_file_with_template(value, template)
+    }
+
+    pub async fn try_write_file_with_template_async<T>(
+        &self,
+        value: &T,
+        template: DatBTreeFile,
+    ) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable + Sync,
+    {
+        self.inner
+            .try_write_file_with_template_async(value, template)
+            .await
+    }
+
     pub fn try_write_compressed<T>(&self, value: &T) -> io::Result<bool>
     where
         T: IDBObj + IPackable,
     {
         self.inner.try_write_compressed(value)
+    }
+
+    pub async fn try_write_compressed_async<T>(&self, value: &T) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable + Sync,
+    {
+        self.inner.try_write_compressed_async(value).await
+    }
+
+    pub fn try_write_compressed_with_template<T>(
+        &self,
+        value: &T,
+        template: DatBTreeFile,
+    ) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable,
+    {
+        self.inner.try_write_compressed_with_template(value, template)
+    }
+
+    pub async fn try_write_compressed_with_template_async<T>(
+        &self,
+        value: &T,
+        template: DatBTreeFile,
+    ) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable + Sync,
+    {
+        self.inner
+            .try_write_compressed_with_template_async(value, template)
+            .await
     }
 
     pub fn get_all_ids_of_type<T>(&self) -> io::Result<Vec<u32>>

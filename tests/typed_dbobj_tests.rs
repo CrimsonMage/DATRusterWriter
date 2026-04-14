@@ -5,6 +5,8 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+use futures::executor::block_on;
+
 use dat_reader_writer::{
     DBObjs::{
         ActionMap::ActionMap, BadDataTable::BadDataTable, ChatPoseTable::ChatPoseTable,
@@ -653,6 +655,51 @@ fn dat_database_can_read_typed_iteration() {
     let iteration = db.try_get::<Iteration>(0xFFFF0001).unwrap().unwrap();
     assert_eq!(1, iteration.current_iteration);
     assert_eq!(Some(&-1), iteration.iterations.get(&1));
+}
+
+#[test]
+fn dat_database_async_reads_typed_entry_and_cache() {
+    let palette = Palette {
+        base: DBObjBase {
+            id: 0x0400_00AA,
+            ..Default::default()
+        },
+        colors: vec![ColorARGB {
+            blue: 0x12,
+            green: 0x34,
+            red: 0x56,
+            alpha: 0x78,
+        }],
+    };
+
+    let mut payload = vec![0u8; 128];
+    let used = {
+        let mut writer = DatBinWriter::new(&mut payload);
+        assert!(palette.pack(&mut writer));
+        writer.offset()
+    };
+
+    let bytes = build_single_block_dat(DatFileType::Portal, 0x0400_00AA, &payload[..used]);
+    let path = unique_temp_file();
+    fs::write(&path, bytes).unwrap();
+
+    let db = DatDatabase::new(DatDatabaseOptions {
+        file_path: path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+
+    let async_palette = block_on(db.get_async::<Palette>(0x0400_00AA))
+        .unwrap()
+        .unwrap();
+    assert_eq!(0x12, async_palette.colors[0].blue);
+    assert_eq!(0x78, async_palette.colors[0].alpha);
+
+    let cached_palette = block_on(db.get_cached_async::<Palette>(0x0400_00AA))
+        .unwrap()
+        .unwrap();
+    assert_eq!(0x12, cached_palette.colors[0].blue);
+    assert_eq!(0x78, cached_palette.colors[0].alpha);
 }
 
 #[test]
@@ -1727,6 +1774,80 @@ fn dat_database_can_write_and_read_compressed_file_bytes() {
 
     let decompressed = db.try_get_file_bytes(0x0400_0010, true).unwrap().unwrap();
     assert_eq!(payload, decompressed);
+}
+
+#[test]
+fn dat_database_can_write_with_template_metadata() {
+    use dat_reader_writer::Lib::IO::DatBTree::{
+        DatBTreeFile::DatBTreeFile, DatBTreeFileFlags::DatBTreeFileFlags,
+    };
+
+    let path = unique_temp_file();
+    let db = DatDatabase::new(DatDatabaseOptions {
+        file_path: path.to_string_lossy().to_string(),
+        access_type: DatAccessType::ReadWrite,
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+    db.block_allocator
+        .init_new(DatFileType::Portal, 0, 1024, 4)
+        .unwrap();
+
+    let palette = Palette {
+        base: DBObjBase {
+            id: 0x0400_0042,
+            ..Default::default()
+        },
+        colors: vec![ColorARGB {
+            blue: 1,
+            green: 2,
+            red: 3,
+            alpha: 4,
+        }],
+    };
+
+    let template = DatBTreeFile {
+        flags: DatBTreeFileFlags::None,
+        version: 7,
+        iteration: 9,
+        ..Default::default()
+    };
+
+    assert!(db
+        .try_write_file_with_template(&palette, template)
+        .unwrap());
+
+    let entry = db.try_get_file_entry(0x0400_0042).unwrap().unwrap();
+    assert_eq!(7, entry.version);
+    assert_eq!(9, entry.iteration);
+    assert!(!entry.flags.contains(DatBTreeFileFlags::IsCompressed));
+
+    let compressed_payload = b"TextureTextureTextureTextureTextureTexture".repeat(16);
+    let compressed_template = DatBTreeFile {
+        flags: DatBTreeFileFlags::None,
+        version: 5,
+        iteration: 11,
+        ..Default::default()
+    };
+
+    assert!(db
+        .try_write_compressed_bytes_with_template(
+            0x0500_0042,
+            &compressed_payload,
+            compressed_payload.len(),
+            compressed_template,
+        )
+        .unwrap());
+
+    let compressed_entry = db.try_get_file_entry(0x0500_0042).unwrap().unwrap();
+    assert_eq!(5, compressed_entry.version);
+    assert_eq!(11, compressed_entry.iteration);
+    assert!(compressed_entry
+        .flags
+        .contains(DatBTreeFileFlags::IsCompressed));
+
+    let read_bytes = db.try_get_file_bytes(0x0500_0042, true).unwrap().unwrap();
+    assert_eq!(compressed_payload, read_bytes);
 }
 
 #[test]
@@ -2941,6 +3062,11 @@ fn hash_table_roundtrip_reads_string_and_primitive_entries() {
     flags.insert(7, true);
     flags.insert(9, false);
 
+    let mut wide = HashTable::<u64, i64>::default();
+    wide.bucket_size_index = 3;
+    wide.insert(0x0000_0001_0000_0002, -5);
+    wide.insert(0x0000_0003_0000_0004, 7);
+
     let mut string_bytes = vec![0u8; 256];
     let mut writer = DatBinWriter::new(&mut string_bytes);
     assert!(strings.pack(&mut writer));
@@ -2951,6 +3077,11 @@ fn hash_table_roundtrip_reads_string_and_primitive_entries() {
     assert!(flags.pack(&mut writer));
     let flag_used = writer.offset();
 
+    let mut wide_bytes = vec![0u8; 128];
+    let mut writer = DatBinWriter::new(&mut wide_bytes);
+    assert!(wide.pack(&mut writer));
+    let wide_used = writer.offset();
+
     let mut unpacked_strings = HashTable::<String, u32>::default();
     assert!(unpacked_strings.unpack(&mut DatBinReader::new(&string_bytes[..string_used])));
     assert_eq!(Some(&1), unpacked_strings.get(&"alpha".to_string()));
@@ -2960,6 +3091,27 @@ fn hash_table_roundtrip_reads_string_and_primitive_entries() {
     assert!(unpacked_flags.unpack(&mut DatBinReader::new(&flag_bytes[..flag_used])));
     assert_eq!(Some(&true), unpacked_flags.get(&7));
     assert_eq!(Some(&false), unpacked_flags.get(&9));
+
+    let mut unpacked_wide = HashTable::<u64, i64>::default();
+    assert!(unpacked_wide.unpack(&mut DatBinReader::new(&wide_bytes[..wide_used])));
+    assert_eq!(Some(&-5), unpacked_wide.get(&0x0000_0001_0000_0002));
+    assert_eq!(Some(&7), unpacked_wide.get(&0x0000_0003_0000_0004));
+}
+
+#[test]
+fn hash_table_helpers_match_reference_bucket_selection_rules() {
+    use dat_reader_writer::Lib::HashTableHelpers::{BUCKET_SIZES, get_bucket_size, get_bucket_size_index};
+
+    assert_eq!(11, get_bucket_size(1, false));
+    assert_eq!(23, get_bucket_size(12, false));
+    assert_eq!(11, get_bucket_size(10, true));
+    assert_eq!(23, get_bucket_size(22, true));
+
+    assert_eq!(0, get_bucket_size_index(1, false));
+    assert_eq!(1, get_bucket_size_index(12, false));
+    assert_eq!(0, get_bucket_size_index(10, true));
+    assert_eq!(1, get_bucket_size_index(22, true));
+    assert_eq!(50331599, *BUCKET_SIZES.last().unwrap());
 }
 
 #[test]
@@ -3654,4 +3806,45 @@ fn generated_hook_wrappers_roundtrip_final_batch() {
         enum_sound_tweaked,
         AnimationHook::SoundTweaked { priority, .. } if (priority - 6.1).abs() < f32::EPSILON
     ));
+}
+
+#[test]
+fn animation_hook_unknown_variant_preserves_raw_payload_bytes() {
+    use dat_reader_writer::Generated::Enums::{
+        AnimationHookDir::AnimationHookDir, AnimationHookType::AnimationHookType,
+    };
+
+    let payload = vec![0xAA, 0xBB, 0xCC, 0xDD, 0x01, 0x02];
+    let mut bytes = vec![0u8; 64];
+    let used = {
+        let mut writer = DatBinWriter::new(&mut bytes);
+        writer.write_u32(0xFFFF_FF00);
+        writer.write_u32(AnimationHookDir::BACKWARD.into());
+        for byte in &payload {
+            writer.write_byte(*byte);
+        }
+        writer.offset()
+    };
+
+    let mut hook = AnimationHook::default();
+    assert!(hook.unpack(&mut DatBinReader::new(&bytes[..used])));
+    assert!(matches!(
+        &hook,
+        AnimationHook::Unknown {
+            hook_type,
+            direction,
+            payload: stored_payload,
+        } if *hook_type == AnimationHookType::from(0xFFFF_FF00)
+            && *direction == AnimationHookDir::BACKWARD
+            && stored_payload == &payload
+    ));
+
+    let mut repacked = vec![0u8; 64];
+    let repacked_used = {
+        let mut writer = DatBinWriter::new(&mut repacked);
+        assert!(hook.pack(&mut writer));
+        writer.offset()
+    };
+
+    assert_eq!(&bytes[..used], &repacked[..repacked_used]);
 }

@@ -1,6 +1,8 @@
 use std::{
     collections::HashMap,
+    future::Future,
     io,
+    pin::Pin,
     sync::{Arc, Mutex},
 };
 
@@ -57,6 +59,13 @@ impl DatBTreeReaderWriter {
         self.try_get_file_internal(file_id, self.block_allocator.header().root_block)
     }
 
+    pub fn try_get_file_async<'a>(
+        &'a self,
+        file_id: u32,
+    ) -> Pin<Box<dyn Future<Output = io::Result<Option<DatBTreeFile>>> + Send + 'a>> {
+        Box::pin(async move { self.try_get_file(file_id) })
+    }
+
     pub fn insert(&self, file: DatBTreeFile) -> io::Result<Option<DatBTreeFile>> {
         if !self.block_allocator.can_write() {
             return Err(io::Error::new(
@@ -108,6 +117,13 @@ impl DatBTreeReaderWriter {
         Ok(None)
     }
 
+    pub fn insert_async<'a>(
+        &'a self,
+        file: DatBTreeFile,
+    ) -> Pin<Box<dyn Future<Output = io::Result<Option<DatBTreeFile>>> + Send + 'a>> {
+        Box::pin(async move { self.insert(file) })
+    }
+
     pub fn try_delete(&self, file_id: u32) -> io::Result<Option<DatBTreeFile>> {
         if !self.block_allocator.can_write() {
             return Err(io::Error::new(
@@ -139,6 +155,13 @@ impl DatBTreeReaderWriter {
         }
 
         Ok(Some(file_entry))
+    }
+
+    pub fn try_delete_async<'a>(
+        &'a self,
+        file_id: u32,
+    ) -> Pin<Box<dyn Future<Output = io::Result<Option<DatBTreeFile>>> + Send + 'a>> {
+        Box::pin(async move { self.try_delete(file_id) })
     }
 
     pub fn has_file(&self, file_id: u32) -> io::Result<bool> {

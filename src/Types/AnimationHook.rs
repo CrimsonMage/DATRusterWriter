@@ -146,6 +146,7 @@ pub enum AnimationHook {
     Unknown {
         hook_type: AnimationHookType,
         direction: AnimationHookDir,
+        payload: Vec<u8>,
     },
 }
 
@@ -355,6 +356,7 @@ impl IUnpackable for AnimationHook {
             _ => Self::Unknown {
                 hook_type,
                 direction,
+                payload: reader.read_remaining_bytes(),
             },
         };
         true
@@ -475,7 +477,11 @@ impl IPackable for AnimationHook {
             }
             Self::SetLight { lights_on, .. } => writer.write_bool(*lights_on, 4),
             Self::CreateBlockingParticle { .. } => {}
-            Self::Unknown { .. } => {}
+            Self::Unknown { payload, .. } => {
+                for byte in payload {
+                    writer.write_byte(*byte);
+                }
+            }
         }
         true
     }

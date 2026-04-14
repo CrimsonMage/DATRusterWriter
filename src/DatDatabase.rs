@@ -1,8 +1,10 @@
 use std::{
     any::Any,
     collections::BTreeMap,
+    future::Future,
     io,
     io::{Read, Write},
+    pin::Pin,
     sync::{Arc, Mutex},
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -105,6 +107,14 @@ impl DatDatabase {
         Ok(Some(bytes))
     }
 
+    pub fn try_get_file_bytes_async<'a>(
+        &'a self,
+        file_id: u32,
+        auto_decompress: bool,
+    ) -> Pin<Box<dyn Future<Output = io::Result<Option<Vec<u8>>>> + Send + 'a>> {
+        Box::pin(async move { self.try_get_file_bytes(file_id, auto_decompress) })
+    }
+
     pub fn try_get<T>(&self, file_id: u32) -> io::Result<Option<T>>
     where
         T: IDBObj + Default,
@@ -145,6 +155,26 @@ impl DatDatabase {
         T: IDBObj + Default,
     {
         self.try_get::<T>(file_id)
+    }
+
+    pub fn try_get_async<'a, T>(
+        &'a self,
+        file_id: u32,
+    ) -> Pin<Box<dyn Future<Output = io::Result<Option<T>>> + Send + 'a>>
+    where
+        T: IDBObj + Default + Send + 'a,
+    {
+        Box::pin(async move { self.try_get::<T>(file_id) })
+    }
+
+    pub fn get_async<'a, T>(
+        &'a self,
+        file_id: u32,
+    ) -> Pin<Box<dyn Future<Output = io::Result<Option<T>>> + Send + 'a>>
+    where
+        T: IDBObj + Default + Send + 'a,
+    {
+        Box::pin(async move { self.get::<T>(file_id) })
     }
 
     pub fn get_cached<T>(&self, file_id: u32) -> io::Result<Option<T>>
@@ -189,6 +219,16 @@ impl DatDatabase {
         Ok(value)
     }
 
+    pub fn get_cached_async<'a, T>(
+        &'a self,
+        file_id: u32,
+    ) -> Pin<Box<dyn Future<Output = io::Result<Option<T>>> + Send + 'a>>
+    where
+        T: IDBObj + Default + Clone + Send + 'static,
+    {
+        Box::pin(async move { self.get_cached::<T>(file_id) })
+    }
+
     pub fn base_property_types(&self) -> io::Result<Option<Arc<BTreeMap<u32, BasePropertyType>>>> {
         if self.header().r#type != DatFileType::Portal {
             return Ok(None);
@@ -231,6 +271,48 @@ impl DatDatabase {
         })
     }
 
+    pub async fn try_write_file_async<T>(&self, value: &T) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable + Sync,
+    {
+        self.try_write_file(value)
+    }
+
+    pub fn try_write_file_with_template<T>(
+        &self,
+        value: &T,
+        template: DatBTreeFile,
+    ) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable,
+    {
+        let mut buffer = vec![0u8; 1024 * 1024 * 5];
+        let bytes_to_write = {
+            let mut writer = DatBinWriter::new(&mut buffer);
+            writer.write_item(value);
+            writer.offset()
+        };
+
+        self.try_write_bytes_core(value.id(), &buffer, bytes_to_write, false, |entry| {
+            entry.flags =
+                (template.flags & !DatBTreeFileFlags::IsCompressed)
+                    | (entry.flags & DatBTreeFileFlags::IsCompressed);
+            entry.version = template.version;
+            entry.iteration = template.iteration;
+        })
+    }
+
+    pub async fn try_write_file_with_template_async<T>(
+        &self,
+        value: &T,
+        template: DatBTreeFile,
+    ) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable + Sync,
+    {
+        self.try_write_file_with_template(value, template)
+    }
+
     pub fn try_write_compressed<T>(&self, value: &T) -> io::Result<bool>
     where
         T: IDBObj + IPackable,
@@ -249,6 +331,48 @@ impl DatDatabase {
         })
     }
 
+    pub async fn try_write_compressed_async<T>(&self, value: &T) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable + Sync,
+    {
+        self.try_write_compressed(value)
+    }
+
+    pub fn try_write_compressed_with_template<T>(
+        &self,
+        value: &T,
+        template: DatBTreeFile,
+    ) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable,
+    {
+        let mut buffer = vec![0u8; 1024 * 1024 * 5];
+        let bytes_to_write = {
+            let mut writer = DatBinWriter::new(&mut buffer);
+            writer.write_item(value);
+            writer.offset()
+        };
+
+        self.try_write_bytes_core(value.id(), &buffer, bytes_to_write, true, |entry| {
+            entry.flags =
+                (template.flags & !DatBTreeFileFlags::IsCompressed)
+                    | (entry.flags & DatBTreeFileFlags::IsCompressed);
+            entry.version = template.version;
+            entry.iteration = template.iteration;
+        })
+    }
+
+    pub async fn try_write_compressed_with_template_async<T>(
+        &self,
+        value: &T,
+        template: DatBTreeFile,
+    ) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable + Sync,
+    {
+        self.try_write_compressed_with_template(value, template)
+    }
+
     pub fn try_write_file_bytes(
         &self,
         id: u32,
@@ -261,6 +385,16 @@ impl DatDatabase {
         })
     }
 
+    pub async fn try_write_file_bytes_async(
+        &self,
+        id: u32,
+        buffer: &[u8],
+        bytes_to_write: usize,
+        iteration: i32,
+    ) -> io::Result<bool> {
+        self.try_write_file_bytes(id, buffer, bytes_to_write, iteration)
+    }
+
     pub fn try_write_compressed_bytes(
         &self,
         id: u32,
@@ -271,6 +405,68 @@ impl DatDatabase {
         self.try_write_bytes_core(id, buffer, bytes_to_write, true, |entry| {
             entry.iteration = iteration;
         })
+    }
+
+    pub async fn try_write_compressed_bytes_async(
+        &self,
+        id: u32,
+        buffer: &[u8],
+        bytes_to_write: usize,
+        iteration: i32,
+    ) -> io::Result<bool> {
+        self.try_write_compressed_bytes(id, buffer, bytes_to_write, iteration)
+    }
+
+    pub fn try_write_file_bytes_with_template(
+        &self,
+        id: u32,
+        buffer: &[u8],
+        bytes_to_write: usize,
+        template: DatBTreeFile,
+    ) -> io::Result<bool> {
+        self.try_write_bytes_core(id, buffer, bytes_to_write, false, |entry| {
+            entry.flags =
+                (template.flags & !DatBTreeFileFlags::IsCompressed)
+                    | (entry.flags & DatBTreeFileFlags::IsCompressed);
+            entry.version = template.version;
+            entry.iteration = template.iteration;
+        })
+    }
+
+    pub async fn try_write_file_bytes_with_template_async(
+        &self,
+        id: u32,
+        buffer: &[u8],
+        bytes_to_write: usize,
+        template: DatBTreeFile,
+    ) -> io::Result<bool> {
+        self.try_write_file_bytes_with_template(id, buffer, bytes_to_write, template)
+    }
+
+    pub fn try_write_compressed_bytes_with_template(
+        &self,
+        id: u32,
+        buffer: &[u8],
+        bytes_to_write: usize,
+        template: DatBTreeFile,
+    ) -> io::Result<bool> {
+        self.try_write_bytes_core(id, buffer, bytes_to_write, true, |entry| {
+            entry.flags =
+                (template.flags & !DatBTreeFileFlags::IsCompressed)
+                    | (entry.flags & DatBTreeFileFlags::IsCompressed);
+            entry.version = template.version;
+            entry.iteration = template.iteration;
+        })
+    }
+
+    pub async fn try_write_compressed_bytes_with_template_async(
+        &self,
+        id: u32,
+        buffer: &[u8],
+        bytes_to_write: usize,
+        template: DatBTreeFile,
+    ) -> io::Result<bool> {
+        self.try_write_compressed_bytes_with_template(id, buffer, bytes_to_write, template)
     }
 
     pub fn get_all_ids_of_type<T>(&self) -> io::Result<Vec<u32>>

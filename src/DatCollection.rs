@@ -232,6 +232,59 @@ impl DatCollection {
         self.try_get::<T>(file_id)
     }
 
+    pub async fn try_get_async<T>(&self, file_id: u32) -> io::Result<Option<T>>
+    where
+        T: IDBObj + Default + Send,
+    {
+        if TypeId::of::<T>() == TypeId::of::<crate::DBObjs::Iteration::Iteration>() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Iteration is not a valid type to read from a dat collection; use a specific database instead",
+            ));
+        }
+
+        match self.type_to_dat_file_type::<T>() {
+            DatFileType::Cell => self.cell.try_get_async::<T>(file_id).await,
+            DatFileType::Portal => {
+                let portal = self.portal.try_get_async::<T>(file_id).await?;
+                if portal.is_some() {
+                    Ok(portal)
+                } else {
+                    self.high_res.try_get_async::<T>(file_id).await
+                }
+            }
+            DatFileType::Local => self.local.inner.try_get_with_base_property_types(
+                file_id,
+                self.portal.inner.base_property_types()?,
+            ),
+            DatFileType::Undefined => {
+                let portal = self.portal.try_get_async::<T>(file_id).await?;
+                if portal.is_some() {
+                    return Ok(portal);
+                }
+                let high_res = self.high_res.try_get_async::<T>(file_id).await?;
+                if high_res.is_some() {
+                    return Ok(high_res);
+                }
+                let local = self.local.inner.try_get_with_base_property_types(
+                    file_id,
+                    self.portal.inner.base_property_types()?,
+                )?;
+                if local.is_some() {
+                    return Ok(local);
+                }
+                self.cell.try_get_async::<T>(file_id).await
+            }
+        }
+    }
+
+    pub async fn get_async<T>(&self, file_id: u32) -> io::Result<Option<T>>
+    where
+        T: IDBObj + Default + Send,
+    {
+        self.try_get_async::<T>(file_id).await
+    }
+
     pub fn get_cached<T>(&self, file_id: u32) -> io::Result<Option<T>>
     where
         T: IDBObj + Default + Clone + Send + 'static,
@@ -278,6 +331,52 @@ impl DatCollection {
         }
     }
 
+    pub async fn get_cached_async<T>(&self, file_id: u32) -> io::Result<Option<T>>
+    where
+        T: IDBObj + Default + Clone + Send + 'static,
+    {
+        if TypeId::of::<T>() == TypeId::of::<crate::DBObjs::Iteration::Iteration>() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Iteration is not a valid type to read from a dat collection; use a specific database instead",
+            ));
+        }
+
+        match self.type_to_dat_file_type::<T>() {
+            DatFileType::Cell => self.cell.get_cached_async::<T>(file_id).await,
+            DatFileType::Portal => {
+                let portal = self.portal.get_cached_async::<T>(file_id).await?;
+                if portal.is_some() {
+                    Ok(portal)
+                } else {
+                    self.high_res.get_cached_async::<T>(file_id).await
+                }
+            }
+            DatFileType::Local => self.local.inner.get_cached_with_base_property_types(
+                file_id,
+                self.portal.inner.base_property_types()?,
+            ),
+            DatFileType::Undefined => {
+                let portal = self.portal.get_cached_async::<T>(file_id).await?;
+                if portal.is_some() {
+                    return Ok(portal);
+                }
+                let high_res = self.high_res.get_cached_async::<T>(file_id).await?;
+                if high_res.is_some() {
+                    return Ok(high_res);
+                }
+                let local = self.local.inner.get_cached_with_base_property_types(
+                    file_id,
+                    self.portal.inner.base_property_types()?,
+                )?;
+                if local.is_some() {
+                    return Ok(local);
+                }
+                self.cell.get_cached_async::<T>(file_id).await
+            }
+        }
+    }
+
     pub fn try_write_file<T>(&self, value: &T) -> io::Result<bool>
     where
         T: IDBObj + IPackable,
@@ -300,6 +399,86 @@ impl DatCollection {
         }
     }
 
+    pub async fn try_write_file_async<T>(&self, value: &T) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable + Sync,
+    {
+        if TypeId::of::<T>() == TypeId::of::<crate::DBObjs::Iteration::Iteration>() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Iteration is not a valid type to write through a dat collection; use a specific database instead",
+            ));
+        }
+
+        match self.type_to_dat_file_type::<T>() {
+            DatFileType::Cell => self.cell.try_write_file_async(value).await,
+            DatFileType::Portal => self.portal.try_write_file_async(value).await,
+            DatFileType::Local => self.local.try_write_file_async(value).await,
+            DatFileType::Undefined => Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "unable to determine dat file type for write",
+            )),
+        }
+    }
+
+    pub fn try_write_file_with_template<T>(
+        &self,
+        value: &T,
+        template: DatBTreeFile,
+    ) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable,
+    {
+        if TypeId::of::<T>() == TypeId::of::<crate::DBObjs::Iteration::Iteration>() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Iteration is not a valid type to write through a dat collection; use a specific database instead",
+            ));
+        }
+
+        match self.type_to_dat_file_type::<T>() {
+            DatFileType::Cell => self.cell.try_write_file_with_template(value, template),
+            DatFileType::Portal => self.portal.try_write_file_with_template(value, template),
+            DatFileType::Local => self.local.try_write_file_with_template(value, template),
+            DatFileType::Undefined => Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "unable to determine dat file type for write",
+            )),
+        }
+    }
+
+    pub async fn try_write_file_with_template_async<T>(
+        &self,
+        value: &T,
+        template: DatBTreeFile,
+    ) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable + Sync,
+    {
+        if TypeId::of::<T>() == TypeId::of::<crate::DBObjs::Iteration::Iteration>() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Iteration is not a valid type to write through a dat collection; use a specific database instead",
+            ));
+        }
+
+        match self.type_to_dat_file_type::<T>() {
+            DatFileType::Cell => self.cell.try_write_file_with_template_async(value, template).await,
+            DatFileType::Portal => self
+                .portal
+                .try_write_file_with_template_async(value, template)
+                .await,
+            DatFileType::Local => self
+                .local
+                .try_write_file_with_template_async(value, template)
+                .await,
+            DatFileType::Undefined => Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "unable to determine dat file type for write",
+            )),
+        }
+    }
+
     pub fn try_write_compressed<T>(&self, value: &T) -> io::Result<bool>
     where
         T: IDBObj + IPackable,
@@ -315,6 +494,89 @@ impl DatCollection {
             DatFileType::Cell => self.cell.try_write_compressed(value),
             DatFileType::Portal => self.portal.try_write_compressed(value),
             DatFileType::Local => self.local.try_write_compressed(value),
+            DatFileType::Undefined => Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "unable to determine dat file type for write",
+            )),
+        }
+    }
+
+    pub async fn try_write_compressed_async<T>(&self, value: &T) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable + Sync,
+    {
+        if TypeId::of::<T>() == TypeId::of::<crate::DBObjs::Iteration::Iteration>() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Iteration is not a valid type to write through a dat collection; use a specific database instead",
+            ));
+        }
+
+        match self.type_to_dat_file_type::<T>() {
+            DatFileType::Cell => self.cell.try_write_compressed_async(value).await,
+            DatFileType::Portal => self.portal.try_write_compressed_async(value).await,
+            DatFileType::Local => self.local.try_write_compressed_async(value).await,
+            DatFileType::Undefined => Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "unable to determine dat file type for write",
+            )),
+        }
+    }
+
+    pub fn try_write_compressed_with_template<T>(
+        &self,
+        value: &T,
+        template: DatBTreeFile,
+    ) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable,
+    {
+        if TypeId::of::<T>() == TypeId::of::<crate::DBObjs::Iteration::Iteration>() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Iteration is not a valid type to write through a dat collection; use a specific database instead",
+            ));
+        }
+
+        match self.type_to_dat_file_type::<T>() {
+            DatFileType::Cell => self.cell.try_write_compressed_with_template(value, template),
+            DatFileType::Portal => self.portal.try_write_compressed_with_template(value, template),
+            DatFileType::Local => self.local.try_write_compressed_with_template(value, template),
+            DatFileType::Undefined => Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "unable to determine dat file type for write",
+            )),
+        }
+    }
+
+    pub async fn try_write_compressed_with_template_async<T>(
+        &self,
+        value: &T,
+        template: DatBTreeFile,
+    ) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable + Sync,
+    {
+        if TypeId::of::<T>() == TypeId::of::<crate::DBObjs::Iteration::Iteration>() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Iteration is not a valid type to write through a dat collection; use a specific database instead",
+            ));
+        }
+
+        match self.type_to_dat_file_type::<T>() {
+            DatFileType::Cell => self
+                .cell
+                .try_write_compressed_with_template_async(value, template)
+                .await,
+            DatFileType::Portal => self
+                .portal
+                .try_write_compressed_with_template_async(value, template)
+                .await,
+            DatFileType::Local => self
+                .local
+                .try_write_compressed_with_template_async(value, template)
+                .await,
             DatFileType::Undefined => Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 "unable to determine dat file type for write",

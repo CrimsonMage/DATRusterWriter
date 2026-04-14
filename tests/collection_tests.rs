@@ -4,12 +4,19 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+use futures::executor::block_on;
+
 use dat_reader_writer::{
     CellDatabase::CellDatabase,
     DBObjs::{Iteration::Iteration, MasterProperty::MasterProperty, Palette::Palette},
     DatCollection::DatCollection,
     Generated::Enums::DatFileType::DatFileType,
-    Lib::IO::{DatBinWriter::DatBinWriter, DatHeader::DatHeader, IPackable::IPackable},
+    Lib::IO::{
+        DatBTree::{DatBTreeFile::DatBTreeFile, DatBTreeFileFlags::DatBTreeFileFlags},
+        DatBinWriter::DatBinWriter,
+        DatHeader::DatHeader,
+        IPackable::IPackable,
+    },
     LocalDatabase::LocalDatabase,
     Options::{DatAccessType::DatAccessType, DatCollectionOptions::DatCollectionOptions},
     PortalDatabase::PortalDatabase,
@@ -413,4 +420,145 @@ fn dat_collection_cached_reads_hold_until_clear_cache() {
     let refreshed = collection.get_cached::<Palette>(0x0400_0020).unwrap().unwrap();
     assert_eq!(0xAA, refreshed.colors[0].blue);
     assert_eq!(0xDD, refreshed.colors[0].alpha);
+}
+
+#[test]
+fn dat_collection_async_reads_follow_portal_high_res_and_cache_paths() {
+    let dir = unique_temp_dir();
+    write_header_only_dat(&dir.join("client_portal.dat"), DatFileType::Portal);
+    write_header_only_dat(&dir.join("client_cell_1.dat"), DatFileType::Cell);
+    write_header_only_dat(&dir.join("client_local_English.dat"), DatFileType::Local);
+
+    let mut palette_payload = [0u8; 12];
+    let mut writer = DatBinWriter::new(&mut palette_payload);
+    writer.write_u32(0x04000044);
+    writer.write_i32(1);
+    writer.write_u32(0x88776655);
+
+    fs::write(
+        dir.join("client_highres.dat"),
+        build_single_block_dat(DatFileType::Portal, 0x04000044, &palette_payload),
+    )
+    .unwrap();
+
+    let collection =
+        DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::Read)
+            .unwrap();
+
+    let palette = block_on(collection.get_async::<Palette>(0x04000044))
+        .unwrap()
+        .unwrap();
+    assert_eq!(1, palette.colors.len());
+    assert_eq!(0x55, palette.colors[0].blue);
+    assert_eq!(0x88, palette.colors[0].alpha);
+
+    let cached_palette = block_on(collection.get_cached_async::<Palette>(0x04000044))
+        .unwrap()
+        .unwrap();
+    assert_eq!(0x55, cached_palette.colors[0].blue);
+    assert_eq!(0x88, cached_palette.colors[0].alpha);
+}
+
+#[test]
+fn dat_collection_can_write_with_template_metadata() {
+    let dir = unique_temp_dir();
+
+    let collection =
+        DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::ReadWrite)
+            .unwrap();
+
+    collection
+        .portal
+        .inner
+        .block_allocator
+        .init_new(DatFileType::Portal, 0, 1024, 4)
+        .unwrap();
+
+    let palette = Palette {
+        base: DBObjBase {
+            id: 0x0400_0030,
+            ..Default::default()
+        },
+        colors: vec![dat_reader_writer::Types::ColorARGB::ColorARGB {
+            blue: 0x10,
+            green: 0x20,
+            red: 0x30,
+            alpha: 0x40,
+        }],
+    };
+
+    let template = DatBTreeFile {
+        flags: DatBTreeFileFlags::None,
+        version: 6,
+        iteration: 8,
+        ..Default::default()
+    };
+
+    assert!(collection
+        .try_write_file_with_template(&palette, template)
+        .unwrap());
+
+    let entry = collection
+        .portal
+        .try_get_file_entry(0x0400_0030)
+        .unwrap()
+        .unwrap();
+    assert_eq!(6, entry.version);
+    assert_eq!(8, entry.iteration);
+
+    let read_palette = collection.get_cached::<Palette>(0x0400_0030).unwrap().unwrap();
+    assert_eq!(0x10, read_palette.colors[0].blue);
+    assert_eq!(0x40, read_palette.colors[0].alpha);
+}
+
+#[test]
+fn dat_collection_async_writes_follow_template_and_read_back() {
+    let dir = unique_temp_dir();
+
+    let collection =
+        DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::ReadWrite)
+            .unwrap();
+
+    collection
+        .portal
+        .inner
+        .block_allocator
+        .init_new(DatFileType::Portal, 0, 1024, 4)
+        .unwrap();
+
+    let palette = Palette {
+        base: DBObjBase {
+            id: 0x0400_0060,
+            ..Default::default()
+        },
+        colors: vec![dat_reader_writer::Types::ColorARGB::ColorARGB {
+            blue: 0x21,
+            green: 0x43,
+            red: 0x65,
+            alpha: 0x87,
+        }],
+    };
+
+    let template = DatBTreeFile {
+        flags: DatBTreeFileFlags::None,
+        version: 12,
+        iteration: 14,
+        ..Default::default()
+    };
+
+    assert!(block_on(collection.try_write_file_with_template_async(&palette, template)).unwrap());
+
+    let entry = collection
+        .portal
+        .try_get_file_entry(0x0400_0060)
+        .unwrap()
+        .unwrap();
+    assert_eq!(12, entry.version);
+    assert_eq!(14, entry.iteration);
+
+    let read_palette = block_on(collection.get_cached_async::<Palette>(0x0400_0060))
+        .unwrap()
+        .unwrap();
+    assert_eq!(0x21, read_palette.colors[0].blue);
+    assert_eq!(0x87, read_palette.colors[0].alpha);
 }
