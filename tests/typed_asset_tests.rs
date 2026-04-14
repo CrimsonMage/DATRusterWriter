@@ -1369,4 +1369,256 @@ fn experience_table_roundtrip_reads_progression_arrays() {
     assert_eq!(vec![0, 6, 8, 10], unpacked.skill_credits);
 }
 
+#[test]
+fn string_info_roundtrip_reads_override_and_table_link() {
+    use dat_reader_writer::{
+        Generated::Enums::StringInfoOverrideFlag::StringInfoOverrideFlag,
+        Types::StringInfo::StringInfo,
+    };
+
+    let value = StringInfo {
+        token: 7,
+        string_id: 0x52BA517,
+        table_id: QualifiedDataId::new(0x23000001),
+        override_flag: StringInfoOverrideFlag::Literal | StringInfoOverrideFlag::AutoGen,
+        english: 1,
+        comment: 2,
+    };
+
+    let mut bytes = vec![0u8; 32];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    assert!(value.pack(&mut writer));
+    let used = writer.offset();
+
+    let mut unpacked = StringInfo::default();
+    assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
+    assert_eq!(7, unpacked.token);
+    assert_eq!(0x52BA517, unpacked.string_id);
+    assert_eq!(0x23000001, unpacked.table_id.data_id);
+    assert!(unpacked.override_flag.contains(StringInfoOverrideFlag::Literal));
+    assert!(unpacked.override_flag.contains(StringInfoOverrideFlag::AutoGen));
+}
+
+#[test]
+fn media_desc_roundtrip_reads_multiple_variants() {
+    use dat_reader_writer::{
+        Generated::Enums::{
+            DrawModeType::DrawModeType, MediaType::MediaType, UIStateId::UIStateId,
+        },
+        Types::{
+            MediaDesc::MediaDesc, MediaDescAnimation::MediaDescAnimation,
+            MediaDescImage::MediaDescImage, MediaDescMovie::MediaDescMovie,
+            MediaDescSound::MediaDescSound, MediaDescState::MediaDescState,
+        },
+    };
+
+    let cases = vec![
+        MediaDesc::Movie(MediaDescMovie {
+            ty: MediaType::Stretch,
+            file_name: PStringBase::from("intro.bik"),
+            stretch_to_full_screen: true,
+        }),
+        MediaDesc::Image(MediaDescImage {
+            ty: MediaType::Image,
+            file: 0x06000011,
+            draw_mode: DrawModeType::Overlay,
+        }),
+        MediaDesc::Animation(MediaDescAnimation {
+            ty: MediaType::Animation,
+            duration: 1.5,
+            draw_mode: DrawModeType::Alphablend,
+            frames: vec![10, 20, 30],
+        }),
+        MediaDesc::Sound(MediaDescSound {
+            ty: MediaType::Sound,
+            file: 0x0A000010,
+            sound: Sound::AMBIENT1,
+        }),
+        MediaDesc::State(MediaDescState {
+            ty: MediaType::State,
+            state_id: UIStateId::Active,
+            probability: 0.75,
+        }),
+    ];
+
+    for value in cases {
+        let mut bytes = vec![0u8; 256];
+        let mut writer = DatBinWriter::new(&mut bytes);
+        assert!(value.pack(&mut writer));
+        let used = writer.offset();
+
+        let mut unpacked = MediaDesc::default();
+        assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
+        assert_eq!(value, unpacked);
+    }
+}
+
+#[test]
+fn base_property_roundtrip_reads_string_info_and_scalar_variants() {
+    use dat_reader_writer::{
+        Generated::Enums::BasePropertyType::BasePropertyType,
+        Lib::IO::Numerics::Vector3,
+        Types::{
+            BaseProperty::{BaseProperty, BasePropertyHeader},
+            ColorARGB::ColorARGB,
+            StringInfo::StringInfo,
+        },
+    };
+
+    let cases = vec![
+        BaseProperty::Integer {
+            header: BasePropertyHeader {
+                master_property_id: 10,
+                should_pack_master_property_id: true,
+            },
+            value: 42,
+        },
+        BaseProperty::Bool {
+            header: BasePropertyHeader::default(),
+            value: true,
+        },
+        BaseProperty::Float {
+            header: BasePropertyHeader::default(),
+            value: 3.5,
+        },
+        BaseProperty::Vector {
+            header: BasePropertyHeader::default(),
+            value: Vector3::new(1.0, 2.0, 3.0),
+        },
+        BaseProperty::Color {
+            header: BasePropertyHeader::default(),
+            value: ColorARGB {
+                blue: 1,
+                green: 2,
+                red: 3,
+                alpha: 4,
+            },
+        },
+        BaseProperty::StringInfo {
+            header: BasePropertyHeader::default(),
+            value: StringInfo {
+                token: 9,
+                string_id: 0x100,
+                table_id: QualifiedDataId::new(0x23000001),
+                override_flag: dat_reader_writer::Generated::Enums::StringInfoOverrideFlag::StringInfoOverrideFlag::Literal,
+                english: 1,
+                comment: 0,
+            },
+        },
+        BaseProperty::Bitfield64 {
+            header: BasePropertyHeader::default(),
+            value: 0x1122334455667788,
+        },
+    ];
+
+    for value in cases {
+        let property_type = value.property_type();
+        let mut bytes = vec![0u8; 128];
+        let mut writer = DatBinWriter::new(&mut bytes);
+        assert!(value.pack(&mut writer));
+        let used = writer.offset();
+
+        let start = match &value {
+            BaseProperty::Integer { header, .. }
+            | BaseProperty::Bool { header, .. }
+            | BaseProperty::Float { header, .. }
+            | BaseProperty::Vector { header, .. }
+            | BaseProperty::Color { header, .. }
+            | BaseProperty::StringInfo { header, .. }
+            | BaseProperty::Enum { header, .. }
+            | BaseProperty::DataId { header, .. }
+            | BaseProperty::InstanceId { header, .. }
+            | BaseProperty::Bitfield32 { header, .. }
+            | BaseProperty::Bitfield64 { header, .. } => {
+                if header.should_pack_master_property_id { 4 } else { 0 }
+            }
+        };
+
+        let mut reader = DatBinReader::new(&bytes[start..used]);
+        let unpacked =
+            BaseProperty::unpack_generic_master_property(&mut reader, property_type).unwrap();
+        assert_eq!(property_type, unpacked.property_type());
+    }
+
+    assert_eq!(BasePropertyType::STRING_INFO, BasePropertyType::from(0x8_u32));
+}
+
+#[test]
+fn base_property_desc_roundtrip_reads_bounds_flags_and_available_properties() {
+    use std::collections::BTreeMap;
+
+    use dat_reader_writer::{
+        Generated::Enums::{
+            BasePropertyType::BasePropertyType, PatchFlags::PatchFlags,
+            PropertyCachingType::PropertyCachingType, PropertyDatFileType::PropertyDatFileType,
+            PropertyGroupName::PropertyGroupName,
+            PropertyInheritanceType::PropertyInheritanceType,
+            PropertyPropagationType::PropertyPropagationType,
+        },
+        Types::{
+            BaseProperty::{BaseProperty, BasePropertyHeader},
+            BasePropertyDesc::BasePropertyDesc,
+        },
+    };
+
+    let mut available_properties = BTreeMap::new();
+    available_properties.insert(10, 20);
+    available_properties.insert(11, 21);
+
+    let desc = BasePropertyDesc {
+        name: 7,
+        property_type: BasePropertyType::Integer,
+        group: PropertyGroupName::GameUI,
+        provider: 8,
+        data: 9,
+        patch_flags: PatchFlags::EmapperId,
+        default_value: Some(BaseProperty::Integer {
+            header: BasePropertyHeader::default(),
+            value: 100,
+        }),
+        max_value: Some(BaseProperty::Integer {
+            header: BasePropertyHeader::default(),
+            value: 200,
+        }),
+        min_value: Some(BaseProperty::Integer {
+            header: BasePropertyHeader::default(),
+            value: 50,
+        }),
+        prediction_timeout: 1.25,
+        inheritance_type: PropertyInheritanceType::Either,
+        dat_file_type: PropertyDatFileType::SharedData,
+        propagation_type: PropertyPropagationType::WorldSharedWithServersAndClients,
+        caching_type: PropertyCachingType::Internal,
+        required: true,
+        read_only: false,
+        no_checkpoint: true,
+        recorded: false,
+        do_not_replay: true,
+        absolute_time_stamp: false,
+        groupable: true,
+        propagate_to_children: true,
+        available_properties,
+    };
+
+    let mut bytes = vec![0u8; 256];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    assert!(desc.pack(&mut writer));
+    let used = writer.offset();
+
+    let mut unpacked = BasePropertyDesc::default();
+    assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
+    assert_eq!(7, unpacked.name);
+    assert_eq!(PropertyGroupName::GameUI, unpacked.group);
+    assert_eq!(PatchFlags::EmapperId, unpacked.patch_flags);
+    assert_eq!(
+        PropertyPropagationType::WorldSharedWithServersAndClients,
+        unpacked.propagation_type
+    );
+    assert_eq!(Some(&20), unpacked.available_properties.get(&10));
+    match unpacked.default_value.unwrap() {
+        BaseProperty::Integer { value, .. } => assert_eq!(100, value),
+        other => panic!("unexpected property variant: {other:?}"),
+    }
+}
+
 

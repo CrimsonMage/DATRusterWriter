@@ -29,6 +29,19 @@ const PORTED_ATTRIBUTES: &[&DBObjTypeAttribute] = &[
     &crate::DBObjs::VitalTable::VITAL_TABLE_ATTR,
     &crate::DBObjs::SkillTable::SKILL_TABLE_ATTR,
     &crate::DBObjs::ExperienceTable::EXPERIENCE_TABLE_ATTR,
+    &crate::DBObjs::Font::FONT_ATTR,
+    &crate::DBObjs::LanguageInfo::LANGUAGE_INFO_ATTR,
+    &crate::DBObjs::NameFilterTable::NAME_FILTER_TABLE_ATTR,
+    &crate::DBObjs::EnumMapper::ENUM_MAPPER_ATTR,
+    &crate::DBObjs::EnumIDMap::ENUM_ID_MAP_ATTR,
+    &crate::DBObjs::DualEnumIDMap::DUAL_ENUM_ID_MAP_ATTR,
+    &crate::DBObjs::RenderTexture::RENDER_TEXTURE_ATTR,
+    &crate::DBObjs::RenderMaterial::RENDER_MATERIAL_ATTR,
+    &crate::DBObjs::MaterialModifier::MATERIAL_MODIFIER_ATTR,
+    &crate::DBObjs::MaterialInstance::MATERIAL_INSTANCE_ATTR,
+    &crate::DBObjs::GfxObjDegradeInfo::GFX_OBJ_DEGRADE_INFO_ATTR,
+    &crate::DBObjs::SpellComponentTable::SPELL_COMPONENT_TABLE_ATTR,
+    &crate::DBObjs::QualityFilter::QUALITY_FILTER_ATTR,
 ];
 
 fn dat_type_matches(attr: &DBObjTypeAttribute, dat_type: DatFileType) -> bool {

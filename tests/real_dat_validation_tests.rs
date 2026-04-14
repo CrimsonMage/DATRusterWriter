@@ -1,12 +1,17 @@
 use dat_reader_writer::{
     DBObjs::{
         Animation::Animation, CharGen::CharGen, ClothingTable::ClothingTable,
-        CombatTable::CombatTable, ExperienceTable::ExperienceTable, GfxObj::GfxObj,
-        Iteration::Iteration, MotionTable::MotionTable, Palette::Palette,
-        ParticleEmitter::ParticleEmitter, PhysicsScript::PhysicsScript,
-        PhysicsScriptTable::PhysicsScriptTable, Region::Region, RenderSurface::RenderSurface,
-        Scene::Scene, Setup::Setup, SkillTable::SkillTable, SoundTable::SoundTable,
-        Surface::Surface, SurfaceTexture::SurfaceTexture, VitalTable::VitalTable, Wave::Wave,
+        CombatTable::CombatTable, ExperienceTable::ExperienceTable, Font::Font, GfxObj::GfxObj,
+        GfxObjDegradeInfo::GfxObjDegradeInfo, Iteration::Iteration, LanguageInfo::LanguageInfo,
+        MotionTable::MotionTable,
+        MaterialInstance::MaterialInstance, MaterialModifier::MaterialModifier,
+        NameFilterTable::NameFilterTable, Palette::Palette, ParticleEmitter::ParticleEmitter,
+        PhysicsScript::PhysicsScript, PhysicsScriptTable::PhysicsScriptTable, Region::Region,
+        QualityFilter::QualityFilter, RenderMaterial::RenderMaterial,
+        RenderSurface::RenderSurface, RenderTexture::RenderTexture, Scene::Scene, Setup::Setup,
+        SkillTable::SkillTable, SpellComponentTable::SpellComponentTable,
+        SoundTable::SoundTable, Surface::Surface, SurfaceTexture::SurfaceTexture,
+        VitalTable::VitalTable, Wave::Wave,
     },
     DatCollection::DatCollection,
     Options::DatAccessType::DatAccessType,
@@ -43,6 +48,11 @@ fn validates_ported_types_against_real_dats() {
     validate_sample::<Palette>(&collection, 5);
     validate_sample::<SurfaceTexture>(&collection, 5);
     validate_sample::<RenderSurface>(&collection, 5);
+    validate_sample::<RenderTexture>(&collection, 3);
+    validate_sample::<RenderMaterial>(&collection, 3);
+    validate_sample::<MaterialModifier>(&collection, 3);
+    validate_sample::<MaterialInstance>(&collection, 3);
+    validate_sample::<GfxObjDegradeInfo>(&collection, 3);
     validate_sample::<MotionTable>(&collection, 5);
     validate_sample::<Setup>(&collection, 5);
     validate_sample::<Animation>(&collection, 5);
@@ -57,4 +67,9 @@ fn validates_ported_types_against_real_dats() {
     validate_sample::<PhysicsScriptTable>(&collection, 3);
     validate_sample::<ClothingTable>(&collection, 3);
     validate_sample::<CombatTable>(&collection, 1);
+    validate_sample::<SpellComponentTable>(&collection, 1);
+    validate_sample::<QualityFilter>(&collection, 1);
+    validate_sample::<Font>(&collection, 3);
+    validate_sample::<LanguageInfo>(&collection, 1);
+    validate_sample::<NameFilterTable>(&collection, 1);
 }

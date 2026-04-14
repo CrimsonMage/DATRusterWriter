@@ -7,6 +7,7 @@ license = "MIT"
 
 [dependencies]
 bitflags = "2.9.1"
+encoding_rs = "0.8.35"
 flate2 = "1.1.4"
 memmap2 = "0.9.5"
 uuid = "1.17.0"

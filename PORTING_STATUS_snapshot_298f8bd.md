@@ -244,11 +244,6 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 - Replaced the stream allocator placeholder with a concrete file-backed synchronous implementation and verified it with temp-file tests for header/version writes, chained block IO, and in-place block rewrites.
 - Reworked DBObjAttributeCache so current Rust DBObj ports resolve through a shared attribute list instead of a large hand-maintained Portal match, and added typed tests for singular/range resolution.
 - Added the string-resource read path with PStringBase, StringTableString, StringTableData, LanguageString, and StringTable, including local DAT typed reads for hashed string entries.
-- Added the explicit enum-mapper family support with concrete `AutoGrowHashTable` / `IntrusiveHashTable` containers, `EnumMapperData`, `EnumMapper`, `EnumIDMap`, and `DualEnumIDMap`.
-- Added the explicit material/render asset slice with `RenderTexture`, `RenderMaterial`, `MaterialModifier`, `MaterialInstance`, `MaterialProperty`, and their immediate enum dependencies.
-- Added the explicit degrade/filter/spell-component slice with `GfxObjDegradeInfo`, `QualityFilter`, `SpellComponentTable`, `GfxObjInfo`, `SpellComponentBase`, `ObfuscatedPStringBase`, and `ComponentType`.
-- Re-ran external retail DAT validation against `C:\Turbine\Asheron's call\` after the new material slice, and the ignored real-DAT suite still passes without hardcoding that path into the crate.
-- Re-ran external retail DAT validation against `C:\Turbine\Asheron's call\` after the new degrade/filter/spell-component slice, and the ignored real-DAT suite still passes without hardcoding that path into the crate.
 
 ## Remaining Major Areas
 
@@ -282,67 +277,3 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 
 
 
-
-## Restored From Snapshot
-
-- Restored from `PORTING_STATUS_snapshot_298f8bd.md`, sourced from commit `298f8bdad60cdc4842583958161e853d2537c749` in the `CrimsonMage/DATRusterWriter` repository.
-- The original local `PORTING_STATUS.md` became unreadable due to null-padded contents and was rebuilt from this snapshot plus subsequent verified port work.
-
-## Progress Since Snapshot Recovery
-
-| Source | Rust | Status | Notes |
-|---|---|---|---|
-| `DatReaderWriter/Generated/Enums/AttributeId.generated.cs` | `src/Generated/Enums/AttributeId.rs` | Ported | Attribute ids required for stat table support |
-| `DatReaderWriter/Generated/Enums/SkillCategory.generated.cs` | `src/Generated/Enums/SkillCategory.rs` | Ported | Skill categories required for `SkillTable` |
-| `DatReaderWriter/Generated/DBObjs/VitalTable.generated.cs` | `src/DBObjs/VitalTable.rs` | Verified | Typed vital formulas now read and are covered by focused tests and retail DAT validation |
-| `DatReaderWriter/Generated/DBObjs/SkillTable.generated.cs` | `src/DBObjs/SkillTable.rs` | Verified | Typed skill entries now read and are covered by focused tests and retail DAT validation |
-| `DatReaderWriter/Generated/DBObjs/ExperienceTable.generated.cs` | `src/DBObjs/ExperienceTable.rs` | Verified | Typed progression arrays now read and are covered by focused tests and retail DAT validation |
-| `DatReaderWriter/Generated/Types/SkillBase.generated.cs` | `src/Types/SkillBase.rs` | Ported | Supporting typed skill payload |
-| `DatReaderWriter/Generated/Types/SkillFormula.generated.cs` | `src/Types/SkillFormula.rs` | Ported | Supporting typed formula payload |
-| `DatReaderWriter/Generated/DBObjs/Font.generated.cs` | `src/DBObjs/Font.rs` | Verified | Glyph metrics and typed surface references are now ported and validated against retail DATs |
-| `DatReaderWriter/Generated/DBObjs/LanguageInfo.generated.cs` | `src/DBObjs/LanguageInfo.rs` | Verified | Local language settings DBObj is now ported and validated against retail DATs |
-| `DatReaderWriter/Generated/DBObjs/NameFilterTable.generated.cs` | `src/DBObjs/NameFilterTable.rs` | Verified | Name-filter rule table is now ported and validated against retail DATs |
-| `DatReaderWriter/Generated/Types/FontCharDesc.generated.cs` | `src/Types/FontCharDesc.rs` | Ported | Supporting glyph description payload |
-| `DatReaderWriter/Generated/Types/NameFilterLanguageData.generated.cs` | `src/Types/NameFilterLanguageData.rs` | Ported | Supporting language-specific naming-rule payload |
-| `DatReaderWriter/Generated/Types/StringInfo.generated.cs` | `src/Types/StringInfo.rs` | Verified | String-table indirection payload is ported and roundtrip tested |
-| `DatReaderWriter/Generated/Types/MediaDesc.generated.cs` and `DatReaderWriter/Generated/Types/MediaDesc*.generated.cs` | `src/Types/MediaDesc.rs`, `src/Types/MediaDesc*.rs` | Verified | Discriminated media descriptor family is ported and roundtrip tested for current client-facing variants |
-| `DatReaderWriter/Generated/Enums/DrawModeType.generated.cs` | `src/Generated/Enums/DrawModeType.rs` | Ported | Media descriptor draw-mode enum |
-| `DatReaderWriter/Generated/Enums/MediaType.generated.cs` | `src/Generated/Enums/MediaType.rs` | Ported | Media descriptor discriminant enum |
-| `DatReaderWriter/Generated/Enums/StringInfoOverrideFlag.generated.cs` | `src/Generated/Enums/StringInfoOverrideFlag.rs` | Ported | String-info override flags |
-| `DatReaderWriter/Generated/Enums/UIStateId.generated.cs` | `src/Generated/Enums/UIStateId.rs` | Partial | Current UI state constants needed by `MediaDescState` are ported; full named surface still remains |
-| `DatReaderWriter/Generated/Enums/BasePropertyType.generated.cs` | `src/Generated/Enums/BasePropertyType.rs` | Ported | Base-property discriminant enum for the local property pipeline |
-| `DatReaderWriter/Generated/Enums/PatchFlags.generated.cs` | `src/Generated/Enums/PatchFlags.rs` | Ported | Property descriptor patch-flag enum |
-| `DatReaderWriter/Generated/Enums/PropertyCachingType.generated.cs` | `src/Generated/Enums/PropertyCachingType.rs` | Ported | Property descriptor caching enum |
-| `DatReaderWriter/Generated/Enums/PropertyDatFileType.generated.cs` | `src/Generated/Enums/PropertyDatFileType.rs` | Ported | Property descriptor dat-file enum |
-| `DatReaderWriter/Generated/Enums/PropertyGroupName.generated.cs` | `src/Generated/Enums/PropertyGroupName.rs` | Ported | Property descriptor grouping enum with the current named surface mirrored |
-| `DatReaderWriter/Generated/Enums/PropertyInheritanceType.generated.cs` | `src/Generated/Enums/PropertyInheritanceType.rs` | Ported | Property descriptor inheritance enum |
-| `DatReaderWriter/Generated/Enums/PropertyPropagationType.generated.cs` | `src/Generated/Enums/PropertyPropagationType.rs` | Ported | Property descriptor propagation enum |
-| external retail DAT validation | `tests/real_dat_validation_tests.rs` | Verified | Live validation continues to pass against retail DATs in `C:\Turbine\Asheron's call\` via `DAT_READER_WRITER_REAL_DAT_DIR`, without hardcoding the path into the crate |
-| tracker recovery | `PORTING_STATUS.md` | Verified | Main tracker restored from the last good snapshot and updated with post-snapshot work |
-| `DatReaderWriter/Types/BaseProperty.cs` | `src/Types/BaseProperty.rs` | Partial | Typed scalar/string-info property dispatch is ported, but full `MasterProperty`-driven generic unpack and array/struct variants remain pending |
-| `DatReaderWriter/Generated/Types/StringInfoBaseProperty.generated.cs` | `src/Types/StringInfoBaseProperty.rs` | Partial | Explicit `StringInfo` property wrapper is ported on top of the new base-property foundation |
-| `DatReaderWriter/Types/BasePropertyDesc.cs` | `src/Types/BasePropertyDesc.rs` | Partial | Property descriptor records now unpack/pack current scalar-bound/default metadata, but broader `MasterProperty` consumers are still pending |
-| `DatReaderWriter/Generated/Enums/RMDataType.generated.cs` | `src/Generated/Enums/RMDataType.rs` | Ported | Explicit render-material data-type enum mirrored from the reference |
-| `DatReaderWriter/Generated/Enums/RenderPassType.generated.cs` | `src/Generated/Enums/RenderPassType.rs` | Partial | Core named render-pass constants used by the current material pipeline are ported; the full long-tail surface still remains |
-| `DatReaderWriter/Generated/Types/MaterialProperty.generated.cs` | `src/Types/MaterialProperty.rs` | Verified | Explicit material-property payload with aligned length fields now roundtrips in focused tests |
-| `DatReaderWriter/Generated/DBObjs/RenderTexture.generated.cs` | `src/DBObjs/RenderTexture.rs` | Verified | Explicit render-texture DBObj now reads texture type and render-surface level refs and is validated against retail DATs |
-| `DatReaderWriter/Generated/DBObjs/RenderMaterial.generated.cs` | `src/DBObjs/RenderMaterial.rs` | Verified | Explicit empty-body render-material DBObj now resolves and is validated against retail DATs |
-| `DatReaderWriter/Generated/DBObjs/MaterialModifier.generated.cs` | `src/DBObjs/MaterialModifier.rs` | Verified | Explicit material-modifier DBObj now reads typed material properties and is validated against retail DATs |
-| `DatReaderWriter/Generated/DBObjs/MaterialInstance.generated.cs` | `src/DBObjs/MaterialInstance.rs` | Verified | Explicit material-instance DBObj now reads material id/type, modifier refs, and booleans and is validated against retail DATs |
-| `DatReaderWriter/Generated/Enums/ComponentType.generated.cs` | `src/Generated/Enums/ComponentType.rs` | Ported | Explicit spell-component enum mirrored from the reference |
-| `DatReaderWriter/Types/ObfuscatedPStringBase.cs` | `src/Types/ObfuscatedPStringBase.rs` | Verified | Explicit obfuscated Windows-1252 string format now decodes/encodes with nibble rotation and alignment |
-| `DatReaderWriter/Generated/Types/GfxObjInfo.generated.cs` | `src/Types/GfxObjInfo.rs` | Verified | Explicit degrade-entry payload with `QualifiedDataId<GfxObj>` and distance thresholds now roundtrips in focused tests |
-| `DatReaderWriter/Generated/Types/SpellComponentBase.generated.cs` | `src/Types/SpellComponentBase.rs` | Verified | Explicit spell-component payload now reads obfuscated strings, icon ids, enums, and timing data and is covered by focused tests |
-| `DatReaderWriter/Generated/DBObjs/GfxObjDegradeInfo.generated.cs` | `src/DBObjs/GfxObjDegradeInfo.rs` | Verified | Explicit degrade-info DBObj now reads typed degrade entries and is validated against retail DATs |
-| `DatReaderWriter/Generated/DBObjs/QualityFilter.generated.cs` | `src/DBObjs/QualityFilter.rs` | Verified | Explicit quality-filter DBObj now reads all stat-filter arrays and is validated against retail DATs |
-| `DatReaderWriter/Generated/DBObjs/SpellComponentTable.generated.cs` | `src/DBObjs/SpellComponentTable.rs` | Verified | Explicit spell-component table DBObj now reads typed packable component entries and is validated against retail DATs |
-
-## Updated Remaining Major Areas
-
-- Remaining base-property variants and the broader `MasterProperty`/property-description pipeline required for full UI/property-driven local resource types
-- Remaining generated DBObjs outside the current asset, gameplay, CharGen, string, language, first material/render, and degrade/filter/spell-component subsets
-- Remaining generated Types outside the currently ported dependency tree
-- `DBObjAttributeCache` coverage beyond the currently ported Rust DBObj set, including broader Local and Cell coverage
-- Generated database readers
-- Any broader write-path parity not directly needed for client read support
-- Broader real-DAT validation coverage as more DBObjs/types are added
