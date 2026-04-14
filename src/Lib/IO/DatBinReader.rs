@@ -14,6 +14,7 @@ use crate::{
 pub struct DatBinReader<'a> {
     data: &'a [u8],
     offset: usize,
+    failed: bool,
     base_property_types: Option<Arc<BTreeMap<u32, BasePropertyType>>>,
 }
 
@@ -22,6 +23,7 @@ impl<'a> DatBinReader<'a> {
         Self {
             data,
             offset: 0,
+            failed: false,
             base_property_types: None,
         }
     }
@@ -33,6 +35,7 @@ impl<'a> DatBinReader<'a> {
         Self {
             data,
             offset: 0,
+            failed: false,
             base_property_types,
         }
     }
@@ -45,17 +48,26 @@ impl<'a> DatBinReader<'a> {
         self.data.len()
     }
 
+    pub fn failed(&self) -> bool {
+        self.failed
+    }
+
     pub fn set_offset(&mut self, offset: usize) {
-        assert!(offset <= self.data.len(), "Offset out of bounds");
-        self.offset = offset;
+        if offset <= self.data.len() {
+            self.offset = offset;
+        } else {
+            self.offset = self.data.len();
+            self.failed = true;
+        }
     }
 
     pub fn rewind(&mut self, num_bytes: usize) {
-        assert!(
-            num_bytes <= self.offset,
-            "Cannot rewind before start of buffer"
-        );
-        self.offset -= num_bytes;
+        if num_bytes <= self.offset {
+            self.offset -= num_bytes;
+        } else {
+            self.offset = 0;
+            self.failed = true;
+        }
     }
 
     pub fn align(&mut self, value: usize) {
@@ -92,7 +104,9 @@ impl<'a> DatBinReader<'a> {
     }
 
     pub fn read_byte(&mut self) -> u8 {
-        self.read_bytes_internal(1)[0]
+        self.try_read_bytes_internal(1)
+            .and_then(|bytes| bytes.first().copied())
+            .unwrap_or_default()
     }
 
     pub fn read_sbyte(&mut self) -> i8 {
@@ -198,7 +212,9 @@ impl<'a> DatBinReader<'a> {
 
     pub fn read_string16_l_byte(&mut self) -> String {
         let length = self.read_compressed_uint() as usize;
-        let bytes = self.read_bytes_internal(length);
+        let Some(bytes) = self.try_read_bytes_internal(length) else {
+            return String::new();
+        };
         let (decoded, _, _) = WINDOWS_1252.decode(bytes);
         decoded.into_owned()
     }
@@ -241,15 +257,37 @@ impl<'a> DatBinReader<'a> {
     }
 
     fn read_bytes_internal(&mut self, count: usize) -> &'a [u8] {
-        let start = self.offset;
-        let end = start + count;
-        self.set_offset(end);
-        &self.data[start..end]
+        self.try_read_bytes_internal(count)
+            .unwrap_or(&self.data[self.offset..self.offset])
     }
 
     fn read_array<const N: usize>(&mut self) -> [u8; N] {
         let mut bytes = [0_u8; N];
-        bytes.copy_from_slice(self.read_bytes_internal(N));
+        if let Some(slice) = self.try_read_bytes_internal(N) {
+            bytes.copy_from_slice(slice);
+        }
         bytes
+    }
+
+    fn try_read_bytes_internal(&mut self, count: usize) -> Option<&'a [u8]> {
+        if self.failed {
+            return None;
+        }
+
+        let Some(end) = self.offset.checked_add(count) else {
+            self.failed = true;
+            self.offset = self.data.len();
+            return None;
+        };
+
+        if end > self.data.len() {
+            self.failed = true;
+            self.offset = self.data.len();
+            return None;
+        }
+
+        let start = self.offset;
+        self.offset = end;
+        Some(&self.data[start..end])
     }
 }

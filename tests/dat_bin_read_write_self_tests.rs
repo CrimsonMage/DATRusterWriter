@@ -100,3 +100,17 @@ fn can_pack_unpack_dat_header() {
     assert!(unpacked_ok);
     assert_eq!(header, unpacked);
 }
+
+#[test]
+fn truncated_reads_fail_cleanly_without_panicking() {
+    let bytes = [0x12_u8, 0x34];
+    let mut reader = DatBinReader::new(&bytes);
+
+    assert_eq!(0x3412, reader.read_u16());
+    assert_eq!(0, reader.read_u32());
+    assert!(reader.failed());
+
+    reader.rewind(100);
+    assert!(reader.failed());
+    assert_eq!(0, reader.offset());
+}

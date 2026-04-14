@@ -2,6 +2,7 @@ use std::{
     fs,
     path::PathBuf,
     sync::atomic::{AtomicU64, Ordering},
+    sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -261,6 +262,38 @@ fn node_bytes_len() -> usize {
 fn db_obj_attribute_cache_resolves_iteration() {
     let attr = DBObjAttributeCache::type_from_id(DatFileType::Portal, 0xFFFF0001).unwrap();
     assert_eq!(DBObjType::Iteration, attr.db_obj_type);
+}
+
+#[test]
+fn base_property_types_are_cached_per_database_instance() {
+    let path = unique_temp_file();
+    let database = DatDatabase::new(DatDatabaseOptions {
+        file_path: path.to_string_lossy().to_string(),
+        access_type: DatAccessType::ReadWrite,
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+
+    database
+        .block_allocator
+        .init_new(DatFileType::Portal, 0, 1024, 4)
+        .unwrap();
+
+    let master_property = MasterProperty {
+        base: DBObjBase {
+            id: 0x3900_0001,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+
+    assert!(database.try_write_file(&master_property).unwrap());
+
+    let first = database.base_property_types().unwrap().unwrap();
+    let second = database.base_property_types().unwrap().unwrap();
+    assert!(Arc::ptr_eq(&first, &second));
+
+    let _ = fs::remove_file(path);
 }
 
 #[test]

@@ -2,6 +2,7 @@
 
 #[path = "CellDatabase.rs"]
 pub mod CellDatabase;
+pub mod client;
 pub mod DBObjs;
 #[path = "DatCollection.rs"]
 pub mod DatCollection;
@@ -20,10 +21,20 @@ pub mod dat_lib;
 
 pub mod databases {
     pub use crate::CellDatabase::CellDatabase;
+    pub use crate::client::ClientDatStore;
     pub use crate::DatCollection::DatCollection;
     pub use crate::DatDatabase::DatDatabase;
     pub use crate::LocalDatabase::LocalDatabase;
     pub use crate::PortalDatabase::PortalDatabase;
+}
+
+pub mod assets {
+    pub use crate::DBObjs::{
+        Animation::Animation, EnvCell::EnvCell, Font::Font, GfxObj::GfxObj,
+        LandBlock::LandBlock, LandBlockInfo::LandBlockInfo, LayoutDesc::LayoutDesc,
+        MasterProperty::MasterProperty, MotionTable::MotionTable, Palette::Palette,
+        Region::Region, RenderTexture::RenderTexture, Setup::Setup, StringTable::StringTable,
+    };
 }
 
 // Curated low-level entry points for callers that need raw DAT access without
@@ -49,8 +60,12 @@ pub mod btree {
 }
 
 pub mod prelude {
+    pub use crate::assets::{
+        Animation, EnvCell, Font, GfxObj, LandBlock, LandBlockInfo, LayoutDesc, MasterProperty,
+        MotionTable, Palette, Region, RenderTexture, Setup, StringTable,
+    };
     pub use crate::databases::{
-        CellDatabase, DatCollection, DatDatabase, LocalDatabase, PortalDatabase,
+        CellDatabase, ClientDatStore, DatCollection, DatDatabase, LocalDatabase, PortalDatabase,
     };
     pub use crate::dat_lib::IO::IDBObj::IDBObj;
     pub use crate::dat_lib::IO::IPackable::IPackable;

@@ -46,6 +46,7 @@ pub struct DatDatabase {
     pub tree: DatBTreeReaderWriter,
     pub options: DatDatabaseOptions,
     file_cache: Mutex<BTreeMap<u32, Box<dyn Any + Send>>>,
+    base_property_types_cache: Mutex<Option<Option<Arc<BTreeMap<u32, BasePropertyType>>>>>,
 }
 
 impl DatDatabase {
@@ -64,11 +65,13 @@ impl DatDatabase {
             tree,
             options,
             file_cache: Mutex::new(BTreeMap::new()),
+            base_property_types_cache: Mutex::new(None),
         })
     }
 
     pub fn clear_cache(&mut self) {
         self.file_cache.lock().unwrap().clear();
+        *self.base_property_types_cache.lock().unwrap() = None;
         self.tree.clear_cache();
         if self.options.index_caching_strategy == IndexCachingStrategy::Upfront {
             let _ = self.tree.build_flat_index();
@@ -140,10 +143,11 @@ impl DatDatabase {
             return Ok(None);
         };
         let mut value = T::default();
-        if !value.unpack(&mut DatBinReader::with_base_property_types(
+        let mut reader = DatBinReader::with_base_property_types(
             &bytes,
             base_property_types,
-        )) {
+        );
+        if !value.unpack(&mut reader) || reader.failed() {
             return Ok(None);
         }
         value.set_id(file_id);
@@ -234,19 +238,26 @@ impl DatDatabase {
             return Ok(None);
         }
 
+        if let Some(cached) = self.base_property_types_cache.lock().unwrap().clone() {
+            return Ok(cached);
+        }
+
         let Some(master_property) =
             self.try_get_with_base_property_types::<MasterProperty>(0x39000001, None)?
         else {
+            *self.base_property_types_cache.lock().unwrap() = Some(None);
             return Ok(None);
         };
 
-        Ok(Some(Arc::new(
+        let cached = Some(Arc::new(
             master_property
                 .properties
                 .into_iter()
                 .map(|(key, property)| (key, property.property_type))
                 .collect(),
-        )))
+        ));
+        *self.base_property_types_cache.lock().unwrap() = Some(cached.clone());
+        Ok(cached)
     }
 
     pub fn has_file(&self, file_id: u32) -> io::Result<bool> {
@@ -557,6 +568,7 @@ impl DatDatabase {
         };
         configure_entry(&mut entry);
         let _ = self.tree.insert(entry)?;
+        *self.base_property_types_cache.lock().unwrap() = None;
         Ok(true)
     }
 
