@@ -1,9 +1,6 @@
-use crate::Lib::IO::{
-    DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
-    IUnpackable::IUnpackable,
-};
+use crate::Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable};
 
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct CloSubPaletteRange {
     pub offset: u32,
     pub num_colors: u32,

@@ -33,6 +33,129 @@ impl DatBTreeNode {
     pub fn is_leaf(&self) -> bool {
         self.branch_count == 0
     }
+
+    pub fn insert_file(&mut self, index: usize, file: DatBTreeFile) {
+        for i in (index..self.file_count).rev() {
+            self.files[i + 1] = self.files[i];
+        }
+        self.files[index] = file;
+        self.file_count += 1;
+    }
+
+    pub fn add_file(&mut self, file: DatBTreeFile) {
+        self.files[self.file_count] = file;
+        self.file_count += 1;
+    }
+
+    pub fn remove_file_at(&mut self, index: usize) {
+        if self.file_count == 0 || index >= self.file_count {
+            return;
+        }
+        self.file_count -= 1;
+        for i in index..self.file_count {
+            self.files[i] = self.files[i + 1];
+        }
+        self.files[self.file_count] = DatBTreeFile::default();
+    }
+
+    pub fn insert_branch(&mut self, index: usize, branch_offset: i32) {
+        for i in (index..self.branch_count).rev() {
+            self.branches[i + 1] = self.branches[i];
+        }
+        self.branches[index] = branch_offset;
+        self.branch_count += 1;
+    }
+
+    pub fn add_branch(&mut self, branch_offset: i32) {
+        self.branches[self.branch_count] = branch_offset;
+        self.branch_count += 1;
+    }
+
+    pub fn remove_branch_at(&mut self, index: usize) {
+        if self.branch_count == 0 || index >= self.branch_count {
+            return;
+        }
+        self.branch_count -= 1;
+        for i in index..self.branch_count {
+            self.branches[i] = self.branches[i + 1];
+        }
+        self.branches[self.branch_count] = 0;
+    }
+
+    pub fn append_files_from(&mut self, source: &DatBTreeNode, src_index: usize, count: usize) {
+        for i in 0..count {
+            self.files[self.file_count + i] = source.files[src_index + i];
+        }
+        self.file_count += count;
+    }
+
+    pub fn append_branches_from(
+        &mut self,
+        source: &DatBTreeNode,
+        src_index: usize,
+        count: usize,
+    ) {
+        for i in 0..count {
+            self.branches[self.branch_count + i] = source.branches[src_index + i];
+        }
+        self.branch_count += count;
+    }
+
+    pub fn remove_file_range(&mut self, index: usize, count: usize) {
+        if count == 0 || index >= self.file_count {
+            return;
+        }
+        let remaining = self.file_count.saturating_sub(index + count);
+        if remaining > 0 {
+            for i in 0..remaining {
+                self.files[index + i] = self.files[index + count + i];
+            }
+        }
+        let old_count = self.file_count;
+        self.file_count = self.file_count.saturating_sub(count);
+        for i in self.file_count..old_count {
+            self.files[i] = DatBTreeFile::default();
+        }
+    }
+
+    pub fn remove_branch_range(&mut self, index: usize, count: usize) {
+        if count == 0 || index >= self.branch_count {
+            return;
+        }
+        let remaining = self.branch_count.saturating_sub(index + count);
+        if remaining > 0 {
+            for i in 0..remaining {
+                self.branches[index + i] = self.branches[index + count + i];
+            }
+        }
+        let old_count = self.branch_count;
+        self.branch_count = self.branch_count.saturating_sub(count);
+        for i in self.branch_count..old_count {
+            self.branches[i] = 0;
+        }
+    }
+
+    pub fn prepend_files_from(&mut self, source: &DatBTreeNode) {
+        let src_count = source.file_count;
+        for i in (0..self.file_count).rev() {
+            self.files[i + src_count] = self.files[i];
+        }
+        for i in 0..src_count {
+            self.files[i] = source.files[i];
+        }
+        self.file_count += src_count;
+    }
+
+    pub fn prepend_branches_from(&mut self, source: &DatBTreeNode) {
+        let src_count = source.branch_count;
+        for i in (0..self.branch_count).rev() {
+            self.branches[i + src_count] = self.branches[i];
+        }
+        for i in 0..src_count {
+            self.branches[i] = source.branches[i];
+        }
+        self.branch_count += src_count;
+    }
 }
 
 impl IUnpackable for DatBTreeNode {
@@ -49,7 +172,7 @@ impl IUnpackable for DatBTreeNode {
 
         let mut did_find_end = false;
         let mut last_branch = 0_i32;
-        for i in 0..Self::MAX_BRANCHES {
+        for _ in 0..Self::MAX_BRANCHES {
             let branch = reader.read_i32();
             if branch == 0 || branch == last_branch || branch == Self::UNUSED_BRANCH_SENTINEL {
                 did_find_end = true;
@@ -59,10 +182,6 @@ impl IUnpackable for DatBTreeNode {
                 last_branch = branch;
                 self.branches[self.branch_count] = branch;
                 self.branch_count += 1;
-            }
-
-            if i + 1 >= Self::MAX_BRANCHES {
-                break;
             }
         }
 

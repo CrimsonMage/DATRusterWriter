@@ -10,6 +10,7 @@ use crate::{
             BlockAllocators::{
                 IDatBlockAllocator::IDatBlockAllocator,
                 MemoryMappedBlockAllocator::MemoryMappedBlockAllocator,
+                StreamBlockAllocator::StreamBlockAllocator,
             },
             DatBTree::{
                 DatBTreeFile::DatBTreeFile, DatBTreeFileFlags::DatBTreeFileFlags,
@@ -33,13 +34,11 @@ pub struct DatDatabase {
 }
 
 impl DatDatabase {
-    pub fn new(mut options: DatDatabaseOptions) -> io::Result<Self> {
-        if options.access_type == DatAccessType::ReadWrite {
-            options.access_type = DatAccessType::Read;
-        }
-
-        let block_allocator =
-            MemoryMappedBlockAllocator::new(&options)? as Arc<dyn IDatBlockAllocator>;
+    pub fn new(options: DatDatabaseOptions) -> io::Result<Self> {
+        let block_allocator: Arc<dyn IDatBlockAllocator> = match options.access_type {
+            DatAccessType::Read => MemoryMappedBlockAllocator::new(&options)?,
+            DatAccessType::ReadWrite => StreamBlockAllocator::new(&options)?,
+        };
         let tree = DatBTreeReaderWriter::new(block_allocator.clone());
         if options.index_caching_strategy == IndexCachingStrategy::Upfront {
             tree.build_flat_index()?;
@@ -59,7 +58,7 @@ impl DatDatabase {
         }
     }
 
-    pub fn header(&self) -> &DatHeader {
+    pub fn header(&self) -> DatHeader {
         self.block_allocator.header()
     }
 

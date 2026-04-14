@@ -3,6 +3,7 @@ use std::{fs::File, io, sync::Arc};
 use memmap2::Mmap;
 
 use crate::{
+    Generated::Enums::DatFileType::DatFileType,
     Lib::IO::{
         BlockAllocators::IDatBlockAllocator::IDatBlockAllocator, DatBinReader::DatBinReader,
         DatHeader::DatHeader, IUnpackable::IUnpackable,
@@ -40,6 +41,13 @@ impl MemoryMappedBlockAllocator {
             can_write: false,
         }))
     }
+
+    fn write_unsupported() -> io::Error {
+        io::Error::new(
+            io::ErrorKind::Unsupported,
+            "memory-mapped allocator is currently read-only",
+        )
+    }
 }
 
 impl IDatBlockAllocator for MemoryMappedBlockAllocator {
@@ -51,8 +59,42 @@ impl IDatBlockAllocator for MemoryMappedBlockAllocator {
         self.has_header_data
     }
 
-    fn header(&self) -> &DatHeader {
-        &self.header
+    fn header(&self) -> DatHeader {
+        self.header.clone()
+    }
+
+    fn init_new(
+        &self,
+        _file_type: DatFileType,
+        _subset: u32,
+        _block_size: i32,
+        _num_blocks_to_allocate: i32,
+    ) -> io::Result<()> {
+        Err(Self::write_unsupported())
+    }
+
+    fn set_version(
+        &self,
+        _version: &str,
+        _engine_version: i32,
+        _game_version: i32,
+        _major_version: uuid::Uuid,
+        _minor_version: u32,
+    ) -> io::Result<()> {
+        Err(Self::write_unsupported())
+    }
+
+    fn write_bytes(&self, _buffer: &[u8], _byte_offset: usize, _num_bytes: usize) -> io::Result<()> {
+        Err(Self::write_unsupported())
+    }
+
+    fn write_block(
+        &self,
+        _buffer: &[u8],
+        _num_bytes: usize,
+        _starting_block: i32,
+    ) -> io::Result<i32> {
+        Err(Self::write_unsupported())
     }
 
     fn read_bytes(
@@ -96,5 +138,34 @@ impl IDatBlockAllocator for MemoryMappedBlockAllocator {
         }
 
         Ok(())
+    }
+
+    fn try_get_block_offsets(&self, starting_block: i32) -> io::Result<Option<Vec<i32>>> {
+        if starting_block <= 0 {
+            return Ok(None);
+        }
+
+        let mut offsets = Vec::new();
+        let mut current_block = starting_block as usize;
+        while current_block != 0 {
+            offsets.push(current_block as i32);
+            let mut next_block_bytes = [0_u8; 4];
+            self.read_bytes(&mut next_block_bytes, 0, current_block, 4)?;
+            current_block = i32::from_le_bytes(next_block_bytes).max(0) as usize;
+        }
+
+        Ok(Some(offsets))
+    }
+
+    fn allocate_empty_blocks(&self, _num_blocks_to_allocate: i32) -> io::Result<()> {
+        Err(Self::write_unsupported())
+    }
+
+    fn reserve_block(&self) -> io::Result<i32> {
+        Err(Self::write_unsupported())
+    }
+
+    fn set_root_block(&self, _offset: i32) -> io::Result<()> {
+        Err(Self::write_unsupported())
     }
 }

@@ -1,14 +1,15 @@
 use dat_reader_writer::{
     DBObjs::{
-        CharGen::CharGen, ClothingTable::ClothingTable, CombatTable::CombatTable, GfxObj::GfxObj,
+        CharGen::CharGen, GfxObj::GfxObj,
         MotionTable::MotionTable, Palette::Palette, ParticleEmitter::ParticleEmitter,
         PhysicsScript::PhysicsScript, Region::Region, RenderSurface::RenderSurface, Scene::Scene,
         Surface::Surface, SurfaceTexture::SurfaceTexture, Wave::Wave,
     },
     Generated::Enums::{
-        AnimationHookDir::AnimationHookDir, AttackHeight::AttackHeight, AttackType::AttackType,
+        AnimationHookDir::AnimationHookDir,
         CullMode::CullMode, EmitterType::EmitterType, GfxObjFlags::GfxObjFlags,
-        MotionCommand::MotionCommand, MotionStance::MotionStance, ParticleType::ParticleType,
+        MotionCommand::MotionCommand, ParentLocation::ParentLocation, ParticleType::ParticleType,
+        Placement::Placement,
         PartsMask::PartsMask, PixelFormat::PixelFormat, SkillId::SkillId, Sound::Sound,
         StipplingType::StipplingType, SurfaceType::SurfaceType,
         TerrainTextureType::TerrainTextureType, TextureType::TextureType, VertexType::VertexType,
@@ -967,137 +968,6 @@ fn char_gen_roundtrip_reads_heritage_groups() {
 }
 
 #[test]
-fn clothing_table_roundtrip_reads_nested_effects() {
-    let mut clothing_base_effects = HashTable::<
-        QualifiedDataId<dat_reader_writer::DBObjs::Setup::Setup>,
-        dat_reader_writer::Types::ClothingBaseEffect::ClothingBaseEffect,
-    >::default();
-    clothing_base_effects.insert(
-        QualifiedDataId::new(0x02000039),
-        dat_reader_writer::Types::ClothingBaseEffect::ClothingBaseEffect {
-            clo_object_effects: vec![dat_reader_writer::Types::CloObjectEffect::CloObjectEffect {
-                index: 7,
-                model_id: QualifiedDataId::new(0x01000044),
-                clo_texture_effects: vec![
-                    dat_reader_writer::Types::CloTextureEffect::CloTextureEffect {
-                        old_texture: QualifiedDataId::new(0x05000001),
-                        new_texture: QualifiedDataId::new(0x05000002),
-                    },
-                ],
-            }],
-        },
-    );
-
-    let mut clothing_sub_pal_effects =
-        HashTable::<u32, dat_reader_writer::Types::CloSubPalEffect::CloSubPalEffect>::default();
-    clothing_sub_pal_effects.insert(
-        62,
-        dat_reader_writer::Types::CloSubPalEffect::CloSubPalEffect {
-            icon: QualifiedDataId::new(0x06000020),
-            clo_sub_palettes: vec![dat_reader_writer::Types::CloSubPalette::CloSubPalette {
-                ranges: vec![
-                    dat_reader_writer::Types::CloSubPaletteRange::CloSubPaletteRange {
-                        offset: 32,
-                        num_colors: 2048,
-                    },
-                ],
-                palette_set: QualifiedDataId::new(0x0F000010),
-            }],
-        },
-    );
-
-    let clothing = ClothingTable {
-        clothing_base_effects,
-        clothing_sub_pal_effects,
-        ..Default::default()
-    };
-
-    let mut bytes = vec![0u8; 1024];
-    let mut writer = DatBinWriter::new(&mut bytes);
-    assert!(clothing.pack(&mut writer));
-    let used = writer.offset();
-
-    let mut unpacked = ClothingTable::default();
-    assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
-    assert_eq!(1, unpacked.clothing_base_effects.len());
-    assert_eq!(
-        0x02000039,
-        unpacked
-            .clothing_base_effects
-            .iter()
-            .next()
-            .unwrap()
-            .0
-            .data_id
-    );
-    assert_eq!(
-        0x01000044,
-        unpacked
-            .clothing_base_effects
-            .iter()
-            .next()
-            .unwrap()
-            .1
-            .clo_object_effects[0]
-            .model_id
-            .data_id
-    );
-    assert_eq!(
-        2048,
-        unpacked
-            .clothing_sub_pal_effects
-            .get(&62)
-            .unwrap()
-            .clo_sub_palettes[0]
-            .ranges[0]
-            .num_colors
-    );
-    assert_eq!(
-        0x0F000010,
-        unpacked
-            .clothing_sub_pal_effects
-            .get(&62)
-            .unwrap()
-            .clo_sub_palettes[0]
-            .palette_set
-            .data_id
-    );
-}
-
-#[test]
-fn combat_table_roundtrip_reads_maneuvers() {
-    let combat = CombatTable {
-        combat_maneuvers: vec![dat_reader_writer::Types::CombatManeuver::CombatManeuver {
-            style: MotionStance::BOW_COMBAT,
-            attack_height: AttackHeight::MEDIUM,
-            attack_type: AttackType::DOUBLE_STRIKE,
-            min_skill_level: 20,
-            motion: MotionCommand(0x41000001),
-        }],
-        ..Default::default()
-    };
-
-    let mut bytes = vec![0u8; 256];
-    let mut writer = DatBinWriter::new(&mut bytes);
-    assert!(combat.pack(&mut writer));
-    let used = writer.offset();
-
-    let mut unpacked = CombatTable::default();
-    assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
-    assert_eq!(1, unpacked.combat_maneuvers.len());
-    assert_eq!(MotionStance::BOW_COMBAT, unpacked.combat_maneuvers[0].style);
-    assert_eq!(
-        AttackHeight::MEDIUM,
-        unpacked.combat_maneuvers[0].attack_height
-    );
-    assert_eq!(
-        AttackType::DOUBLE_STRIKE,
-        unpacked.combat_maneuvers[0].attack_type
-    );
-    assert_eq!(20, unpacked.combat_maneuvers[0].min_skill_level);
-}
-
-#[test]
 fn drawing_bsp_portal_roundtrip_reads_children_polygons_and_portals() {
     use dat_reader_writer::Generated::Enums::BSPNodeType::BSPNodeType;
     use dat_reader_writer::Lib::IO::Numerics::{Plane, Vector3};
@@ -1264,7 +1134,7 @@ fn gfx_obj_roundtrip_reads_physics_drawing_and_degrade() {
 }
 
 #[test]
-fn generated_enum_surfaces_cover_remaining_skill_and_terrain_constants() {
+fn generated_enum_surfaces_cover_remaining_skill_terrain_and_asset_constants() {
     assert_eq!(SkillId::CHALLENGE, SkillId::from(0x35));
     assert_eq!(SkillId::SUMMONING, SkillId::from(0x36));
     assert_eq!(
@@ -1275,4 +1145,103 @@ fn generated_enum_surfaces_cover_remaining_skill_and_terrain_constants() {
         TerrainTextureType::WATER_DEEP_SEA,
         TerrainTextureType::from(0x14)
     );
+    assert_eq!(ParentLocation::LeftWeapon, ParentLocation::from(0x08));
+    assert_eq!(Placement::Random10, Placement::from(0x82));
+    assert_eq!(EmitterType::BirthratePerMeter, EmitterType::from(0x02));
+    assert_eq!(ParticleType::GlobalVelocity, ParticleType::from(0x0C));
+    assert_eq!(VertexType::CSWVertexType, VertexType::from(0x01));
+    assert_eq!(CullMode::CounterClockwise, CullMode::from(0x03));
+    assert_eq!(CullMode::Clockwise, CullMode::CLOCKWISE);
 }
+
+#[test]
+fn clothing_table_roundtrip_reads_base_and_subpal_effects() {
+    use dat_reader_writer::{
+        DBObjs::ClothingTable::ClothingTable,
+        Types::{
+            CloObjectEffect::CloObjectEffect,
+            CloSubPalEffect::CloSubPalEffect,
+            CloSubPalette::CloSubPalette,
+            CloSubPaletteRange::CloSubPaletteRange,
+            CloTextureEffect::CloTextureEffect,
+            ClothingBaseEffect::ClothingBaseEffect,
+            PackableHashTable::PackableHashTable,
+        },
+    };
+
+    let mut table = ClothingTable::default();
+    table.clothing_base_effects = PackableHashTable::default();
+    table.clothing_base_effects.insert(
+        QualifiedDataId::new(0x02000010),
+        ClothingBaseEffect {
+            clo_object_effects: vec![CloObjectEffect {
+                index: 1,
+                model_id: QualifiedDataId::new(0x01000020),
+                clo_texture_effects: vec![CloTextureEffect {
+                    old_texture: QualifiedDataId::new(0x05000030),
+                    new_texture: QualifiedDataId::new(0x05000031),
+                }],
+            }],
+        },
+    );
+    table.clothing_sub_pal_effects = PackableHashTable::default();
+    table.clothing_sub_pal_effects.insert(
+        9,
+        CloSubPalEffect {
+            icon: QualifiedDataId::new(0x06000040),
+            clo_sub_palettes: vec![CloSubPalette {
+                ranges: vec![CloSubPaletteRange { offset: 2, num_colors: 3 }],
+                palette_set: QualifiedDataId::new(0x0F000050),
+            }],
+        },
+    );
+
+    let mut bytes = vec![0u8; 2048];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    assert!(table.pack(&mut writer));
+    let used = writer.offset();
+
+    let mut unpacked = ClothingTable::default();
+    assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
+    assert_eq!(1, unpacked.clothing_base_effects.len());
+    assert_eq!(0x01000020, unpacked.clothing_base_effects.get(&QualifiedDataId::new(0x02000010)).unwrap().clo_object_effects[0].model_id.data_id);
+    assert_eq!(0x05000031, unpacked.clothing_base_effects.get(&QualifiedDataId::new(0x02000010)).unwrap().clo_object_effects[0].clo_texture_effects[0].new_texture.data_id);
+    assert_eq!(0x0F000050, unpacked.clothing_sub_pal_effects.get(&9).unwrap().clo_sub_palettes[0].palette_set.data_id);
+}
+
+#[test]
+fn combat_table_roundtrip_reads_maneuvers() {
+    use dat_reader_writer::{
+        DBObjs::CombatTable::CombatTable,
+        Generated::Enums::{AttackHeight::AttackHeight, AttackType::AttackType, MotionStance::MotionStance},
+        Types::CombatManeuver::CombatManeuver,
+    };
+
+    let table = CombatTable {
+        combat_maneuvers: vec![CombatManeuver {
+            style: MotionStance::SWORD_COMBAT,
+            attack_height: AttackHeight::HIGH,
+            attack_type: AttackType::Slash | AttackType::DoubleSlash,
+            min_skill_level: 250,
+            motion: MotionCommand(0x12345678),
+        }],
+        ..Default::default()
+    };
+
+    let mut bytes = vec![0u8; 512];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    assert!(table.pack(&mut writer));
+    let used = writer.offset();
+
+    let mut unpacked = CombatTable::default();
+    assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
+    assert_eq!(1, unpacked.combat_maneuvers.len());
+    assert_eq!(MotionStance::SWORD_COMBAT, unpacked.combat_maneuvers[0].style);
+    assert!(unpacked.combat_maneuvers[0].attack_type.contains(AttackType::Slash));
+    assert_eq!(250, unpacked.combat_maneuvers[0].min_skill_level);
+}
+
+
+
+
+

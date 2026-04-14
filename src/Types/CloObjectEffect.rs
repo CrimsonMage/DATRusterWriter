@@ -1,9 +1,6 @@
 use crate::{
     DBObjs::GfxObj::GfxObj,
-    Lib::IO::{
-        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
-        IUnpackable::IUnpackable,
-    },
+    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable},
     Types::{CloTextureEffect::CloTextureEffect, QualifiedDataId::QualifiedDataId},
 };
 
@@ -20,10 +17,7 @@ impl IUnpackable for CloObjectEffect {
         self.model_id = reader.read_item::<QualifiedDataId<GfxObj>>();
         let count = reader.read_u32() as usize;
         self.clo_texture_effects.clear();
-        for _ in 0..count {
-            self.clo_texture_effects
-                .push(reader.read_item::<CloTextureEffect>());
-        }
+        for _ in 0..count { self.clo_texture_effects.push(reader.read_item::<CloTextureEffect>()); }
         true
     }
 }
@@ -33,9 +27,7 @@ impl IPackable for CloObjectEffect {
         writer.write_u32(self.index);
         writer.write_item(&self.model_id);
         writer.write_u32(self.clo_texture_effects.len() as u32);
-        for item in &self.clo_texture_effects {
-            writer.write_item(item);
-        }
+        for item in &self.clo_texture_effects { writer.write_item(item); }
         true
     }
 }

@@ -8,8 +8,8 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 
 ## Scope Note
 
-- Primary target is now read functionality.
-- Write functionality may still be scaffolded or partially retained where it helps preserve structure, tests, or future parity.
+- Primary target remains read functionality, but write parity is also in scope where it can be ported explicitly and safely.
+- Write functionality is no longer just incidental: we are also porting explicit write-side parity where it meaningfully supports future DAT authoring and roundtrip verification.
 - When read and write differ in priority, read support wins.
 
 ## Current Summary
@@ -41,15 +41,15 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | DatReaderWriter/Generated/Enums/AnimationFlags.generated.cs | src/Generated/Enums/AnimationFlags.rs | Ported | Read-side animation presence bitflags |
 | DatReaderWriter/Generated/Enums/AttackHeight.generated.cs | src/Generated/Enums/AttackHeight.rs | Ported | Explicit named combat attack-height constants for CombatTable reads |
 | DatReaderWriter/Generated/Enums/AttackType.generated.cs | src/Generated/Enums/AttackType.rs | Ported | Explicit named combat attack-type constants for CombatTable reads |
-| `DatReaderWriter/Generated/Enums/ParentLocation.generated.cs` | `src/Generated/Enums/ParentLocation.rs` | Partial | Read-first numeric wrapper for setup attachment slots |
-| `DatReaderWriter/Generated/Enums/Placement.generated.cs` | `src/Generated/Enums/Placement.rs` | Partial | Read-first numeric wrapper for setup placement keys |
+| `DatReaderWriter/Generated/Enums/ParentLocation.generated.cs` | `src/Generated/Enums/ParentLocation.rs` | Ported | Full named parent-location constants now mirrored into the Rust wrapper surface |
+| `DatReaderWriter/Generated/Enums/Placement.generated.cs` | `src/Generated/Enums/Placement.rs` | Ported | Full named placement constants now mirrored into the Rust wrapper surface |
 | `DatReaderWriter/Generated/Enums/PlayScript.generated.cs` | `src/Generated/Enums/PlayScript.rs` | Ported | Explicit named play-script constants now mirrored into the Rust wrapper surface |
 | `DatReaderWriter/Generated/Enums/SetupFlags.generated.cs` | `src/Generated/Enums/SetupFlags.rs` | Ported | Setup optional-data bitflags |
 | DatReaderWriter/Generated/Enums/SkillId.generated.cs | src/Generated/Enums/SkillId.rs | Ported | Full named skill-id constant surface now mirrored into the Rust wrapper |
-| `DatReaderWriter/Generated/Enums/EmitterType.generated.cs` | `src/Generated/Enums/EmitterType.rs` | Partial | Read-first numeric wrapper for particle emitter mode |
-| `DatReaderWriter/Generated/Enums/ParticleType.generated.cs` | `src/Generated/Enums/ParticleType.rs` | Partial | Read-first numeric wrapper for particle motion mode |
-| `DatReaderWriter/Generated/Enums/VertexType.generated.cs` | `src/Generated/Enums/VertexType.rs` | Partial | Read-first numeric wrapper for vertex array type |
-| `DatReaderWriter/Generated/Enums/CullMode.generated.cs` | `src/Generated/Enums/CullMode.rs` | Partial | Read-first numeric wrapper for polygon cull mode |
+| `DatReaderWriter/Generated/Enums/EmitterType.generated.cs` | `src/Generated/Enums/EmitterType.rs` | Ported | Full named particle-emitter constants now mirrored into the Rust wrapper surface |
+| `DatReaderWriter/Generated/Enums/ParticleType.generated.cs` | `src/Generated/Enums/ParticleType.rs` | Ported | Full named particle-type constants now mirrored into the Rust wrapper surface |
+| `DatReaderWriter/Generated/Enums/VertexType.generated.cs` | `src/Generated/Enums/VertexType.rs` | Ported | Full named vertex-type constants now mirrored into the Rust wrapper surface |
+| `DatReaderWriter/Generated/Enums/CullMode.generated.cs` | `src/Generated/Enums/CullMode.rs` | Ported | Full named cull-mode constants now mirrored into the Rust wrapper surface while keeping the existing CLOCKWISE compatibility alias |
 | `DatReaderWriter/Generated/Enums/StipplingType.generated.cs` | `src/Generated/Enums/StipplingType.rs` | Ported | Polygon stippling bitflags |
 | `DatReaderWriter/Enums/BSPNodeType.cs` | `src/Generated/Enums/BSPNodeType.rs` | Ported | Full named BSP node constants now mirrored into the Rust wrapper surface |
 | `DatReaderWriter/Generated/Enums/Sound.generated.cs` | `src/Generated/Enums/Sound.rs` | Ported | Explicit named sound constants now mirrored into the Rust wrapper surface |
@@ -66,14 +66,14 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Lib/IO/DatBinReader.cs` | `src/Lib/IO/DatBinReader.rs` | Verified | Primitive reader, seeking, and remaining-byte helpers ported and tested |
 | `DatReaderWriter/Lib/IO/DatBinWriter.cs` | `src/Lib/IO/DatBinWriter.rs` | Verified | Retained mainly for parity and self-tests |
 | `DatReaderWriter/Lib/IO/DatHeader.cs` | `src/Lib/IO/DatHeader.rs` | Verified | Header model and pack/unpack tested |
-| `DatReaderWriter/Lib/IO/BlockAllocators/IDatBlockAllocator.cs` | `src/Lib/IO/BlockAllocators/IDatBlockAllocator.rs` | Partial | Read-path contract only |
+| `DatReaderWriter/Lib/IO/BlockAllocators/IDatBlockAllocator.cs` | `src/Lib/IO/BlockAllocators/IDatBlockAllocator.rs` | Partial | Expanded to include explicit write-capable allocator operations alongside the existing read contract |
 | `DatReaderWriter/Lib/IO/BlockAllocators/BaseBlockAllocator.cs` | `src/Lib/IO/BlockAllocators/BaseBlockAllocator.rs` | Scaffolded | Placeholder while read logic lives in concrete allocator |
 | `DatReaderWriter/Lib/IO/BlockAllocators/MemoryMappedBlockAllocator.cs` | `src/Lib/IO/BlockAllocators/MemoryMappedBlockAllocator.rs` | Partial | Read-only memory-mapped implementation |
-| `DatReaderWriter/Lib/IO/BlockAllocators/StreamBlockAllocator.cs` | `src/Lib/IO/BlockAllocators/StreamBlockAllocator.rs` | Scaffolded | Deferred in favor of memory-mapped read path |
+| `DatReaderWriter/Lib/IO/BlockAllocators/StreamBlockAllocator.cs` | `src/Lib/IO/BlockAllocators/StreamBlockAllocator.rs` | Partial | Concrete file-backed allocator now supports explicit synchronous header init/version updates, free-block reservation, chained block read/write, and root-block updates; async parity remains pending |
 | `DatReaderWriter/Lib/IO/DatBTree/DatBTreeFileFlags.cs` | `src/Lib/IO/DatBTree/DatBTreeFileFlags.rs` | Ported | Bitflags port |
 | `DatReaderWriter/Lib/IO/DatBTree/DatBTreeFile.cs` | `src/Lib/IO/DatBTree/DatBTreeFile.rs` | Ported | Entry unpack and basic pack parity |
-| `DatReaderWriter/Lib/IO/DatBTree/DatBTreeNode.cs` | `src/Lib/IO/DatBTree/DatBTreeNode.rs` | Verified | Read-path node pack/unpack symmetry and traversal helpers tested |
-| `DatReaderWriter/Lib/IO/DatBTree/DatBTreeReaderWriter.cs` | `src/Lib/IO/DatBTree/DatBTreeReaderWriter.rs` | Verified | Read-path lookup, enumeration, caching, and range traversal tested |
+| `DatReaderWriter/Lib/IO/DatBTree/DatBTreeNode.cs` | `src/Lib/IO/DatBTree/DatBTreeNode.rs` | Verified | Read-path node pack/unpack symmetry plus explicit array mutation helpers for write-side B-tree operations tested |
+| `DatReaderWriter/Lib/IO/DatBTree/DatBTreeReaderWriter.cs` | `src/Lib/IO/DatBTree/DatBTreeReaderWriter.rs` | Partial | Read-path lookup, enumeration, caching, and range traversal remain tested, and explicit synchronous write-side insert/update/delete behavior is now ported; async mutation parity remains pending |
 | `DatReaderWriter/Lib/Attributes/DBObjTypeAttribute.cs` | `src/Lib/Attributes/DBObjTypeAttribute.rs` | Ported | Rust metadata descriptor |
 | `DatReaderWriter/Lib/DBObjAttributeCache.cs` | `src/Lib/DBObjAttributeCache.rs` | Partial | Ported objects now resolve through a shared Rust attribute list with tested singular/range lookup; broader generated coverage remains pending |
 | `DatReaderWriter/Types/DBObj.cs` | `src/Types/DBObj.rs` | Partial | Rust DB object base abstraction |
@@ -131,7 +131,8 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/Types/SoundEntry.generated.cs` | `src/Types/SoundEntry.rs` | Ported | Wave reference with sound weights |
 | `DatReaderWriter/Generated/Types/SoundHashData.generated.cs` | `src/Types/SoundHashData.rs` | Ported | Hash-keyed sound weights |
 | `DatReaderWriter/Types/PackedQualifiedDataId.cs` | `src/Types/PackedQualifiedDataId.rs` | Ported | Packed known-type id wrapper with collection resolution helper |
-| DatReaderWriter/Types/HashTable.cs | src/Types/HashTable.rs | Partial | Explicit read/write hash-table wrapper now supports primitive keys plus `QualifiedDataId<T>` keys for the current CharGen and ClothingTable read paths |
+| DatReaderWriter/Types/HashTable.cs | src/Types/HashTable.rs | Partial | Explicit read/write hash-table wrapper now supports primitive keys plus `QualifiedDataId<T>` keys for the current CharGen read path and other explicit typed map ports |
+| DatReaderWriter/Types/PackableHashTable.cs | src/Types/PackableHashTable.rs | Ported | Explicit packable hash-table wrapper now covers the setup-keyed clothing and numeric sub-palette tables used on the read path |
 | DatReaderWriter/Generated/Types/CloSubPaletteRange.generated.cs | src/Types/CloSubPaletteRange.rs | Ported | Clothing sub-palette range payload |
 | DatReaderWriter/Generated/Types/CloSubPalette.generated.cs | src/Types/CloSubPalette.rs | Ported | Clothing sub-palette entry with PalSet reference |
 | DatReaderWriter/Generated/Types/CloSubPalEffect.generated.cs | src/Types/CloSubPalEffect.rs | Ported | Clothing sub-palette effect payload |
@@ -153,7 +154,7 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | DatReaderWriter/Generated/Types/HeritageGroupCG.generated.cs | src/Types/HeritageGroupCG.rs | Verified | Character-generation heritage group payload now reads starting areas, templates, skills, and gender table |
 | `DatReaderWriter/Generated/Types/AnimationHook.generated.cs` and hook variants | `src/Types/AnimationHook.rs` | Partial | Read-side hook family collapsed into one Rust enum; unknown hook payloads are not preserved |
 | `DatReaderWriter/Generated/Types/PhysicsScriptData.generated.cs` | `src/Types/PhysicsScriptData.rs` | Ported | Physics script timing + hook record |
-| `DatReaderWriter/DatDatabase.cs` | `src/DatDatabase.rs` | Partial | Raw file entry lookup, byte/decompression read support, typed `try_get<T>()`, and typed id enumeration |
+| `DatReaderWriter/DatDatabase.cs` | `src/DatDatabase.rs` | Partial | Raw file entry lookup, byte/decompression read support, typed `try_get<T>()`, typed id enumeration, and allocator selection for both read-only and read-write access |
 | `DatReaderWriter/DatCollection.cs` | `src/DatCollection.rs` | Partial | Typed `try_get<T>()`, portal/high-res fallback, and typed id enumeration now ported for read use |
 | `DatReaderWriter/CellDatabase.cs` | `src/CellDatabase.rs` | Verified | Read-first concrete wrapper with header validation and typed read delegation |
 | `DatReaderWriter/PortalDatabase.cs` | `src/PortalDatabase.rs` | Verified | Read-first concrete wrapper with header validation and typed read delegation |
@@ -181,7 +182,7 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/DBObjs/SoundTable.generated.cs` | `src/DBObjs/SoundTable.rs` | Verified | Explicit read-side sound table port with hash and named sound maps |
 | `DatReaderWriter/Generated/DBObjs/PhysicsScriptTable.generated.cs` | `src/DBObjs/PhysicsScriptTable.rs` | Verified | Explicit play-script to script-list table now ported |
 | `DatReaderWriter.Tests/IO/DatBinReadWriteSelfTests.cs` | `tests/dat_bin_read_write_self_tests.rs` | Verified | Initial Rust equivalents passing |
-| `DatReaderWriter.Tests/IO/DatBTree/DatBTreeReaderWriterTests.cs` | `tests/btree_tests.rs` | Partial | Read-path node and traversal coverage via mock allocator |
+| `DatReaderWriter.Tests/IO/DatBTree/DatBTreeReaderWriterTests.cs` | `tests/btree_tests.rs` | Partial | Mock-allocator coverage now includes read traversal plus write-side insert, replace, root-split, leaf delete, and root-collapse behavior |
 | `DatReaderWriter.Tests/*` options-adjacent behavior | `tests/options_tests.rs` | Verified | Rust-specific coverage for options defaults and overrides |
 | `DatReaderWriter` database/collection constructor behavior | `tests/collection_tests.rs` | Verified | Synthetic header-backed tests for wrapper validation, path resolution, high-res fallback, typed id enumeration, and qualified-id resolution |
 | typed DB object read behavior | `tests/typed_dbobj_tests.rs` | Verified | `Iteration` id resolution, typed read, typed id enumeration, attribute-cache coverage, and portal/local string DBObj coverage |
@@ -195,6 +196,8 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 - Traverse the B-tree in read mode.
 - Resolve raw file entries by id.
 - Read raw file bytes and auto-decompress compressed entries.
+- Mutate the in-memory/viewed B-tree structure through explicit insert/update/delete operations when backed by a writable allocator contract.
+- Use a concrete stream-backed allocator for synchronous DAT header initialization, version updates, free-block reservation, and chained block read/write operations on the write path.
 - Configure database and collection options from Rust.
 - Open the standard four DATs through `DatCollection`.
 - Validate specialized database wrappers against the header's DAT type.
@@ -206,7 +209,8 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 - Read the core `GfxObj` mesh layout including surfaces, vertex arrays, polygons, and drawing/physics BSP structures.
 - Read `Wave`, `ParticleEmitter`, and `PhysicsScript` objects with typed animation hook decoding.
 - Read `SoundTable` and `PhysicsScriptTable` objects with explicit typed map payloads.
-- Read `Setup` and `Animation` objects with explicit part/frame structures and default asset references.`r`n- Read `CharGen` objects with explicit heritage-group, gender, starting-area, and appearance payloads.
+- Read `Setup` and `Animation` objects with explicit part/frame structures and default asset references.
+- Read `CharGen` objects with explicit heritage-group, gender, starting-area, and appearance payloads.
 - Read nested `Region` sound, scene, sky, terrain, and misc payloads through typed helper structs.
 
 ## Latest Progress
@@ -235,13 +239,15 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 - Expanded `typed_asset_tests.rs` again to verify nested `ClothingTable` and `CombatTable` roundtrips on the read path.
 - Finished the remaining read-side GfxObj support gap by aligning the drawing/physics BSP node behavior with the reference and filling out the full named BSPNodeType surface.
 - Expanded `typed_asset_tests.rs` to cover drawing portal BSP nodes, physics portal rejection, and `GfxObj` roundtrips with physics, drawing, and degrade data.
-- Finished the remaining partial named enum surfaces for `SkillId` and `TerrainTextureType` and verified the new constants inside the existing asset test binary.
+- Finished the remaining partial named enum surfaces for `SkillId`, `TerrainTextureType`, `ParentLocation`, `Placement`, `EmitterType`, `ParticleType`, `VertexType`, and `CullMode`, and verified the new constants inside the existing asset test binary.
+- Ported the explicit B-tree node mutation helpers and synchronous write-side insert/update/delete flow, including empty-tree root creation, in-place replacement, full-root splitting, leaf deletion, and empty-root collapse through a writable allocator contract.
+- Replaced the stream allocator placeholder with a concrete file-backed synchronous implementation and verified it with temp-file tests for header/version writes, chained block IO, and in-place block rewrites.
 - Reworked DBObjAttributeCache so current Rust DBObj ports resolve through a shared attribute list instead of a large hand-maintained Portal match, and added typed tests for singular/range resolution.
 - Added the string-resource read path with PStringBase, StringTableString, StringTableData, LanguageString, and StringTable, including local DAT typed reads for hashed string entries.
 
 ## Remaining Major Areas
 
-- Full named generated enum surfaces where read-first wrappers are still used: future enum-heavy ports beyond the currently needed read-first subset
+- Remaining write-path parity, including async allocator methods and any additional database-level authoring helpers still needed
 - DB object attribute cache and id-to-type resolution beyond the currently ported Rust DBObj set, including broader Local/Cell coverage
 - Generated DBObjs beyond the current asset-focused subset
 - Generated Types beyond the current asset-focused subset
@@ -249,6 +255,12 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 - Richer cache behavior and higher-level object graph traversal beyond direct `QualifiedDataId<T>` lookups
 - Write-path allocator and B-tree behavior if parity is still desired later
 - Broader test suite migration with real DAT-backed fixtures that remain external to the crate
+
+
+
+
+
+
 
 
 

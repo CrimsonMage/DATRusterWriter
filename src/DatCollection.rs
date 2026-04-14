@@ -123,7 +123,7 @@ impl DatCollection {
         }
     }
 
-    pub fn header_for(&self, dat_file_type: DatFileType) -> Option<&DatHeader> {
+    pub fn header_for(&self, dat_file_type: DatFileType) -> Option<DatHeader> {
         match dat_file_type {
             DatFileType::Cell => Some(self.cell.inner.header()),
             DatFileType::Portal => Some(self.portal.inner.header()),
@@ -183,3 +183,4 @@ impl DatCollection {
         }
     }
 }
+
