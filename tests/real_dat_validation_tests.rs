@@ -11,7 +11,7 @@ use dat_reader_writer::{
         MasterInputMap::MasterInputMap, MasterProperty::MasterProperty,
         MaterialInstance::MaterialInstance, MaterialModifier::MaterialModifier,
         MotionTable::MotionTable, NameFilterTable::NameFilterTable,
-        ObjectHierarchy::ObjectHierarchy, Palette::Palette, PaletteSet::PaletteSet,
+        ObjectHierarchy::ObjectHierarchy, PalSet::PalSet, Palette::Palette, PaletteSet::PaletteSet,
         ParticleEmitter::ParticleEmitter, ParticleEmitterInfo::ParticleEmitterInfo,
         PhysicsScript::PhysicsScript, PhysicsScriptTable::PhysicsScriptTable,
         QualityFilter::QualityFilter, Region::Region, RenderMaterial::RenderMaterial,
@@ -96,6 +96,7 @@ fn validates_ported_types_against_real_dats() {
     assert!(collection.portal.region().unwrap().is_some());
 
     validate_sample::<Palette>(&collection, 5);
+    validate_sample::<PalSet>(&collection, 2);
     validate_sample::<PaletteSet>(&collection, 2);
     validate_sample::<SurfaceTexture>(&collection, 5);
     validate_sample::<RenderSurface>(&collection, 5);

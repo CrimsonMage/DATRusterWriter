@@ -634,6 +634,113 @@ fn dbobj_base_pack_unpack_matches_header_flag_behavior() {
 }
 
 #[test]
+fn foundational_enum_and_flag_surfaces_are_stable() {
+    use dat_reader_writer::{
+        Generated::Enums::{
+            AnimationHookDir::AnimationHookDir, AnimationHookType::AnimationHookType,
+            DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType,
+            GfxObjFlags::GfxObjFlags, MotionCommand::MotionCommand, PartsMask::PartsMask,
+            PixelFormat::PixelFormat, SurfaceType::SurfaceType, TextureType::TextureType,
+        },
+        Lib::IO::DatBTree::DatBTreeFileFlags::DatBTreeFileFlags,
+    };
+
+    assert_eq!(5, DBObjType::Palette as i32);
+    assert_eq!(38, DBObjType::MasterProperty as i32);
+    assert_eq!(0x01, DBObjHeaderFlags::HasId.bits());
+    assert_eq!(0x02, DBObjHeaderFlags::HasDataCategory.bits());
+    assert_eq!(
+        DBObjHeaderFlags::HasId | DBObjHeaderFlags::HasDataCategory,
+        DBObjHeaderFlags::from_bits_retain(0x03)
+    );
+    assert_eq!(TextureType::TEXTURE2D, TextureType::from(2));
+    assert_eq!(PixelFormat::PFID_P8, PixelFormat::from(41));
+    assert_eq!(MotionCommand(0x4100_0003), MotionCommand(0x4100_0003));
+    assert_eq!(AnimationHookDir::BOTH, AnimationHookDir::from(0));
+    assert_eq!(AnimationHookDir::FORWARD, AnimationHookDir::from(1));
+    assert_eq!(AnimationHookType::NO_OP, AnimationHookType::from(0));
+    assert_eq!(AnimationHookType::SOUND, AnimationHookType::from(1));
+    assert!(GfxObjFlags::HasDrawing.bits() != 0);
+    assert!(PartsMask::HasSceneInfo.bits() != 0);
+    assert!(SurfaceType::Diffuse.bits() != 0);
+    assert_eq!(0, DatBTreeFileFlags::None.bits());
+}
+
+#[test]
+fn foundational_wire_types_roundtrip_cleanly() {
+    use dat_reader_writer::{
+        DBObjs::Palette::Palette,
+        Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags,
+        Lib::IO::DatBTree::{
+            DatBTreeFile::DatBTreeFile, DatBTreeFileFlags::DatBTreeFileFlags,
+        },
+        Types::{ColorARGB::ColorARGB, PStringBase::PStringBase, QualifiedDataId::QualifiedDataId},
+    };
+
+    let file = DatBTreeFile {
+        flags: DatBTreeFileFlags::IsCompressed,
+        version: 7,
+        id: 0x0400_1234,
+        offset: 0x2000,
+        size: 0x300,
+        raw_date: 0x1122_3344,
+        iteration: 9,
+    };
+    let mut file_bytes = vec![0u8; DatBTreeFile::SIZE];
+    assert!(file.pack(&mut DatBinWriter::new(&mut file_bytes)));
+    let mut unpacked_file = DatBTreeFile::default();
+    assert!(unpacked_file.unpack(&mut DatBinReader::new(&file_bytes)));
+    assert_eq!(file, unpacked_file);
+
+    let color = ColorARGB {
+        blue: 0x11,
+        green: 0x22,
+        red: 0x33,
+        alpha: 0x44,
+    };
+    let mut color_bytes = [0u8; 4];
+    assert!(color.pack(&mut DatBinWriter::new(&mut color_bytes)));
+    let mut unpacked_color = ColorARGB::default();
+    assert!(unpacked_color.unpack(&mut DatBinReader::new(&color_bytes)));
+    assert_eq!(color, unpacked_color);
+
+    let byte_string = PStringBase::<u8>::from("Portal");
+    let wide_string = PStringBase::<u16>::from("Dereth");
+    let mut byte_string_bytes = vec![0u8; 64];
+    let mut wide_string_bytes = vec![0u8; 64];
+    let byte_used = {
+        let mut writer = DatBinWriter::new(&mut byte_string_bytes);
+        assert!(byte_string.pack(&mut writer));
+        writer.offset()
+    };
+    let wide_used = {
+        let mut writer = DatBinWriter::new(&mut wide_string_bytes);
+        assert!(wide_string.pack(&mut writer));
+        writer.offset()
+    };
+    let mut unpacked_byte_string = PStringBase::<u8>::default();
+    let mut unpacked_wide_string = PStringBase::<u16>::default();
+    assert!(unpacked_byte_string.unpack(&mut DatBinReader::new(
+        &byte_string_bytes[..byte_used]
+    )));
+    assert!(unpacked_wide_string.unpack(&mut DatBinReader::new(
+        &wide_string_bytes[..wide_used]
+    )));
+    assert_eq!(byte_string, unpacked_byte_string);
+    assert_eq!(wide_string, unpacked_wide_string);
+
+    let qualified = QualifiedDataId::<Palette>::new(0x0400_4321);
+    let mut qualified_bytes = [0u8; 4];
+    assert!(qualified.pack(&mut DatBinWriter::new(&mut qualified_bytes)));
+    let mut unpacked_qualified = QualifiedDataId::<Palette>::default();
+    assert!(unpacked_qualified.unpack(&mut DatBinReader::new(&qualified_bytes)));
+    assert_eq!(qualified.data_id, unpacked_qualified.data_id);
+
+    let flags = DBObjHeaderFlags::HasId | DBObjHeaderFlags::HasDataCategory;
+    assert_eq!(0x03, flags.bits());
+}
+
+#[test]
 fn dat_database_can_read_typed_iteration() {
     let mut payload = [0u8; 12];
     let mut writer = DatBinWriter::new(&mut payload);
@@ -3087,6 +3194,46 @@ fn dat_database_can_read_palette_set_clothing_and_particle_emitter_info() {
     assert_eq!(ParticleType::Still, read_emitter.particle_type);
     assert_eq!(0x01000030, read_emitter.gfx_obj_id.data_id);
     assert!(read_emitter.is_parent_local);
+}
+
+#[test]
+fn pal_set_roundtrip_reads_palette_references() {
+    use dat_reader_writer::DBObjs::PalSet::PalSet;
+
+    let pal_set = PalSet {
+        base: DBObjBase {
+            id: 0x0F00_0010,
+            ..Default::default()
+        },
+        palettes: vec![
+            QualifiedDataId::new(0x0400_0010),
+            QualifiedDataId::new(0x0400_0011),
+            QualifiedDataId::new(0x0400_0012),
+        ],
+    };
+
+    let mut payload = vec![0u8; 128];
+    let mut writer = DatBinWriter::new(&mut payload);
+    assert!(pal_set.pack(&mut writer));
+    let used = writer.offset();
+
+    let path = unique_temp_file();
+    fs::write(
+        &path,
+        build_single_block_dat(DatFileType::Portal, 0x0F00_0010, &payload[..used]),
+    )
+    .unwrap();
+
+    let db = DatDatabase::new(DatDatabaseOptions {
+        file_path: path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+
+    let read_pal_set = db.try_get::<PalSet>(0x0F00_0010).unwrap().unwrap();
+    assert_eq!(0x0F00_0010, read_pal_set.base.id);
+    assert_eq!(3, read_pal_set.palettes.len());
+    assert_eq!(0x0400_0011, read_pal_set.palettes[1].data_id);
 }
 
 #[test]
