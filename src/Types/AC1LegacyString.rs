@@ -2,10 +2,17 @@ use crate::Lib::IO::{
     DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
     IUnpackable::IUnpackable,
 };
+use crate::Types::StringBase::StringBase;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct AC1LegacyString {
     pub value: String,
+}
+
+impl StringBase for AC1LegacyString {
+    fn value(&self) -> &str {
+        &self.value
+    }
 }
 
 impl IUnpackable for AC1LegacyString {

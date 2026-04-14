@@ -20,6 +20,10 @@ pub mod CombatTable;
 pub mod ContractTable;
 #[path = "DBProperties.rs"]
 pub mod DBProperties;
+#[path = "DataIdMapper.rs"]
+pub mod DataIdMapper;
+#[path = "DualDataIdMapper.rs"]
+pub mod DualDataIdMapper;
 #[path = "DualEnumIDMap.rs"]
 pub mod DualEnumIDMap;
 #[path = "EnumIDMap.rs"]

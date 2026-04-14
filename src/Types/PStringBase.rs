@@ -4,6 +4,7 @@ use crate::Lib::IO::{
     DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
     IUnpackable::IUnpackable,
 };
+use crate::Types::StringBase::StringBase;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct PStringBase<T> {
@@ -29,6 +30,12 @@ impl<T> From<&str> for PStringBase<T> {
 impl<T> From<String> for PStringBase<T> {
     fn from(value: String) -> Self {
         Self::new(value)
+    }
+}
+
+impl<T> StringBase for PStringBase<T> {
+    fn value(&self) -> &str {
+        &self.value
     }
 }
 

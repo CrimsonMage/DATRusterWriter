@@ -1456,6 +1456,74 @@ fn string_info_roundtrip_reads_override_and_table_link() {
 }
 
 #[test]
+fn string_base_helpers_match_expected_equality_and_hash_behavior() {
+    use dat_reader_writer::Types::StringBase::StringBase;
+
+    let packed = PStringBase::<u8>::from("Portal");
+    let legacy = AC1LegacyString {
+        value: "Portal".to_string(),
+    };
+    let empty = PStringBase::<u8>::from("");
+
+    assert!(packed.equals_string("Portal"));
+    assert!(legacy.equals_string("Portal"));
+    assert_eq!(packed.ac_string_hash(), legacy.ac_string_hash());
+    assert_eq!(0, empty.ac_string_hash());
+}
+
+#[test]
+fn string_info_base_property_roundtrip_reads_wrapper_payload() {
+    use dat_reader_writer::{
+        Generated::Enums::StringInfoOverrideFlag::StringInfoOverrideFlag,
+        Types::{
+            BaseProperty::{BaseProperty, BasePropertyHeader},
+            StringInfo::StringInfo,
+            StringInfoBaseProperty::StringInfoBaseProperty,
+        },
+    };
+
+    let property = StringInfoBaseProperty {
+        header: BasePropertyHeader {
+            master_property_id: 0x99,
+            should_pack_master_property_id: true,
+        },
+        value: StringInfo {
+            token: 12,
+            string_id: 0x0102_0304,
+            table_id: QualifiedDataId::new(0x23000001),
+            override_flag: StringInfoOverrideFlag::Literal,
+            english: 7,
+            comment: 8,
+        },
+    };
+
+    let mut bytes = vec![0u8; 64];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    assert!(property.pack(&mut writer));
+    let used = writer.offset();
+
+    let mut unpacked = StringInfoBaseProperty {
+        header: BasePropertyHeader {
+            master_property_id: property.header.master_property_id,
+            should_pack_master_property_id: true,
+        },
+        ..Default::default()
+    };
+    let mut reader = DatBinReader::new(&bytes[4..used]);
+    assert!(unpacked.unpack(&mut reader));
+    assert_eq!(12, unpacked.value.token);
+    assert_eq!(0x0102_0304, unpacked.value.string_id);
+    assert_eq!(0x23000001, unpacked.value.table_id.data_id);
+    assert_eq!(
+        BaseProperty::StringInfo {
+            header: property.header.clone(),
+            value: property.value.clone(),
+        },
+        unpacked.as_base_property()
+    );
+}
+
+#[test]
 fn media_desc_roundtrip_reads_multiple_variants() {
     use dat_reader_writer::{
         Generated::Enums::{
@@ -1691,4 +1759,153 @@ fn base_property_desc_roundtrip_reads_bounds_flags_and_available_properties() {
         BaseProperty::Integer { value, .. } => assert_eq!(100, value),
         other => panic!("unexpected property variant: {other:?}"),
     }
+}
+
+#[test]
+fn array_and_struct_base_property_wrappers_roundtrip() {
+    use std::{collections::BTreeMap, sync::Arc};
+
+    use dat_reader_writer::Types::{
+        ArrayBaseProperty::ArrayBaseProperty,
+        BaseProperty::{BaseProperty, BasePropertyHeader},
+        StringInfo::StringInfo,
+        StructBaseProperty::StructBaseProperty,
+    };
+
+    let array = ArrayBaseProperty {
+        header: BasePropertyHeader {
+            master_property_id: 0x1234,
+            should_pack_master_property_id: false,
+        },
+        value: vec![
+            BaseProperty::Integer {
+                header: BasePropertyHeader {
+                    master_property_id: 10,
+                    should_pack_master_property_id: true,
+                },
+                value: 42,
+            },
+            BaseProperty::Bool {
+                header: BasePropertyHeader {
+                    master_property_id: 11,
+                    should_pack_master_property_id: true,
+                },
+                value: true,
+            },
+        ],
+    };
+
+    let mut struct_value = BTreeMap::new();
+    struct_value.insert(
+        7,
+        BaseProperty::Integer {
+            header: BasePropertyHeader {
+                master_property_id: 12,
+                should_pack_master_property_id: true,
+            },
+            value: 77,
+        },
+    );
+    struct_value.insert(
+        8,
+        BaseProperty::StringInfo {
+            header: BasePropertyHeader {
+                master_property_id: 13,
+                should_pack_master_property_id: true,
+            },
+            value: StringInfo {
+                token: 5,
+                string_id: 0x0102_0304,
+                table_id: QualifiedDataId::new(0x2300_0001),
+                override_flag: dat_reader_writer::Generated::Enums::StringInfoOverrideFlag::StringInfoOverrideFlag::Literal,
+                english: 6,
+                comment: 7,
+            },
+        },
+    );
+    let structured = StructBaseProperty {
+        header: BasePropertyHeader {
+            master_property_id: 0x5678,
+            should_pack_master_property_id: false,
+        },
+        value: struct_value,
+    };
+
+    let mut array_bytes = vec![0u8; 256];
+    let mut array_writer = DatBinWriter::new(&mut array_bytes);
+    assert!(array.pack(&mut array_writer));
+    let array_used = array_writer.offset();
+
+    let mut struct_bytes = vec![0u8; 256];
+    let mut struct_writer = DatBinWriter::new(&mut struct_bytes);
+    assert!(structured.pack(&mut struct_writer));
+    let struct_used = struct_writer.offset();
+
+    let mut unpacked_array = ArrayBaseProperty {
+        header: BasePropertyHeader {
+            master_property_id: array.header.master_property_id,
+            should_pack_master_property_id: false,
+        },
+        ..Default::default()
+    };
+    let mut unpacked_struct = StructBaseProperty {
+        header: BasePropertyHeader {
+            master_property_id: structured.header.master_property_id,
+            should_pack_master_property_id: false,
+        },
+        ..Default::default()
+    };
+
+    let base_property_types = Arc::new(BTreeMap::from([
+        (
+            10_u32,
+            dat_reader_writer::Generated::Enums::BasePropertyType::BasePropertyType::Integer,
+        ),
+        (
+            11_u32,
+            dat_reader_writer::Generated::Enums::BasePropertyType::BasePropertyType::Bool,
+        ),
+        (
+            12_u32,
+            dat_reader_writer::Generated::Enums::BasePropertyType::BasePropertyType::Integer,
+        ),
+        (
+            13_u32,
+            dat_reader_writer::Generated::Enums::BasePropertyType::BasePropertyType::StringInfo,
+        ),
+    ]));
+
+    assert!(
+        unpacked_array.unpack(&mut DatBinReader::with_base_property_types(
+            &array_bytes[..array_used],
+            Some(base_property_types.clone()),
+        ))
+    );
+    assert!(
+        unpacked_struct.unpack(&mut DatBinReader::with_base_property_types(
+            &struct_bytes[..struct_used],
+            Some(base_property_types),
+        ))
+    );
+
+    assert_eq!(2, unpacked_array.value.len());
+    assert!(matches!(
+        unpacked_array.value[0],
+        BaseProperty::Integer { value: 42, .. }
+    ));
+    assert!(matches!(
+        unpacked_array.value[1],
+        BaseProperty::Bool { value: true, .. }
+    ));
+    assert_eq!(
+        Some(&77),
+        unpacked_struct.value.get(&7).and_then(|value| match value {
+            BaseProperty::Integer { value, .. } => Some(value),
+            _ => None,
+        })
+    );
+    assert!(matches!(
+        unpacked_struct.value.get(&8),
+        Some(BaseProperty::StringInfo { value, .. }) if value.token == 5 && value.table_id.data_id == 0x2300_0001
+    ));
 }

@@ -61,8 +61,8 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Options/DatCollectionOptions.cs` | `src/Options/DatCollectionOptions.rs` | Verified | Path and per-dat strategy overrides ported |
 | `DatReaderWriter/Lib/IO/IPackable.cs` | `src/Lib/IO/IPackable.rs` | Ported | Trait scaffolded for crate shape |
 | `DatReaderWriter/Lib/IO/IUnpackable.cs` | `src/Lib/IO/IUnpackable.rs` | Ported | Trait scaffolded for crate shape |
-| `DatReaderWriter/Lib/IO/IDBObj.cs` | `src/Lib/IO/IDBObj.rs` | Partial | Expanded into typed DB object trait with metadata hooks |
-| `DatReaderWriter/Lib/IO/ObjectFactory.cs` | `src/Lib/IO/ObjectFactory.rs` | Partial | Minimal generic constructor helper only |
+| `DatReaderWriter/Lib/IO/IDBObj.cs` | `src/Lib/IO/IDBObj.rs` | Verified | Trait now exposes header flags, DBObj type, id, and data-category access directly, with focused object-factory tests covering header-flag and data-category behavior on typed boxed DBObjs |
+| `DatReaderWriter/Lib/IO/ObjectFactory.cs` | `src/Lib/IO/ObjectFactory.rs` | Verified | Generic constructor helper now also provides explicit boxed DBObj creation by `DBObjType` and source id, with focused dispatch tests across portal/local/cell types |
 | `DatReaderWriter/Lib/IO/DatBinReader.cs` | `src/Lib/IO/DatBinReader.rs` | Verified | Primitive reader, seeking, and remaining-byte helpers ported and tested |
 | `DatReaderWriter/Lib/IO/DatBinWriter.cs` | `src/Lib/IO/DatBinWriter.rs` | Verified | Retained mainly for parity and self-tests |
 | `DatReaderWriter/Lib/IO/DatHeader.cs` | `src/Lib/IO/DatHeader.rs` | Verified | Header model and pack/unpack tested |
@@ -78,6 +78,7 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Lib/DBObjAttributeCache.cs` | `src/Lib/DBObjAttributeCache.rs` | Partial | Ported objects now resolve through a shared Rust attribute list with tested singular/range lookup; broader generated coverage remains pending |
 | `DatReaderWriter/Types/DBObj.cs` | `src/Types/DBObj.rs` | Partial | Rust DB object base abstraction |
 | DatReaderWriter/Types/AC1LegacyPStringBase.cs | src/Types/AC1LegacyString.rs | Partial | Byte-string read path only |
+| `DatReaderWriter/Types/StringBase.cs` | `src/Types/StringBase.rs` | Verified | Shared string-base helper trait now mirrors the source file's equality and AC string-hash behavior and is covered by focused tests across packed and legacy string types |
 | DatReaderWriter/Types/PStringBase.cs | src/Types/PStringBase.rs | Ported | Generic packed string primitive for byte and UTF-16 string payloads |
 | `DatReaderWriter/Generated/Types/ColorARGB.generated.cs` | `src/Types/ColorARGB.rs` | Ported | Color primitive |
 | `DatReaderWriter/Types/QualifiedDataId.cs` | `src/Types/QualifiedDataId.rs` | Ported | Generic data-id wrapper with collection-backed typed resolution helpers |
@@ -334,7 +335,9 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/Enums/PropertyPropagationType.generated.cs` | `src/Generated/Enums/PropertyPropagationType.rs` | Ported | Property descriptor propagation enum |
 | external retail DAT validation | `tests/real_dat_validation_tests.rs` | Verified | Live validation continues to pass against retail DATs in `C:\Turbine\Asheron's call\` via `DAT_READER_WRITER_REAL_DAT_DIR`, without hardcoding the path into the crate |
 | tracker recovery | `PORTING_STATUS.md` | Verified | Main tracker restored from the last good snapshot and updated with post-snapshot work |
-| `DatReaderWriter/Types/BaseProperty.cs` | `src/Types/BaseProperty.rs` | Partial | `MasterProperty`-driven generic unpack is now ported for current read paths, including array/struct and several raw property variants, but the full long-tail property surface still remains |
+| `DatReaderWriter/Types/BaseProperty.cs` | `src/Types/BaseProperty.rs` | Partial | `MasterProperty`-driven generic unpack is now ported for current read paths, including array/struct and several raw property variants, but the broader long-tail property resolution surface still remains |
+| `DatReaderWriter/Types/ArrayBaseProperty.cs` | `src/Types/ArrayBaseProperty.rs` | Verified | Explicit array property wrapper now mirrors the source file shape and is covered by focused roundtrip tests on nested master-property payloads |
+| `DatReaderWriter/Types/StructBaseProperty.cs` | `src/Types/StructBaseProperty.rs` | Verified | Explicit struct property wrapper now mirrors the source file shape and is covered by focused roundtrip tests on keyed nested property payloads |
 | `DatReaderWriter/Generated/Types/BoolBaseProperty.generated.cs` | `src/Types/BoolBaseProperty.rs` | Verified | Explicit scalar bool property wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
 | `DatReaderWriter/Generated/Types/IntegerBaseProperty.generated.cs` | `src/Types/IntegerBaseProperty.rs` | Verified | Explicit scalar integer property wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
 | `DatReaderWriter/Generated/Types/FloatBaseProperty.generated.cs` | `src/Types/FloatBaseProperty.rs` | Verified | Explicit scalar float property wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
@@ -345,7 +348,7 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/Types/InstanceIdBaseProperty.generated.cs` | `src/Types/InstanceIdBaseProperty.rs` | Verified | Explicit instance-id property wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
 | `DatReaderWriter/Generated/Types/Bitfield32BaseProperty.generated.cs` | `src/Types/Bitfield32BaseProperty.rs` | Verified | Explicit 32-bit bitfield property wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
 | `DatReaderWriter/Generated/Types/Bitfield64BaseProperty.generated.cs` | `src/Types/Bitfield64BaseProperty.rs` | Verified | Explicit 64-bit bitfield property wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
-| `DatReaderWriter/Generated/Types/StringInfoBaseProperty.generated.cs` | `src/Types/StringInfoBaseProperty.rs` | Partial | Explicit `StringInfo` property wrapper is ported on top of the new base-property foundation |
+| `DatReaderWriter/Generated/Types/StringInfoBaseProperty.generated.cs` | `src/Types/StringInfoBaseProperty.rs` | Verified | Explicit `StringInfo` property wrapper now roundtrips as its own file surface and is covered by focused tests on the wrapper payload plus base-property conversion |
 | `DatReaderWriter/Generated/Types/Waveform.generated.cs` | `src/Types/Waveform.rs` | Verified | Explicit waveform byte wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
 | `DatReaderWriter/Generated/Types/PortalPoly.generated.cs` | `src/Types/PortalPoly.rs` | Verified | Explicit portal-polygon link payload now mirrors the generated file shape and is covered by focused roundtrip tests |
 | `DatReaderWriter/Generated/Types/MaterialLayer.generated.cs` | `src/Types/MaterialLayer.rs` | Verified | Explicit material-layer payload now mirrors the generated file shape and is covered by focused roundtrip tests |
@@ -365,6 +368,26 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/Types/AnimationDoneHook.generated.cs` | `src/Types/AnimationDoneHook.rs` | Verified | Explicit animation-done-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
 | `DatReaderWriter/Generated/Types/ReplaceObjectHook.generated.cs` | `src/Types/ReplaceObjectHook.rs` | Verified | Explicit replace-object-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
 | `DatReaderWriter/Generated/Types/EtherealHook.generated.cs` | `src/Types/EtherealHook.rs` | Verified | Explicit ethereal-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/TransparentHook.generated.cs` | `src/Types/TransparentHook.rs` | Verified | Explicit transparent-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/TransparentPartHook.generated.cs` | `src/Types/TransparentPartHook.rs` | Verified | Explicit transparent-part-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/LuminousHook.generated.cs` | `src/Types/LuminousHook.rs` | Verified | Explicit luminous-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/LuminousPartHook.generated.cs` | `src/Types/LuminousPartHook.rs` | Verified | Explicit luminous-part-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/DiffuseHook.generated.cs` | `src/Types/DiffuseHook.rs` | Verified | Explicit diffuse-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/DiffusePartHook.generated.cs` | `src/Types/DiffusePartHook.rs` | Verified | Explicit diffuse-part-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/ScaleHook.generated.cs` | `src/Types/ScaleHook.rs` | Verified | Explicit scale-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/DestroyParticleHook.generated.cs` | `src/Types/DestroyParticleHook.rs` | Verified | Explicit destroy-particle-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/StopParticleHook.generated.cs` | `src/Types/StopParticleHook.rs` | Verified | Explicit stop-particle-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/NoDrawHook.generated.cs` | `src/Types/NoDrawHook.rs` | Verified | Explicit no-draw-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/DefaultScriptHook.generated.cs` | `src/Types/DefaultScriptHook.rs` | Verified | Explicit default-script-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/DefaultScriptPartHook.generated.cs` | `src/Types/DefaultScriptPartHook.rs` | Verified | Explicit default-script-part-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/CallPESHook.generated.cs` | `src/Types/CallPESHook.rs` | Verified | Explicit call-PES-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/SetOmegaHook.generated.cs` | `src/Types/SetOmegaHook.rs` | Verified | Explicit set-omega-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/TextureVelocityHook.generated.cs` | `src/Types/TextureVelocityHook.rs` | Verified | Explicit texture-velocity-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/TextureVelocityPartHook.generated.cs` | `src/Types/TextureVelocityPartHook.rs` | Verified | Explicit texture-velocity-part-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/SetLightHook.generated.cs` | `src/Types/SetLightHook.rs` | Verified | Explicit set-light-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/CreateBlockingParticleHook.generated.cs` | `src/Types/CreateBlockingParticleHook.rs` | Verified | Explicit create-blocking-particle-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/CreateParticleHook.generated.cs` | `src/Types/CreateParticleHook.rs` | Verified | Explicit create-particle-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
+| `DatReaderWriter/Generated/Types/SoundTweakedHook.generated.cs` | `src/Types/SoundTweakedHook.rs` | Verified | Explicit sound-tweaked-hook wrapper now mirrors the generated file shape and is covered by focused roundtrip tests against the shared hook payload |
 | `DatReaderWriter/Types/BasePropertyDesc.cs` | `src/Types/BasePropertyDesc.rs` | Partial | Property descriptor records now unpack/pack current scalar-bound/default metadata, but broader `MasterProperty` consumers are still pending |
 | `DatReaderWriter/Generated/Enums/RMDataType.generated.cs` | `src/Generated/Enums/RMDataType.rs` | Ported | Explicit render-material data-type enum mirrored from the reference |
 | `DatReaderWriter/Generated/Enums/RenderPassType.generated.cs` | `src/Generated/Enums/RenderPassType.rs` | Verified | Full named render-pass constant surface now mirrors the generated reference and is exercised in the enum-surface test |
@@ -380,6 +403,8 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/DBObjs/GfxObjDegradeInfo.generated.cs` | `src/DBObjs/GfxObjDegradeInfo.rs` | Verified | Explicit degrade-info DBObj now reads typed degrade entries and is validated against retail DATs |
 | `DatReaderWriter/Generated/DBObjs/QualityFilter.generated.cs` | `src/DBObjs/QualityFilter.rs` | Verified | Explicit quality-filter DBObj now reads all stat-filter arrays and is validated against retail DATs |
 | `DatReaderWriter/Generated/DBObjs/SpellComponentTable.generated.cs` | `src/DBObjs/SpellComponentTable.rs` | Verified | Explicit spell-component table DBObj now reads typed packable component entries and is validated against retail DATs |
+| `DatReaderWriter/Generated/DBObjs/DataIdMapper.generated.cs` | `src/DBObjs/DataIdMapper.rs` | Verified | Explicit data-id mapper DBObj now mirrors the generated file shape and is covered by focused typed-read tests; it intentionally coexists with the overlapping `EnumIDMap` alias range |
+| `DatReaderWriter/Generated/DBObjs/DualDataIdMapper.generated.cs` | `src/DBObjs/DualDataIdMapper.rs` | Verified | Explicit dual data-id mapper DBObj now mirrors the generated file shape and is covered by focused typed-read tests; it intentionally coexists with the overlapping `DualEnumIDMap` alias range |
 | `DatReaderWriter/Types/AC1LegacyPStringBase.cs` | `src/Types/AC1LegacyPStringBase.rs` | Verified | Explicit AC1 legacy packed string compatibility wrapper now mirrors the current byte-string read/write format used by contract records |
 | `DatReaderWriter/Generated/Types/Contract.generated.cs` | `src/Types/Contract.rs` | Verified | Explicit contract payload now reads quest strings and positions and is covered by focused tests |
 | `DatReaderWriter/Generated/Types/TabooTableEntry.generated.cs` | `src/Types/TabooTableEntry.rs` | Verified | Explicit taboo-entry payload now reads the key, flag, and banned pattern list and is covered by focused tests |
@@ -432,10 +457,10 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 
 ## Updated Remaining Major Areas
 
-- Remaining base-property variants and the broader `MasterProperty`/property-description pipeline beyond the current `DBProperties` and `LayoutDesc` read paths
-- Remaining generated DBObjs outside the current asset, gameplay, CharGen, string, language, first material/render, degrade/filter/spell-component, and bad-data/contract/taboo subsets
-- Remaining generated Types outside the currently ported dependency tree
-- `DBObjAttributeCache` coverage beyond the currently ported Rust DBObj set, including broader Local and Cell coverage
+- Remaining broader `MasterProperty`/property-description pipeline parity beyond the current `DBProperties` and `LayoutDesc` read paths
+- Remaining generated DBObjs outside the current asset, gameplay, cell/runtime, CharGen, string/language, material/render, degrade/filter/spell-component, mapper, and table/resource subsets
+- Remaining partial infrastructure rows such as `IDBObj`, allocator/database write-path breadth, and broader generic container parity
+- `DBObjAttributeCache` coverage beyond the currently ported Rust DBObj set, including wider Local and Cell coverage
 - Generated database readers
 - Any broader write-path parity not directly needed for client read support
 - Broader real-DAT validation coverage as more DBObjs/types are added

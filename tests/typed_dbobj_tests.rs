@@ -9,6 +9,7 @@ use dat_reader_writer::{
     DBObjs::{
         ActionMap::ActionMap, BadDataTable::BadDataTable, ChatPoseTable::ChatPoseTable,
         Clothing::Clothing, ContractTable::ContractTable, DBProperties::DBProperties,
+        DataIdMapper::DataIdMapper, DualDataIdMapper::DualDataIdMapper,
         DualEnumIDMap::DualEnumIDMap, EnumIDMap::EnumIDMap, EnumMapper::EnumMapper,
         EnvCell::EnvCell, Environment::Environment, Font::Font,
         GfxObjDegradeInfo::GfxObjDegradeInfo, Iteration::Iteration, LandBlock::LandBlock,
@@ -41,8 +42,8 @@ use dat_reader_writer::{
     Types::{
         AC1LegacyPStringBase::AC1LegacyPStringBase,
         ActionMapValue::ActionMapValue,
-        AnimationHook::AnimationHook,
         AnimationDoneHook::AnimationDoneHook,
+        AnimationHook::AnimationHook,
         AttackCone::AttackCone,
         AttackHook::AttackHook,
         AutoGrowHashTable::AutoGrowHashTable,
@@ -56,14 +57,22 @@ use dat_reader_writer::{
         BuildingInfo::BuildingInfo,
         BuildingPortal::BuildingPortal,
         CInputMap::CInputMap,
+        CallPESHook::CallPESHook,
         CellPortal::CellPortal,
         CellStruct::CellStruct,
         ChatEmoteData::ChatEmoteData,
         ColorARGB::ColorARGB,
         ColorBaseProperty::ColorBaseProperty,
         Contract::Contract,
+        CreateBlockingParticleHook::CreateBlockingParticleHook,
+        CreateParticleHook::CreateParticleHook,
         DataIdBaseProperty::DataIdBaseProperty,
+        DefaultScriptHook::DefaultScriptHook,
+        DefaultScriptPartHook::DefaultScriptPartHook,
+        DestroyParticleHook::DestroyParticleHook,
         DeviceKeyMapEntry::DeviceKeyMapEntry,
+        DiffuseHook::DiffuseHook,
+        DiffusePartHook::DiffusePartHook,
         ElementDesc::ElementDesc,
         EnumBaseProperty::EnumBaseProperty,
         EnumMapperData::EnumMapperData,
@@ -81,9 +90,12 @@ use dat_reader_writer::{
         LM_UVTranslate::LM_UVTranslate,
         LayerModifier::LayerModifier,
         LayerStage::LayerStage,
+        LuminousHook::LuminousHook,
+        LuminousPartHook::LuminousPartHook,
         MaterialLayer::MaterialLayer,
         MaterialProperty::MaterialProperty,
         NameFilterLanguageData::NameFilterLanguageData,
+        NoDrawHook::NoDrawHook,
         ObfuscatedPStringBase::ObfuscatedPStringBase,
         ObjHierarchyNode::ObjHierarchyNode,
         PHashTable::PHashTable,
@@ -94,20 +106,29 @@ use dat_reader_writer::{
         QualifiedControl::QualifiedControl,
         QualifiedDataId::QualifiedDataId,
         ReplaceObjectHook::ReplaceObjectHook,
+        ScaleHook::ScaleHook,
+        SetLightHook::SetLightHook,
+        SetOmegaHook::SetOmegaHook,
         ShaderResourceEntry::ShaderResourceEntry,
         SoundHook::SoundHook,
         SoundTableHook::SoundTableHook,
+        SoundTweakedHook::SoundTweakedHook,
         SpellBase::SpellBase,
         SpellComponentBase::SpellComponentBase,
         SpellSet::SpellSet,
         SpellSetTiers::SpellSetTiers,
         Stab::Stab,
         StateDesc::StateDesc,
+        StopParticleHook::StopParticleHook,
         StringTableString::StringTableString,
         SubPalette::SubPalette,
         TabooTableEntry::TabooTableEntry,
         TerrainInfo::TerrainInfo,
         TextureMapChange::TextureMapChange,
+        TextureVelocityHook::TextureVelocityHook,
+        TextureVelocityPartHook::TextureVelocityPartHook,
+        TransparentHook::TransparentHook,
+        TransparentPartHook::TransparentPartHook,
         UserBindingData::UserBindingData,
         VectorBaseProperty::VectorBaseProperty,
         Waveform::Waveform,
@@ -495,6 +516,51 @@ fn db_obj_attribute_cache_tracks_current_ported_dbobjs() {
             .iter()
             .any(|attr| attr.db_obj_type == DBObjType::TabooTable)
     );
+}
+
+#[test]
+fn object_factory_creates_boxed_dbobjs_from_type_and_id() {
+    let from_type = dat_reader_writer::Lib::IO::ObjectFactory::create_boxed(DBObjType::Iteration)
+        .expect("factory should create Iteration");
+    assert_eq!(DBObjType::Iteration, from_type.db_obj_type());
+    assert_eq!(
+        dat_reader_writer::Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags::None,
+        from_type.header_flags()
+    );
+    assert!(from_type.as_any().is::<Iteration>());
+
+    let mut from_portal_id = dat_reader_writer::Lib::IO::ObjectFactory::create_boxed_from_id(
+        DatFileType::Portal,
+        0x1500_0010,
+    )
+    .expect("factory should resolve RenderTexture");
+    assert_eq!(DBObjType::RenderTexture, from_portal_id.db_obj_type());
+    assert_eq!(
+        dat_reader_writer::Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags::from_bits_retain(
+            dat_reader_writer::Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags::HasId.bits()
+                | dat_reader_writer::Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags::HasDataCategory.bits()
+        ),
+        from_portal_id.header_flags()
+    );
+    from_portal_id.set_data_category(7);
+    assert_eq!(7, from_portal_id.data_category());
+    assert!(from_portal_id.as_any().is::<RenderTexture>());
+
+    let from_local_id = dat_reader_writer::Lib::IO::ObjectFactory::create_boxed_from_id(
+        DatFileType::Local,
+        0x2100_0010,
+    )
+    .expect("factory should resolve LayoutDesc");
+    assert_eq!(DBObjType::LayoutDesc, from_local_id.db_obj_type());
+    assert!(from_local_id.as_any().is::<LayoutDesc>());
+
+    let from_cell_id = dat_reader_writer::Lib::IO::ObjectFactory::create_boxed_from_id(
+        DatFileType::Cell,
+        0x0001_FFFF,
+    )
+    .expect("factory should resolve LandBlock");
+    assert_eq!(DBObjType::LandBlock, from_cell_id.db_obj_type());
+    assert!(from_cell_id.as_any().is::<LandBlock>());
 }
 
 #[test]
@@ -953,6 +1019,34 @@ fn dat_database_can_read_enum_mapper_family() {
         server_enum_to_name: server_name_map,
         ..Default::default()
     };
+    let data_id_mapper = DataIdMapper {
+        client_id_numbering_type: NumberingType::NORMAL,
+        client_enum_to_id: std::collections::BTreeMap::from([(14, 0x05000030)]),
+        client_name_numbering_type: NumberingType::NORMAL,
+        client_enum_to_name: std::collections::BTreeMap::from([(15, String::from("did-client"))]),
+        server_id_numbering_type: NumberingType::NORMAL,
+        server_enum_to_id: std::collections::BTreeMap::from([(16, 0x05000040)]),
+        server_name_numbering_type: NumberingType::NORMAL,
+        server_enum_to_name: std::collections::BTreeMap::from([(17, String::from("did-server"))]),
+        ..Default::default()
+    };
+    let dual_data_id_mapper = DualDataIdMapper {
+        client_id_numbering_type: NumberingType::NORMAL,
+        client_enum_to_id: std::collections::BTreeMap::from([(24, 0x05000050)]),
+        client_name_numbering_type: NumberingType::NORMAL,
+        client_enum_to_name: std::collections::BTreeMap::from([(
+            25,
+            String::from("dual-did-client"),
+        )]),
+        server_id_numbering_type: NumberingType::NORMAL,
+        server_enum_to_id: std::collections::BTreeMap::from([(26, 0x05000060)]),
+        server_name_numbering_type: NumberingType::NORMAL,
+        server_enum_to_name: std::collections::BTreeMap::from([(
+            27,
+            String::from("dual-did-server"),
+        )]),
+        ..Default::default()
+    };
 
     let mut enum_id_payload = vec![0u8; 512];
     let mut writer = DatBinWriter::new(&mut enum_id_payload);
@@ -964,9 +1058,21 @@ fn dat_database_can_read_enum_mapper_family() {
     assert!(dual_enum_id_map.pack(&mut writer));
     let dual_enum_id_used = writer.offset();
 
+    let mut data_id_payload = vec![0u8; 512];
+    let mut writer = DatBinWriter::new(&mut data_id_payload);
+    assert!(data_id_mapper.pack(&mut writer));
+    let data_id_used = writer.offset();
+
+    let mut dual_data_id_payload = vec![0u8; 512];
+    let mut writer = DatBinWriter::new(&mut dual_data_id_payload);
+    assert!(dual_data_id_mapper.pack(&mut writer));
+    let dual_data_id_used = writer.offset();
+
     let mapper_path = unique_temp_file();
     let enum_id_path = unique_temp_file();
     let dual_enum_id_path = unique_temp_file();
+    let data_id_path = unique_temp_file();
+    let dual_data_id_path = unique_temp_file();
 
     fs::write(
         &mapper_path,
@@ -987,11 +1093,29 @@ fn dat_database_can_read_enum_mapper_family() {
     )
     .unwrap();
     fs::write(
+        &data_id_path,
+        build_single_block_dat(
+            DatFileType::Portal,
+            0x25000011,
+            &data_id_payload[..data_id_used],
+        ),
+    )
+    .unwrap();
+    fs::write(
         &dual_enum_id_path,
         build_single_block_dat(
             DatFileType::Portal,
             0x27000010,
             &dual_enum_id_payload[..dual_enum_id_used],
+        ),
+    )
+    .unwrap();
+    fs::write(
+        &dual_data_id_path,
+        build_single_block_dat(
+            DatFileType::Portal,
+            0x27000011,
+            &dual_data_id_payload[..dual_data_id_used],
         ),
     )
     .unwrap();
@@ -1008,6 +1132,16 @@ fn dat_database_can_read_enum_mapper_family() {
     .unwrap();
     let dual_enum_id_db = DatDatabase::new(DatDatabaseOptions {
         file_path: dual_enum_id_path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+    let data_id_db = DatDatabase::new(DatDatabaseOptions {
+        file_path: data_id_path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+    let dual_data_id_db = DatDatabase::new(DatDatabaseOptions {
+        file_path: dual_data_id_path.to_string_lossy().to_string(),
         ..DatDatabaseOptions::default()
     })
     .unwrap();
@@ -1037,6 +1171,34 @@ fn dat_database_can_read_enum_mapper_family() {
     assert_eq!(
         "server",
         read_dual_enum_id.server_enum_to_name.get(&3).unwrap()
+    );
+
+    let read_data_id = data_id_db
+        .try_get::<DataIdMapper>(0x25000011)
+        .unwrap()
+        .unwrap();
+    assert_eq!(Some(&0x05000030), read_data_id.client_enum_to_id.get(&14));
+    assert_eq!(
+        "did-client",
+        read_data_id.client_enum_to_name.get(&15).unwrap()
+    );
+    assert_eq!(Some(&0x05000040), read_data_id.server_enum_to_id.get(&16));
+    assert_eq!(
+        "did-server",
+        read_data_id.server_enum_to_name.get(&17).unwrap()
+    );
+
+    let read_dual_data_id = dual_data_id_db
+        .try_get::<DualDataIdMapper>(0x27000011)
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        Some(&0x05000050),
+        read_dual_data_id.client_enum_to_id.get(&24)
+    );
+    assert_eq!(
+        "dual-did-server",
+        read_dual_data_id.server_enum_to_name.get(&27).unwrap()
     );
 }
 
@@ -3026,5 +3188,236 @@ fn generated_hook_wrappers_roundtrip_first_batch() {
     assert!(matches!(
         enum_replace,
         AnimationHook::ReplaceObject { part_index, .. } if part_index == 5
+    ));
+}
+
+#[test]
+fn generated_hook_wrappers_roundtrip_second_batch() {
+    use dat_reader_writer::Generated::Enums::AnimationHookDir::AnimationHookDir;
+
+    let transparent_hook = TransparentHook {
+        direction: AnimationHookDir::FORWARD,
+        start: 0.1,
+        end: 0.2,
+        time: 0.3,
+    };
+    let transparent_part_hook = TransparentPartHook {
+        direction: AnimationHookDir::BACKWARD,
+        part_index: 9,
+        start: 0.4,
+        end: 0.5,
+        time: 0.6,
+    };
+    let luminous_hook = LuminousHook {
+        direction: AnimationHookDir::FORWARD,
+        start: 1.1,
+        end: 1.2,
+        time: 1.3,
+    };
+    let luminous_part_hook = LuminousPartHook {
+        direction: AnimationHookDir::BACKWARD,
+        part_index: 10,
+        start: 1.4,
+        end: 1.5,
+        time: 1.6,
+    };
+    let diffuse_hook = DiffuseHook {
+        direction: AnimationHookDir::FORWARD,
+        start: 2.1,
+        end: 2.2,
+        time: 2.3,
+    };
+    let diffuse_part_hook = DiffusePartHook {
+        direction: AnimationHookDir::BACKWARD,
+        part_index: 11,
+        start: 2.4,
+        end: 2.5,
+        time: 2.6,
+    };
+    let scale_hook = ScaleHook {
+        direction: AnimationHookDir::FORWARD,
+        end: 3.2,
+        time: 3.3,
+    };
+    let destroy_hook = DestroyParticleHook {
+        direction: AnimationHookDir::FORWARD,
+        emitter_id: 12,
+    };
+    let stop_hook = StopParticleHook {
+        direction: AnimationHookDir::BACKWARD,
+        emitter_id: 13,
+    };
+    let no_draw_hook = NoDrawHook {
+        direction: AnimationHookDir::FORWARD,
+        no_draw: true,
+    };
+    let default_script_hook = DefaultScriptHook {
+        direction: AnimationHookDir::BOTH,
+    };
+    let default_script_part_hook = DefaultScriptPartHook {
+        direction: AnimationHookDir::FORWARD,
+        part_index: 14,
+    };
+    let call_pes_hook = CallPESHook {
+        direction: AnimationHookDir::BACKWARD,
+        pes: 15,
+        pause: 4.5,
+    };
+    let set_omega_hook = SetOmegaHook {
+        direction: AnimationHookDir::FORWARD,
+        axis: dat_reader_writer::Lib::IO::Numerics::Vector3::new(7.0, 8.0, 9.0),
+    };
+    let texture_velocity_hook = TextureVelocityHook {
+        direction: AnimationHookDir::FORWARD,
+        u_speed: 5.1,
+        v_speed: 5.2,
+    };
+    let texture_velocity_part_hook = TextureVelocityPartHook {
+        direction: AnimationHookDir::BACKWARD,
+        part_index: 16,
+        u_speed: 5.3,
+        v_speed: 5.4,
+    };
+    let set_light_hook = SetLightHook {
+        direction: AnimationHookDir::FORWARD,
+        lights_on: true,
+    };
+    let create_blocking_hook = CreateBlockingParticleHook {
+        direction: AnimationHookDir::BOTH,
+    };
+
+    fn roundtrip_bytes<T: IPackable + IUnpackable + Default>(value: &T, size: usize) -> T {
+        let mut bytes = vec![0u8; size];
+        let mut writer = DatBinWriter::new(&mut bytes);
+        assert!(value.pack(&mut writer));
+        let used = writer.offset();
+        let mut unpacked = T::default();
+        assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
+        unpacked
+    }
+
+    let unpacked_transparent = roundtrip_bytes(&transparent_hook, 32);
+    let unpacked_transparent_part = roundtrip_bytes(&transparent_part_hook, 32);
+    let unpacked_luminous = roundtrip_bytes(&luminous_hook, 32);
+    let unpacked_luminous_part = roundtrip_bytes(&luminous_part_hook, 32);
+    let unpacked_diffuse = roundtrip_bytes(&diffuse_hook, 32);
+    let unpacked_diffuse_part = roundtrip_bytes(&diffuse_part_hook, 32);
+    let unpacked_scale = roundtrip_bytes(&scale_hook, 24);
+    let unpacked_destroy = roundtrip_bytes(&destroy_hook, 16);
+    let unpacked_stop = roundtrip_bytes(&stop_hook, 16);
+    let unpacked_no_draw = roundtrip_bytes(&no_draw_hook, 16);
+    let unpacked_default_script = roundtrip_bytes(&default_script_hook, 16);
+    let unpacked_default_script_part = roundtrip_bytes(&default_script_part_hook, 16);
+    let unpacked_call_pes = roundtrip_bytes(&call_pes_hook, 24);
+    let unpacked_set_omega = roundtrip_bytes(&set_omega_hook, 24);
+    let unpacked_texture_velocity = roundtrip_bytes(&texture_velocity_hook, 24);
+    let unpacked_texture_velocity_part = roundtrip_bytes(&texture_velocity_part_hook, 24);
+    let unpacked_set_light = roundtrip_bytes(&set_light_hook, 16);
+    let unpacked_create_blocking = roundtrip_bytes(&create_blocking_hook, 16);
+
+    assert_eq!(9, unpacked_transparent_part.part_index);
+    assert_eq!(1.3, unpacked_luminous.time);
+    assert_eq!(10, unpacked_luminous_part.part_index);
+    assert_eq!(2.2, unpacked_diffuse.end);
+    assert_eq!(11, unpacked_diffuse_part.part_index);
+    assert_eq!(3.2, unpacked_scale.end);
+    assert_eq!(12, unpacked_destroy.emitter_id);
+    assert_eq!(13, unpacked_stop.emitter_id);
+    assert!(unpacked_no_draw.no_draw);
+    assert_eq!(14, unpacked_default_script_part.part_index);
+    assert_eq!(15, unpacked_call_pes.pes);
+    assert_eq!(
+        dat_reader_writer::Lib::IO::Numerics::Vector3::new(7.0, 8.0, 9.0),
+        unpacked_set_omega.axis
+    );
+    assert_eq!(5.1, unpacked_texture_velocity.u_speed);
+    assert_eq!(16, unpacked_texture_velocity_part.part_index);
+    assert!(unpacked_set_light.lights_on);
+    assert_eq!(AnimationHookDir::BOTH, unpacked_create_blocking.direction);
+
+    let mut enum_no_draw = AnimationHook::default();
+    let mut bytes = vec![0u8; 16];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    assert!(no_draw_hook.pack(&mut writer));
+    let used = writer.offset();
+    assert!(enum_no_draw.unpack(&mut DatBinReader::new(&bytes[..used])));
+    assert!(matches!(
+        enum_no_draw,
+        AnimationHook::NoDraw { no_draw, .. } if no_draw
+    ));
+
+    let _ = unpacked_transparent;
+    let _ = unpacked_default_script;
+}
+
+#[test]
+fn generated_hook_wrappers_roundtrip_final_batch() {
+    use dat_reader_writer::Generated::Enums::AnimationHookDir::AnimationHookDir;
+
+    let create_particle_hook = CreateParticleHook {
+        direction: AnimationHookDir::FORWARD,
+        emitter_info_id: QualifiedDataId::new(0x3200_0010),
+        part_index: 17,
+        offset: Frame {
+            origin: dat_reader_writer::Lib::IO::Numerics::Vector3::new(1.0, 2.0, 3.0),
+            orientation: dat_reader_writer::Lib::IO::Numerics::Quaternion::new(0.0, 0.0, 0.0, 1.0),
+        },
+        emitter_id: 18,
+    };
+    let sound_tweaked_hook = SoundTweakedHook {
+        direction: AnimationHookDir::BACKWARD,
+        sound_id: QualifiedDataId::new(0x0A00_0020),
+        priority: 6.1,
+        probability: 6.2,
+        volume: 6.3,
+    };
+
+    let mut create_particle_bytes = vec![0u8; 64];
+    let mut create_particle_writer = DatBinWriter::new(&mut create_particle_bytes);
+    assert!(create_particle_hook.pack(&mut create_particle_writer));
+    let create_particle_used = create_particle_writer.offset();
+
+    let mut sound_tweaked_bytes = vec![0u8; 32];
+    let mut sound_tweaked_writer = DatBinWriter::new(&mut sound_tweaked_bytes);
+    assert!(sound_tweaked_hook.pack(&mut sound_tweaked_writer));
+    let sound_tweaked_used = sound_tweaked_writer.offset();
+
+    let mut unpacked_create_particle = CreateParticleHook::default();
+    let mut unpacked_sound_tweaked = SoundTweakedHook::default();
+
+    assert!(unpacked_create_particle.unpack(&mut DatBinReader::new(
+        &create_particle_bytes[..create_particle_used]
+    )));
+    assert!(unpacked_sound_tweaked.unpack(&mut DatBinReader::new(
+        &sound_tweaked_bytes[..sound_tweaked_used]
+    )));
+
+    assert_eq!(
+        0x3200_0010,
+        unpacked_create_particle.emitter_info_id.data_id
+    );
+    assert_eq!(17, unpacked_create_particle.part_index);
+    assert_eq!(18, unpacked_create_particle.emitter_id);
+    assert_eq!(0x0A00_0020, unpacked_sound_tweaked.sound_id.data_id);
+    assert_eq!(6.1, unpacked_sound_tweaked.priority);
+    assert_eq!(6.2, unpacked_sound_tweaked.probability);
+    assert_eq!(6.3, unpacked_sound_tweaked.volume);
+
+    let mut enum_create_particle = AnimationHook::default();
+    assert!(enum_create_particle.unpack(&mut DatBinReader::new(
+        &create_particle_bytes[..create_particle_used]
+    )));
+    assert!(matches!(
+        enum_create_particle,
+        AnimationHook::CreateParticle { part_index, .. } if part_index == 17
+    ));
+
+    let mut enum_sound_tweaked = AnimationHook::default();
+    assert!(enum_sound_tweaked.unpack(&mut DatBinReader::new(
+        &sound_tweaked_bytes[..sound_tweaked_used]
+    )));
+    assert!(matches!(
+        enum_sound_tweaked,
+        AnimationHook::SoundTweaked { priority, .. } if (priority - 6.1).abs() < f32::EPSILON
     ));
 }

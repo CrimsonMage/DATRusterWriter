@@ -3,6 +3,7 @@ use dat_reader_writer::{
         ActionMap::ActionMap, Animation::Animation, BadDataTable::BadDataTable, CharGen::CharGen,
         ChatPoseTable::ChatPoseTable, Clothing::Clothing, ClothingTable::ClothingTable,
         CombatTable::CombatTable, ContractTable::ContractTable, DBProperties::DBProperties,
+        DataIdMapper::DataIdMapper, DualDataIdMapper::DualDataIdMapper,
         DualEnumIDMap::DualEnumIDMap, EnumIDMap::EnumIDMap, EnvCell::EnvCell,
         Environment::Environment, ExperienceTable::ExperienceTable, Font::Font, GfxObj::GfxObj,
         GfxObjDegradeInfo::GfxObjDegradeInfo, Iteration::Iteration, LandBlock::LandBlock,
@@ -106,7 +107,9 @@ fn validates_ported_types_against_real_dats() {
     validate_sample::<MaterialModifier>(&collection, 3);
     validate_sample::<MaterialInstance>(&collection, 3);
     validate_sample::<EnumIDMap>(&collection, 1);
+    validate_sample::<DataIdMapper>(&collection, 1);
     validate_sample::<DualEnumIDMap>(&collection, 1);
+    validate_sample::<DualDataIdMapper>(&collection, 1);
     validate_sample::<ActionMap>(&collection, 1);
     validate_sample::<DBProperties>(&collection, 1);
     validate_sample::<Environment>(&collection, 1);
