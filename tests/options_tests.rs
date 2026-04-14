@@ -1,4 +1,4 @@
-use dat_reader_writer::Options::{
+use dat_ruster_writer::Options::{
     DatAccessType::DatAccessType, DatCollectionOptions::DatCollectionOptions,
     DatDatabaseOptions::DatDatabaseOptions, FileCachingStrategy::FileCachingStrategy,
     IndexCachingStrategy::IndexCachingStrategy,

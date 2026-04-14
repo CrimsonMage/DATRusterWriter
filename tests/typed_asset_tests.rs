@@ -1,4 +1,4 @@
-use dat_reader_writer::{
+use dat_ruster_writer::{
     DBObjs::{
         CharGen::CharGen, GfxObj::GfxObj, MotionTable::MotionTable, Palette::Palette,
         ParticleEmitter::ParticleEmitter, PhysicsScript::PhysicsScript, Region::Region,
@@ -527,7 +527,7 @@ fn physics_script_roundtrip_reads_mixed_hooks() {
 
 #[test]
 fn sound_table_roundtrip_reads_hashes_and_entries() {
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         DBObjs::SoundTable::SoundTable,
         Types::{SoundData::SoundData, SoundEntry::SoundEntry, SoundHashData::SoundHashData},
     };
@@ -579,7 +579,7 @@ fn sound_table_roundtrip_reads_hashes_and_entries() {
 
 #[test]
 fn physics_script_table_roundtrip_reads_script_map() {
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         DBObjs::PhysicsScriptTable::PhysicsScriptTable,
         Generated::Enums::PlayScript::PlayScript,
         Types::{
@@ -629,7 +629,7 @@ fn physics_script_table_roundtrip_reads_script_map() {
 
 #[test]
 fn animation_roundtrip_reads_pos_frames_and_hooks() {
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         DBObjs::Animation::Animation, Generated::Enums::AnimationFlags::AnimationFlags,
         Types::AnimationFrame::AnimationFrame,
     };
@@ -668,8 +668,8 @@ fn animation_roundtrip_reads_pos_frames_and_hooks() {
 
 #[test]
 fn setup_roundtrip_reads_optional_arrays_and_default_refs() {
-    use dat_reader_writer::Lib::IO::Numerics::Vector3;
-    use dat_reader_writer::{
+    use dat_ruster_writer::Lib::IO::Numerics::Vector3;
+    use dat_ruster_writer::{
         DBObjs::Setup::Setup,
         Generated::Enums::{
             ParentLocation::ParentLocation, Placement::Placement, SetupFlags::SetupFlags,
@@ -795,7 +795,7 @@ fn obj_desc_roundtrip_reads_palette_texture_and_animation_changes() {
             new_texture: PackedQualifiedDataId::new(0x05000021),
         }],
         anim_part_changes: vec![
-            dat_reader_writer::Types::AnimationPartChange::AnimationPartChange {
+            dat_ruster_writer::Types::AnimationPartChange::AnimationPartChange {
                 part_index: 5,
                 part_id: PackedQualifiedDataId::new(0x01000030),
             },
@@ -818,8 +818,8 @@ fn obj_desc_roundtrip_reads_palette_texture_and_animation_changes() {
 
 #[test]
 fn char_gen_roundtrip_reads_heritage_groups() {
-    use dat_reader_writer::Types::GearCG::GearCG;
-    use dat_reader_writer::Types::HairStyleCG::HairStyleCG;
+    use dat_ruster_writer::Types::GearCG::GearCG;
+    use dat_ruster_writer::Types::HairStyleCG::HairStyleCG;
 
     let mut genders = HashTable::<i32, SexCG>::default();
     genders.insert(
@@ -849,7 +849,7 @@ fn char_gen_roundtrip_reads_heritage_groups() {
                     new_texture: PackedQualifiedDataId::new(0x05000023),
                 }],
                 anim_part_changes: vec![
-                    dat_reader_writer::Types::AnimationPartChange::AnimationPartChange {
+                    dat_ruster_writer::Types::AnimationPartChange::AnimationPartChange {
                         part_index: 5,
                         part_id: PackedQualifiedDataId::new(0x01000024),
                     },
@@ -960,9 +960,9 @@ fn char_gen_roundtrip_reads_heritage_groups() {
 
 #[test]
 fn drawing_bsp_portal_roundtrip_reads_children_polygons_and_portals() {
-    use dat_reader_writer::Generated::Enums::BSPNodeType::BSPNodeType;
-    use dat_reader_writer::Lib::IO::Numerics::{Plane, Vector3};
-    use dat_reader_writer::Types::{
+    use dat_ruster_writer::Generated::Enums::BSPNodeType::BSPNodeType;
+    use dat_ruster_writer::Lib::IO::Numerics::{Plane, Vector3};
+    use dat_ruster_writer::Types::{
         BSPTrees::{DrawingBSPNode, DrawingBSPTree},
         PortalRef::PortalRef,
         Sphere::Sphere,
@@ -1023,8 +1023,8 @@ fn drawing_bsp_portal_roundtrip_reads_children_polygons_and_portals() {
 
 #[test]
 fn physics_bsp_portal_nodes_are_rejected_like_reference() {
-    use dat_reader_writer::Generated::Enums::BSPNodeType::BSPNodeType;
-    use dat_reader_writer::Types::BSPTrees::PhysicsBSPNode;
+    use dat_ruster_writer::Generated::Enums::BSPNodeType::BSPNodeType;
+    use dat_ruster_writer::Types::BSPTrees::PhysicsBSPNode;
 
     let mut bytes = vec![0u8; 8];
     let mut writer = DatBinWriter::new(&mut bytes);
@@ -1037,9 +1037,9 @@ fn physics_bsp_portal_nodes_are_rejected_like_reference() {
 
 #[test]
 fn gfx_obj_roundtrip_reads_physics_drawing_and_degrade() {
-    use dat_reader_writer::Generated::Enums::BSPNodeType::BSPNodeType;
-    use dat_reader_writer::Lib::IO::Numerics::{Plane, Vector3};
-    use dat_reader_writer::Types::{
+    use dat_ruster_writer::Generated::Enums::BSPNodeType::BSPNodeType;
+    use dat_ruster_writer::Lib::IO::Numerics::{Plane, Vector3};
+    use dat_ruster_writer::Types::{
         BSPTrees::{DrawingBSPNode, DrawingBSPTree, PhysicsBSPNode, PhysicsBSPTree},
         Sphere::Sphere,
     };
@@ -1155,7 +1155,7 @@ fn generated_enum_surfaces_cover_remaining_skill_terrain_and_asset_constants() {
 
 #[test]
 fn clothing_table_roundtrip_reads_base_and_subpal_effects() {
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         DBObjs::ClothingTable::ClothingTable,
         Types::{
             CloObjectEffect::CloObjectEffect, CloSubPalEffect::CloSubPalEffect,
@@ -1238,7 +1238,7 @@ fn clothing_table_roundtrip_reads_base_and_subpal_effects() {
 
 #[test]
 fn combat_table_roundtrip_reads_maneuvers() {
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         DBObjs::CombatTable::CombatTable,
         Generated::Enums::{
             AttackHeight::AttackHeight, AttackType::AttackType, MotionStance::MotionStance,
@@ -1279,7 +1279,7 @@ fn combat_table_roundtrip_reads_maneuvers() {
 
 #[test]
 fn vital_table_roundtrip_reads_formulas() {
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         DBObjs::VitalTable::VitalTable, Generated::Enums::AttributeId::AttributeId,
         Types::SkillFormula::SkillFormula,
     };
@@ -1327,7 +1327,7 @@ fn vital_table_roundtrip_reads_formulas() {
 
 #[test]
 fn skill_table_roundtrip_reads_skill_entries() {
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         DBObjs::RenderSurface::RenderSurface,
         DBObjs::SkillTable::SkillTable,
         Generated::Enums::{
@@ -1391,7 +1391,7 @@ fn skill_table_roundtrip_reads_skill_entries() {
 
 #[test]
 fn experience_table_roundtrip_reads_progression_arrays() {
-    use dat_reader_writer::DBObjs::ExperienceTable::ExperienceTable;
+    use dat_ruster_writer::DBObjs::ExperienceTable::ExperienceTable;
 
     let table = ExperienceTable {
         attributes: vec![0, 10, 20, 30],
@@ -1419,7 +1419,7 @@ fn experience_table_roundtrip_reads_progression_arrays() {
 
 #[test]
 fn string_info_roundtrip_reads_override_and_table_link() {
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         Generated::Enums::StringInfoOverrideFlag::StringInfoOverrideFlag,
         Types::StringInfo::StringInfo,
     };
@@ -1457,14 +1457,14 @@ fn string_info_roundtrip_reads_override_and_table_link() {
 
 #[test]
 fn string_base_helpers_match_expected_equality_and_hash_behavior() {
-    use dat_reader_writer::Types::StringBase::StringBase;
+    use dat_ruster_writer::Types::StringBase::StringBase;
 
     let packed = PStringBase::<u8>::from("Portal");
     let legacy = AC1LegacyString {
         value: "Portal".to_string(),
     };
     let legacy_packed_u8 =
-        dat_reader_writer::Types::AC1LegacyPStringBase::AC1LegacyPStringBase::<u8>::from("Portal");
+        dat_ruster_writer::Types::AC1LegacyPStringBase::AC1LegacyPStringBase::<u8>::from("Portal");
     let empty = PStringBase::<u8>::from("");
 
     assert!(packed.equals_string("Portal"));
@@ -1477,7 +1477,7 @@ fn string_base_helpers_match_expected_equality_and_hash_behavior() {
 
 #[test]
 fn ac1_legacy_pstring_base_roundtrips_byte_and_u16_payloads() {
-    use dat_reader_writer::Types::AC1LegacyPStringBase::AC1LegacyPStringBase;
+    use dat_ruster_writer::Types::AC1LegacyPStringBase::AC1LegacyPStringBase;
 
     let byte_value = AC1LegacyPStringBase::<u8>::from("Portal");
     let wide_value = AC1LegacyPStringBase::<u16>::from("Dereth");
@@ -1503,7 +1503,7 @@ fn ac1_legacy_pstring_base_roundtrips_byte_and_u16_payloads() {
 
 #[test]
 fn string_info_base_property_roundtrip_reads_wrapper_payload() {
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         Generated::Enums::StringInfoOverrideFlag::StringInfoOverrideFlag,
         Types::{
             BaseProperty::{BaseProperty, BasePropertyHeader},
@@ -1555,7 +1555,7 @@ fn string_info_base_property_roundtrip_reads_wrapper_payload() {
 
 #[test]
 fn media_desc_roundtrip_reads_multiple_variants() {
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         Generated::Enums::{
             DrawModeType::DrawModeType, MediaType::MediaType, UIStateId::UIStateId,
         },
@@ -1609,7 +1609,7 @@ fn media_desc_roundtrip_reads_multiple_variants() {
 
 #[test]
 fn base_property_roundtrip_reads_string_info_and_scalar_variants() {
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         Generated::Enums::BasePropertyType::BasePropertyType,
         Lib::IO::Numerics::Vector3,
         Types::{
@@ -1654,7 +1654,7 @@ fn base_property_roundtrip_reads_string_info_and_scalar_variants() {
                 token: 9,
                 string_id: 0x100,
                 table_id: QualifiedDataId::new(0x23000001),
-                override_flag: dat_reader_writer::Generated::Enums::StringInfoOverrideFlag::StringInfoOverrideFlag::Literal,
+                override_flag: dat_ruster_writer::Generated::Enums::StringInfoOverrideFlag::StringInfoOverrideFlag::Literal,
                 english: 1,
                 comment: 0,
             },
@@ -1718,7 +1718,7 @@ fn base_property_roundtrip_reads_string_info_and_scalar_variants() {
 fn base_property_roundtrip_reads_remaining_supported_variants() {
     use std::{collections::BTreeMap, sync::Arc};
 
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         Generated::Enums::BasePropertyType::BasePropertyType,
         Lib::IO::Numerics::{Quaternion, Vector3},
         Types::{
@@ -1972,7 +1972,7 @@ fn base_property_roundtrip_reads_remaining_supported_variants() {
 fn base_property_desc_roundtrip_reads_bounds_flags_and_available_properties() {
     use std::collections::BTreeMap;
 
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         Generated::Enums::{
             BasePropertyType::BasePropertyType, PatchFlags::PatchFlags,
             PropertyCachingType::PropertyCachingType, PropertyDatFileType::PropertyDatFileType,
@@ -2047,7 +2047,7 @@ fn base_property_desc_roundtrip_reads_bounds_flags_and_available_properties() {
 
 #[test]
 fn base_property_desc_roundtrip_reads_empty_optional_values() {
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         Generated::Enums::{
             BasePropertyType::BasePropertyType, PropertyCachingType::PropertyCachingType,
             PropertyDatFileType::PropertyDatFileType, PropertyGroupName::PropertyGroupName,
@@ -2102,7 +2102,7 @@ fn base_property_desc_roundtrip_reads_empty_optional_values() {
 fn array_and_struct_base_property_wrappers_roundtrip() {
     use std::{collections::BTreeMap, sync::Arc};
 
-    use dat_reader_writer::Types::{
+    use dat_ruster_writer::Types::{
         ArrayBaseProperty::ArrayBaseProperty,
         BaseProperty::{BaseProperty, BasePropertyHeader},
         StringInfo::StringInfo,
@@ -2154,7 +2154,7 @@ fn array_and_struct_base_property_wrappers_roundtrip() {
                 token: 5,
                 string_id: 0x0102_0304,
                 table_id: QualifiedDataId::new(0x2300_0001),
-                override_flag: dat_reader_writer::Generated::Enums::StringInfoOverrideFlag::StringInfoOverrideFlag::Literal,
+                override_flag: dat_ruster_writer::Generated::Enums::StringInfoOverrideFlag::StringInfoOverrideFlag::Literal,
                 english: 6,
                 comment: 7,
             },
@@ -2196,19 +2196,19 @@ fn array_and_struct_base_property_wrappers_roundtrip() {
     let base_property_types = Arc::new(BTreeMap::from([
         (
             10_u32,
-            dat_reader_writer::Generated::Enums::BasePropertyType::BasePropertyType::Integer,
+            dat_ruster_writer::Generated::Enums::BasePropertyType::BasePropertyType::Integer,
         ),
         (
             11_u32,
-            dat_reader_writer::Generated::Enums::BasePropertyType::BasePropertyType::Bool,
+            dat_ruster_writer::Generated::Enums::BasePropertyType::BasePropertyType::Bool,
         ),
         (
             12_u32,
-            dat_reader_writer::Generated::Enums::BasePropertyType::BasePropertyType::Integer,
+            dat_ruster_writer::Generated::Enums::BasePropertyType::BasePropertyType::Integer,
         ),
         (
             13_u32,
-            dat_reader_writer::Generated::Enums::BasePropertyType::BasePropertyType::StringInfo,
+            dat_ruster_writer::Generated::Enums::BasePropertyType::BasePropertyType::StringInfo,
         ),
     ]));
 

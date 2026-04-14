@@ -6,7 +6,7 @@ use std::{
 
 use futures::executor::block_on;
 
-use dat_reader_writer::{
+use dat_ruster_writer::{
     Generated::Enums::DatFileType::DatFileType,
     Lib::IO::{
         BlockAllocators::IDatBlockAllocator::IDatBlockAllocator,
@@ -311,9 +311,9 @@ fn btree_node_pack_unpack_roundtrip_for_leaf_and_branching_metadata() {
 
     let bytes = encode_node(&node);
     let mut unpacked = DatBTreeNode::new(100);
-    let ok = dat_reader_writer::Lib::IO::IUnpackable::IUnpackable::unpack(
+    let ok = dat_ruster_writer::Lib::IO::IUnpackable::IUnpackable::unpack(
         &mut unpacked,
-        &mut dat_reader_writer::Lib::IO::DatBinReader::DatBinReader::new(&bytes),
+        &mut dat_ruster_writer::Lib::IO::DatBinReader::DatBinReader::new(&bytes),
     );
     assert!(ok);
     assert_eq!(1, unpacked.file_count);

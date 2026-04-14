@@ -7,7 +7,7 @@ use std::{
 
 use futures::executor::block_on;
 
-use dat_reader_writer::{
+use dat_ruster_writer::{
     DBObjs::{
         ActionMap::ActionMap, BadDataTable::BadDataTable, ChatPoseTable::ChatPoseTable,
         Clothing::Clothing, ContractTable::ContractTable, DBProperties::DBProperties,
@@ -147,7 +147,7 @@ fn unique_temp_dir() -> PathBuf {
         .unwrap()
         .as_nanos();
     let counter = UNIQUE_TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
-    let dir = std::env::temp_dir().join(format!("dat_reader_writer_typed_{stamp}_{counter}"));
+    let dir = std::env::temp_dir().join(format!("dat_ruster_writer_typed_{stamp}_{counter}"));
     fs::create_dir_all(&dir).unwrap();
     dir
 }
@@ -159,7 +159,7 @@ fn unique_temp_file() -> PathBuf {
         .as_nanos();
     let counter = UNIQUE_TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
     let dir = std::env::temp_dir();
-    dir.join(format!("dat_reader_writer_typed_{stamp}_{counter}.dat"))
+    dir.join(format!("dat_ruster_writer_typed_{stamp}_{counter}.dat"))
 }
 
 fn build_single_block_dat(dat_file_type: DatFileType, file_id: u32, payload: &[u8]) -> Vec<u8> {
@@ -181,9 +181,9 @@ fn build_single_block_dat(dat_file_type: DatFileType, file_id: u32, payload: &[u
     header.file_size = (file_offset + block_size) as i32;
 
     let mut root_node =
-        dat_reader_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::new(root_offset as i32);
+        dat_ruster_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::new(root_offset as i32);
     root_node.file_count = 1;
-    root_node.files[0] = dat_reader_writer::Lib::IO::DatBTree::DatBTreeFile::DatBTreeFile {
+    root_node.files[0] = dat_ruster_writer::Lib::IO::DatBTree::DatBTreeFile::DatBTreeFile {
         version: 2,
         id: file_id,
         offset: file_offset as i32,
@@ -196,7 +196,7 @@ fn build_single_block_dat(dat_file_type: DatFileType, file_id: u32, payload: &[u
     assert!(header.pack(&mut DatBinWriter::new(&mut bytes[..DatHeader::SIZE])));
 
     let mut node_bytes =
-        vec![0u8; dat_reader_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::SIZE];
+        vec![0u8; dat_ruster_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::SIZE];
     assert!(root_node.pack(&mut DatBinWriter::new(&mut node_bytes)));
     bytes[root_offset + 4..root_offset + 4 + node_bytes.len()].copy_from_slice(&node_bytes);
     bytes[file_offset + 4..file_offset + 4 + payload.len()].copy_from_slice(payload);
@@ -224,10 +224,10 @@ fn build_multi_block_dat(dat_file_type: DatFileType, entries: &[(u32, Vec<u8>)])
     header.file_size = total_len as i32;
 
     let mut root_node =
-        dat_reader_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::new(root_offset as i32);
+        dat_ruster_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::new(root_offset as i32);
     root_node.file_count = entries.len();
     for (index, (file_id, payload)) in entries.iter().enumerate() {
-        root_node.files[index] = dat_reader_writer::Lib::IO::DatBTree::DatBTreeFile::DatBTreeFile {
+        root_node.files[index] = dat_ruster_writer::Lib::IO::DatBTree::DatBTreeFile::DatBTreeFile {
             version: 2,
             id: *file_id,
             offset: (first_file_offset + (index * block_size)) as i32,
@@ -241,7 +241,7 @@ fn build_multi_block_dat(dat_file_type: DatFileType, entries: &[(u32, Vec<u8>)])
     assert!(header.pack(&mut DatBinWriter::new(&mut bytes[..DatHeader::SIZE])));
 
     let mut node_bytes =
-        vec![0u8; dat_reader_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::SIZE];
+        vec![0u8; dat_ruster_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::SIZE];
     assert!(root_node.pack(&mut DatBinWriter::new(&mut node_bytes)));
     bytes[root_offset + 4..root_offset + 4 + node_bytes.len()].copy_from_slice(&node_bytes);
 
@@ -254,7 +254,7 @@ fn build_multi_block_dat(dat_file_type: DatFileType, entries: &[(u32, Vec<u8>)])
 }
 
 fn node_bytes_len() -> usize {
-    dat_reader_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::SIZE
+    dat_ruster_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::SIZE
 }
 
 #[test]
@@ -559,25 +559,25 @@ fn db_obj_attribute_cache_maps_types_to_dbobj_types_and_masks() {
 
 #[test]
 fn object_factory_creates_boxed_dbobjs_from_type_and_id() {
-    let from_type = dat_reader_writer::Lib::IO::ObjectFactory::create_boxed(DBObjType::Iteration)
+    let from_type = dat_ruster_writer::Lib::IO::ObjectFactory::create_boxed(DBObjType::Iteration)
         .expect("factory should create Iteration");
     assert_eq!(DBObjType::Iteration, from_type.db_obj_type());
     assert_eq!(
-        dat_reader_writer::Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags::None,
+        dat_ruster_writer::Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags::None,
         from_type.header_flags()
     );
     assert!(from_type.as_any().is::<Iteration>());
 
-    let mut from_portal_id = dat_reader_writer::Lib::IO::ObjectFactory::create_boxed_from_id(
+    let mut from_portal_id = dat_ruster_writer::Lib::IO::ObjectFactory::create_boxed_from_id(
         DatFileType::Portal,
         0x1500_0010,
     )
     .expect("factory should resolve RenderTexture");
     assert_eq!(DBObjType::RenderTexture, from_portal_id.db_obj_type());
     assert_eq!(
-        dat_reader_writer::Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags::from_bits_retain(
-            dat_reader_writer::Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags::HasId.bits()
-                | dat_reader_writer::Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags::HasDataCategory.bits()
+        dat_ruster_writer::Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags::from_bits_retain(
+            dat_ruster_writer::Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags::HasId.bits()
+                | dat_ruster_writer::Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags::HasDataCategory.bits()
         ),
         from_portal_id.header_flags()
     );
@@ -585,7 +585,7 @@ fn object_factory_creates_boxed_dbobjs_from_type_and_id() {
     assert_eq!(7, from_portal_id.data_category());
     assert!(from_portal_id.as_any().is::<RenderTexture>());
 
-    let from_local_id = dat_reader_writer::Lib::IO::ObjectFactory::create_boxed_from_id(
+    let from_local_id = dat_ruster_writer::Lib::IO::ObjectFactory::create_boxed_from_id(
         DatFileType::Local,
         0x2100_0010,
     )
@@ -593,7 +593,7 @@ fn object_factory_creates_boxed_dbobjs_from_type_and_id() {
     assert_eq!(DBObjType::LayoutDesc, from_local_id.db_obj_type());
     assert!(from_local_id.as_any().is::<LayoutDesc>());
 
-    let from_cell_id = dat_reader_writer::Lib::IO::ObjectFactory::create_boxed_from_id(
+    let from_cell_id = dat_ruster_writer::Lib::IO::ObjectFactory::create_boxed_from_id(
         DatFileType::Cell,
         0x0001_FFFF,
     )
@@ -604,7 +604,7 @@ fn object_factory_creates_boxed_dbobjs_from_type_and_id() {
 
 #[test]
 fn dbobj_base_pack_unpack_matches_header_flag_behavior() {
-    use dat_reader_writer::Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags;
+    use dat_ruster_writer::Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags;
 
     let flags = DBObjHeaderFlags::from_bits_retain(
         DBObjHeaderFlags::HasId.bits() | DBObjHeaderFlags::HasDataCategory.bits(),
@@ -635,7 +635,7 @@ fn dbobj_base_pack_unpack_matches_header_flag_behavior() {
 
 #[test]
 fn foundational_enum_and_flag_surfaces_are_stable() {
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         Generated::Enums::{
             AnimationHookDir::AnimationHookDir, AnimationHookType::AnimationHookType,
             DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType,
@@ -668,7 +668,7 @@ fn foundational_enum_and_flag_surfaces_are_stable() {
 
 #[test]
 fn foundational_wire_types_roundtrip_cleanly() {
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         DBObjs::Palette::Palette,
         Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags,
         Lib::IO::DatBTree::{
@@ -939,7 +939,7 @@ fn db_obj_attribute_cache_tracks_new_gameplay_table_ports() {
 
 #[test]
 fn dat_database_can_read_typed_vital_table() {
-    use dat_reader_writer::{
+    use dat_ruster_writer::{
         DBObjs::VitalTable::VitalTable, Generated::Enums::AttributeId::AttributeId,
         Types::SkillFormula::SkillFormula,
     };
@@ -987,7 +987,7 @@ fn db_obj_attribute_cache_resolves_experience_table() {
 
 #[test]
 fn dat_database_can_read_typed_experience_table() {
-    use dat_reader_writer::DBObjs::ExperienceTable::ExperienceTable;
+    use dat_ruster_writer::DBObjs::ExperienceTable::ExperienceTable;
 
     let experience = ExperienceTable {
         attributes: vec![0, 10, 20],
@@ -1426,7 +1426,7 @@ fn dat_database_can_read_enum_mapper_family() {
 
 #[test]
 fn dat_database_can_read_render_material_family() {
-    use dat_reader_writer::Generated::Enums::{RMDataType::RMDataType, TextureType::TextureType};
+    use dat_ruster_writer::Generated::Enums::{RMDataType::RMDataType, TextureType::TextureType};
 
     let render_texture = RenderTexture {
         texture_type: TextureType::TEXTURE2D,
@@ -1582,7 +1582,7 @@ fn dat_database_can_read_render_material_family() {
 
 #[test]
 fn dat_database_can_read_action_map_and_master_property() {
-    use dat_reader_writer::Generated::Enums::{
+    use dat_ruster_writer::Generated::Enums::{
         BasePropertyType::BasePropertyType, PatchFlags::PatchFlags,
         PropertyCachingType::PropertyCachingType, PropertyDatFileType::PropertyDatFileType,
         PropertyGroupName::PropertyGroupName, PropertyInheritanceType::PropertyInheritanceType,
@@ -1752,7 +1752,7 @@ fn dat_database_can_read_action_map_and_master_property() {
 
 #[test]
 fn dat_database_can_write_master_property_and_read_it_back() {
-    use dat_reader_writer::Generated::Enums::{
+    use dat_ruster_writer::Generated::Enums::{
         BasePropertyType::BasePropertyType, PatchFlags::PatchFlags,
         PropertyCachingType::PropertyCachingType, PropertyDatFileType::PropertyDatFileType,
         PropertyGroupName::PropertyGroupName, PropertyInheritanceType::PropertyInheritanceType,
@@ -1872,7 +1872,7 @@ fn dat_database_can_write_and_read_compressed_file_bytes() {
 
     let entry = db.try_get_file_entry(0x0400_0010).unwrap().unwrap();
     assert!(entry.flags.contains(
-        dat_reader_writer::Lib::IO::DatBTree::DatBTreeFileFlags::DatBTreeFileFlags::IsCompressed
+        dat_ruster_writer::Lib::IO::DatBTree::DatBTreeFileFlags::DatBTreeFileFlags::IsCompressed
     ));
     assert_eq!(2, entry.iteration);
 
@@ -1885,7 +1885,7 @@ fn dat_database_can_write_and_read_compressed_file_bytes() {
 
 #[test]
 fn dat_database_can_write_with_template_metadata() {
-    use dat_reader_writer::Lib::IO::DatBTree::{
+    use dat_ruster_writer::Lib::IO::DatBTree::{
         DatBTreeFile::DatBTreeFile, DatBTreeFileFlags::DatBTreeFileFlags,
     };
 
@@ -1975,7 +1975,7 @@ fn dat_database_async_file_byte_paths_match_sync_behavior() {
         0x0500_0099,
         &payload,
         payload.len(),
-        dat_reader_writer::Lib::IO::DatBTree::DatBTreeFile::DatBTreeFile {
+        dat_ruster_writer::Lib::IO::DatBTree::DatBTreeFile::DatBTreeFile {
             version: 3,
             iteration: 4,
             ..Default::default()
@@ -2002,7 +2002,7 @@ fn dat_collection_can_read_db_properties_and_layout_desc() {
         0x10,
         BasePropertyDesc {
             property_type:
-                dat_reader_writer::Generated::Enums::BasePropertyType::BasePropertyType::Integer,
+                dat_ruster_writer::Generated::Enums::BasePropertyType::BasePropertyType::Integer,
             ..Default::default()
         },
     );
@@ -2010,7 +2010,7 @@ fn dat_collection_can_read_db_properties_and_layout_desc() {
         0x11,
         BasePropertyDesc {
             property_type:
-                dat_reader_writer::Generated::Enums::BasePropertyType::BasePropertyType::Struct,
+                dat_ruster_writer::Generated::Enums::BasePropertyType::BasePropertyType::Struct,
             ..Default::default()
         },
     );
@@ -2018,7 +2018,7 @@ fn dat_collection_can_read_db_properties_and_layout_desc() {
         0x12,
         BasePropertyDesc {
             property_type:
-                dat_reader_writer::Generated::Enums::BasePropertyType::BasePropertyType::Array,
+                dat_ruster_writer::Generated::Enums::BasePropertyType::BasePropertyType::Array,
             ..Default::default()
         },
     );
@@ -2223,8 +2223,8 @@ fn dat_collection_can_read_db_properties_and_layout_desc() {
 
 #[test]
 fn dat_database_can_read_cell_environment_types() {
-    use dat_reader_writer::Generated::Enums::BSPNodeType::BSPNodeType;
-    use dat_reader_writer::Lib::IO::Numerics::{Plane, Quaternion, Vector3};
+    use dat_ruster_writer::Generated::Enums::BSPNodeType::BSPNodeType;
+    use dat_ruster_writer::Lib::IO::Numerics::{Plane, Quaternion, Vector3};
 
     let frame = Frame {
         origin: Vector3::new(1.0, 2.0, 3.0),
@@ -2278,11 +2278,11 @@ fn dat_database_can_read_cell_environment_types() {
     let mut terrain = [TerrainInfo::default(); 81];
     terrain[0].set_road(2);
     terrain[0].set_terrain_type(
-        dat_reader_writer::Generated::Enums::TerrainTextureType::TerrainTextureType::LUSH_GRASS,
+        dat_ruster_writer::Generated::Enums::TerrainTextureType::TerrainTextureType::LUSH_GRASS,
     );
     terrain[0].set_scenery(7);
     terrain[1].set_terrain_type(
-        dat_reader_writer::Generated::Enums::TerrainTextureType::TerrainTextureType::SAND_YELLOW,
+        dat_ruster_writer::Generated::Enums::TerrainTextureType::TerrainTextureType::SAND_YELLOW,
     );
     let mut height = [0u8; 81];
     height[0] = 9;
@@ -2295,7 +2295,7 @@ fn dat_database_can_read_cell_environment_types() {
     };
 
     let env_cell = EnvCell {
-        base: dat_reader_writer::Types::DBObj::DBObjBase {
+        base: dat_ruster_writer::Types::DBObj::DBObjBase {
             id: 0x0001_0123,
             ..Default::default()
         },
@@ -2459,8 +2459,8 @@ fn dat_database_can_read_cell_environment_types() {
 
 #[test]
 fn dat_database_can_read_degrade_quality_and_spell_component_tables() {
-    use dat_reader_writer::Generated::Enums::ComponentType::ComponentType;
-    use dat_reader_writer::Types::GfxObjInfo::GfxObjInfo;
+    use dat_ruster_writer::Generated::Enums::ComponentType::ComponentType;
+    use dat_ruster_writer::Types::GfxObjInfo::GfxObjInfo;
 
     let gfx_obj_degrade_info = GfxObjDegradeInfo {
         degrades: vec![GfxObjInfo {
@@ -2488,7 +2488,7 @@ fn dat_database_can_read_degrade_quality_and_spell_component_tables() {
         ..Default::default()
     };
 
-    let mut components = dat_reader_writer::Types::PackableHashTable::PackableHashTable::<
+    let mut components = dat_ruster_writer::Types::PackableHashTable::PackableHashTable::<
         u32,
         SpellComponentBase,
     >::default();
@@ -2631,7 +2631,7 @@ fn dat_database_can_read_spell_table() {
     };
 
     let mut spells =
-        dat_reader_writer::Types::PackableHashTable::PackableHashTable::<u32, SpellBase>::default();
+        dat_ruster_writer::Types::PackableHashTable::PackableHashTable::<u32, SpellBase>::default();
     spells.insert(1, spell);
 
     let mut spell_set_tiers = PHashTable::<u32, SpellSetTiers>::default();
@@ -2701,7 +2701,7 @@ fn dat_database_can_read_spell_table() {
 
 #[test]
 fn dat_database_can_read_bad_contract_and_taboo_tables() {
-    let mut bad_ids = dat_reader_writer::Types::PackableHashTable::PackableHashTable::<
+    let mut bad_ids = dat_ruster_writer::Types::PackableHashTable::PackableHashTable::<
         QualifiedDataId<BadDataTable>,
         u32,
     >::default();
@@ -2712,7 +2712,7 @@ fn dat_database_can_read_bad_contract_and_taboo_tables() {
     };
 
     let mut contracts =
-        dat_reader_writer::Types::PackableHashTable::PackableHashTable::<u32, Contract>::default();
+        dat_ruster_writer::Types::PackableHashTable::PackableHashTable::<u32, Contract>::default();
     contracts.insert(
         1,
         Contract {
@@ -2732,8 +2732,8 @@ fn dat_database_can_read_bad_contract_and_taboo_tables() {
             location_npc_start: Position {
                 cell_id: 1,
                 frame: Frame {
-                    origin: dat_reader_writer::Lib::IO::Numerics::Vector3::new(1.0, 2.0, 3.0),
-                    orientation: dat_reader_writer::Lib::IO::Numerics::Quaternion::new(
+                    origin: dat_ruster_writer::Lib::IO::Numerics::Vector3::new(1.0, 2.0, 3.0),
+                    orientation: dat_ruster_writer::Lib::IO::Numerics::Quaternion::new(
                         0.0, 0.0, 0.0, 1.0,
                     ),
                 },
@@ -2842,7 +2842,7 @@ fn dat_database_can_read_bad_contract_and_taboo_tables() {
 
 #[test]
 fn dat_database_can_read_chat_pose_table() {
-    let mut chat_poses = dat_reader_writer::Types::PackableHashTable::PackableHashTable::<
+    let mut chat_poses = dat_ruster_writer::Types::PackableHashTable::PackableHashTable::<
         AC1LegacyPStringBase<u8>,
         AC1LegacyPStringBase<u8>,
     >::default();
@@ -2851,7 +2851,7 @@ fn dat_database_can_read_chat_pose_table() {
         AC1LegacyPStringBase::from("anim_wave"),
     );
 
-    let mut chat_emotes = dat_reader_writer::Types::PackableHashTable::PackableHashTable::<
+    let mut chat_emotes = dat_ruster_writer::Types::PackableHashTable::PackableHashTable::<
         AC1LegacyPStringBase<u8>,
         ChatEmoteData,
     >::default();
@@ -2950,14 +2950,14 @@ fn dat_database_can_read_object_hierarchy() {
 
 #[test]
 fn dat_database_can_read_master_input_map() {
-    use dat_reader_writer::Generated::Enums::DeviceType::DeviceType;
+    use dat_ruster_writer::Generated::Enums::DeviceType::DeviceType;
 
     let mut input_maps = std::collections::BTreeMap::new();
     input_maps.insert(
         1,
         CInputMap {
             mappings: vec![QualifiedControl {
-                key: dat_reader_writer::Types::ControlSpecification::ControlSpecification {
+                key: dat_ruster_writer::Types::ControlSpecification::ControlSpecification {
                     key: 0x41,
                     modifier: 0x02,
                 },
@@ -2975,7 +2975,7 @@ fn dat_database_can_read_master_input_map() {
             guid: Uuid::from_u128(0x0102030405060708090A0B0C0D0E0F10),
         }],
         meta_keys: vec![
-            dat_reader_writer::Types::ControlSpecification::ControlSpecification {
+            dat_ruster_writer::Types::ControlSpecification::ControlSpecification {
                 key: 0x11,
                 modifier: 0x22,
             },
@@ -3014,7 +3014,7 @@ fn dat_database_can_read_master_input_map() {
 
 #[test]
 fn dat_database_can_read_palette_set_clothing_and_particle_emitter_info() {
-    use dat_reader_writer::Generated::Enums::{
+    use dat_ruster_writer::Generated::Enums::{
         EmitterType::EmitterType, ParticleType::ParticleType,
     };
 
@@ -3026,9 +3026,9 @@ fn dat_database_can_read_palette_set_clothing_and_particle_emitter_info() {
     let clothing = Clothing {
         clothing_base_effects: std::collections::BTreeMap::from([(
             0x01000010,
-            dat_reader_writer::Types::ClothingBaseEffect::ClothingBaseEffect {
+            dat_ruster_writer::Types::ClothingBaseEffect::ClothingBaseEffect {
                 clo_object_effects: vec![
-                    dat_reader_writer::Types::CloObjectEffect::CloObjectEffect {
+                    dat_ruster_writer::Types::CloObjectEffect::CloObjectEffect {
                         index: 1,
                         model_id: QualifiedDataId::new(0x01000020),
                         clo_texture_effects: vec![],
@@ -3038,12 +3038,12 @@ fn dat_database_can_read_palette_set_clothing_and_particle_emitter_info() {
         )]),
         clothing_sub_pal_effects: std::collections::BTreeMap::from([(
             5,
-            dat_reader_writer::Types::CloSubPalEffect::CloSubPalEffect {
+            dat_ruster_writer::Types::CloSubPalEffect::CloSubPalEffect {
                 icon: QualifiedDataId::new(0x0D000002),
-                clo_sub_palettes: vec![dat_reader_writer::Types::CloSubPalette::CloSubPalette {
+                clo_sub_palettes: vec![dat_ruster_writer::Types::CloSubPalette::CloSubPalette {
                     palette_set: QualifiedDataId::new(0x0F000010),
                     ranges: vec![
-                        dat_reader_writer::Types::CloSubPaletteRange::CloSubPaletteRange {
+                        dat_ruster_writer::Types::CloSubPaletteRange::CloSubPaletteRange {
                             offset: 3,
                             num_colors: 4,
                         },
@@ -3067,16 +3067,16 @@ fn dat_database_can_read_palette_set_clothing_and_particle_emitter_info() {
         total_seconds: 4.5,
         lifespan: 1.25,
         lifespan_rand: 0.5,
-        offset_dir: dat_reader_writer::Lib::IO::Numerics::Vector3::new(1.0, 2.0, 3.0),
+        offset_dir: dat_ruster_writer::Lib::IO::Numerics::Vector3::new(1.0, 2.0, 3.0),
         min_offset: 0.1,
         max_offset: 0.2,
-        a: dat_reader_writer::Lib::IO::Numerics::Vector3::new(4.0, 5.0, 6.0),
+        a: dat_ruster_writer::Lib::IO::Numerics::Vector3::new(4.0, 5.0, 6.0),
         min_a: 0.3,
         max_a: 0.4,
-        b: dat_reader_writer::Lib::IO::Numerics::Vector3::new(7.0, 8.0, 9.0),
+        b: dat_ruster_writer::Lib::IO::Numerics::Vector3::new(7.0, 8.0, 9.0),
         min_b: 0.5,
         max_b: 0.6,
-        c: dat_reader_writer::Lib::IO::Numerics::Vector3::new(10.0, 11.0, 12.0),
+        c: dat_ruster_writer::Lib::IO::Numerics::Vector3::new(10.0, 11.0, 12.0),
         min_c: 0.7,
         max_c: 0.8,
         start_scale: 1.1,
@@ -3198,7 +3198,7 @@ fn dat_database_can_read_palette_set_clothing_and_particle_emitter_info() {
 
 #[test]
 fn pal_set_roundtrip_reads_palette_references() {
-    use dat_reader_writer::DBObjs::PalSet::PalSet;
+    use dat_ruster_writer::DBObjs::PalSet::PalSet;
 
     let pal_set = PalSet {
         base: DBObjBase {
@@ -3285,7 +3285,7 @@ fn hash_table_roundtrip_reads_string_and_primitive_entries() {
 
 #[test]
 fn hash_table_helpers_match_reference_bucket_selection_rules() {
-    use dat_reader_writer::Lib::HashTableHelpers::{BUCKET_SIZES, get_bucket_size, get_bucket_size_index};
+    use dat_ruster_writer::Lib::HashTableHelpers::{BUCKET_SIZES, get_bucket_size, get_bucket_size_index};
 
     assert_eq!(11, get_bucket_size(1, false));
     assert_eq!(23, get_bucket_size(12, false));
@@ -3301,7 +3301,7 @@ fn hash_table_helpers_match_reference_bucket_selection_rules() {
 
 #[test]
 fn hash_table_string_keys_pack_in_reference_hash_bucket_order() {
-    use dat_reader_writer::Lib::HashTableHelpers::{BUCKET_SIZES, HashKeyable};
+    use dat_ruster_writer::Lib::HashTableHelpers::{BUCKET_SIZES, HashKeyable};
 
     let mut table = HashTable::<String, u32>::default();
     table.bucket_size_index = 1;
@@ -3353,7 +3353,7 @@ fn explicit_base_property_wrappers_roundtrip_current_scalar_variants() {
     };
     let vector_property = VectorBaseProperty {
         header: header.clone(),
-        value: dat_reader_writer::Lib::IO::Numerics::Vector3::new(1.0, 2.0, 3.0),
+        value: dat_ruster_writer::Lib::IO::Numerics::Vector3::new(1.0, 2.0, 3.0),
     };
     let color_property = ColorBaseProperty {
         header: header.clone(),
@@ -3433,7 +3433,7 @@ fn explicit_base_property_wrappers_roundtrip_current_scalar_variants() {
     assert_eq!(-42, unpacked_integer.value);
     assert_eq!(3.25, unpacked_float.value);
     assert_eq!(
-        dat_reader_writer::Lib::IO::Numerics::Vector3::new(1.0, 2.0, 3.0),
+        dat_ruster_writer::Lib::IO::Numerics::Vector3::new(1.0, 2.0, 3.0),
         unpacked_vector.value
     );
     assert_eq!(
@@ -3480,7 +3480,7 @@ fn generated_misc_type_surfaces_roundtrip_cleanly() {
         true_flags: 2,
         false_flags: 3,
         render_pass:
-            dat_reader_writer::Generated::Enums::RenderPassType::RenderPassType::AlphaBlend,
+            dat_ruster_writer::Generated::Enums::RenderPassType::RenderPassType::AlphaBlend,
     };
     let layer_stage = LayerStage {
         sampler_name: PStringBase::from("Diffuse"),
@@ -3659,7 +3659,7 @@ fn generated_split_type_surfaces_roundtrip_cleanly() {
 
 #[test]
 fn generated_hook_wrappers_roundtrip_first_batch() {
-    use dat_reader_writer::Generated::Enums::{AnimationHookDir::AnimationHookDir, Sound::Sound};
+    use dat_ruster_writer::Generated::Enums::{AnimationHookDir::AnimationHookDir, Sound::Sound};
 
     let sound_hook = SoundHook {
         direction: AnimationHookDir::FORWARD,
@@ -3764,7 +3764,7 @@ fn generated_hook_wrappers_roundtrip_first_batch() {
 
 #[test]
 fn generated_hook_wrappers_roundtrip_second_batch() {
-    use dat_reader_writer::Generated::Enums::AnimationHookDir::AnimationHookDir;
+    use dat_ruster_writer::Generated::Enums::AnimationHookDir::AnimationHookDir;
 
     let transparent_hook = TransparentHook {
         direction: AnimationHookDir::FORWARD,
@@ -3836,7 +3836,7 @@ fn generated_hook_wrappers_roundtrip_second_batch() {
     };
     let set_omega_hook = SetOmegaHook {
         direction: AnimationHookDir::FORWARD,
-        axis: dat_reader_writer::Lib::IO::Numerics::Vector3::new(7.0, 8.0, 9.0),
+        axis: dat_ruster_writer::Lib::IO::Numerics::Vector3::new(7.0, 8.0, 9.0),
     };
     let texture_velocity_hook = TextureVelocityHook {
         direction: AnimationHookDir::FORWARD,
@@ -3898,7 +3898,7 @@ fn generated_hook_wrappers_roundtrip_second_batch() {
     assert_eq!(14, unpacked_default_script_part.part_index);
     assert_eq!(15, unpacked_call_pes.pes);
     assert_eq!(
-        dat_reader_writer::Lib::IO::Numerics::Vector3::new(7.0, 8.0, 9.0),
+        dat_ruster_writer::Lib::IO::Numerics::Vector3::new(7.0, 8.0, 9.0),
         unpacked_set_omega.axis
     );
     assert_eq!(5.1, unpacked_texture_velocity.u_speed);
@@ -3923,15 +3923,15 @@ fn generated_hook_wrappers_roundtrip_second_batch() {
 
 #[test]
 fn generated_hook_wrappers_roundtrip_final_batch() {
-    use dat_reader_writer::Generated::Enums::AnimationHookDir::AnimationHookDir;
+    use dat_ruster_writer::Generated::Enums::AnimationHookDir::AnimationHookDir;
 
     let create_particle_hook = CreateParticleHook {
         direction: AnimationHookDir::FORWARD,
         emitter_info_id: QualifiedDataId::new(0x3200_0010),
         part_index: 17,
         offset: Frame {
-            origin: dat_reader_writer::Lib::IO::Numerics::Vector3::new(1.0, 2.0, 3.0),
-            orientation: dat_reader_writer::Lib::IO::Numerics::Quaternion::new(0.0, 0.0, 0.0, 1.0),
+            origin: dat_ruster_writer::Lib::IO::Numerics::Vector3::new(1.0, 2.0, 3.0),
+            orientation: dat_ruster_writer::Lib::IO::Numerics::Quaternion::new(0.0, 0.0, 0.0, 1.0),
         },
         emitter_id: 18,
     };
@@ -3995,7 +3995,7 @@ fn generated_hook_wrappers_roundtrip_final_batch() {
 
 #[test]
 fn animation_hook_unknown_variant_preserves_raw_payload_bytes() {
-    use dat_reader_writer::Generated::Enums::{
+    use dat_ruster_writer::Generated::Enums::{
         AnimationHookDir::AnimationHookDir, AnimationHookType::AnimationHookType,
     };
 

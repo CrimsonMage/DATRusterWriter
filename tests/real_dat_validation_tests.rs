@@ -1,4 +1,4 @@
-use dat_reader_writer::{
+use dat_ruster_writer::{
     DBObjs::{
         ActionMap::ActionMap, Animation::Animation, BadDataTable::BadDataTable, CharGen::CharGen,
         ChatPoseTable::ChatPoseTable, Clothing::Clothing, ClothingTable::ClothingTable,
@@ -25,13 +25,13 @@ use dat_reader_writer::{
 };
 
 fn real_dat_dir() -> String {
-    std::env::var("DAT_READER_WRITER_REAL_DAT_DIR")
-        .expect("set DAT_READER_WRITER_REAL_DAT_DIR to a real DAT directory before running this ignored test")
+    std::env::var("dat_ruster_writer_REAL_DAT_DIR")
+        .expect("set dat_ruster_writer_REAL_DAT_DIR to a real DAT directory before running this ignored test")
 }
 
 fn validate_sample<T>(collection: &DatCollection, sample_count: usize)
 where
-    T: dat_reader_writer::Lib::IO::IDBObj::IDBObj + Default,
+    T: dat_ruster_writer::Lib::IO::IDBObj::IDBObj + Default,
 {
     let ids = collection.get_all_ids_of_type::<T>().unwrap();
     assert!(
@@ -50,7 +50,7 @@ where
 }
 
 #[test]
-#[ignore = "requires DAT_READER_WRITER_REAL_DAT_DIR and local retail DAT files"]
+#[ignore = "requires dat_ruster_writer_REAL_DAT_DIR and local retail DAT files"]
 fn validates_ported_types_against_real_dats() {
     let collection = DatCollection::from_directory(real_dat_dir(), DatAccessType::Read).unwrap();
 

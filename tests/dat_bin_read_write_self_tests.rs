@@ -1,4 +1,4 @@
-use dat_reader_writer::{
+use dat_ruster_writer::{
     Generated::Enums::DatFileType::DatFileType,
     Lib::IO::{
         DatBinReader::DatBinReader,

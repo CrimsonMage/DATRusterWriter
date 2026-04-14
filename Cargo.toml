@@ -1,5 +1,5 @@
 [package]
-name = "dat_reader_writer"
+name = "dat_ruster_writer"
 version = "0.1.0"
 edition = "2024"
 description = "Rust port of the DatReaderWriter library for Asheron's Call dat files."

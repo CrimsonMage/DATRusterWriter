@@ -4,7 +4,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use dat_reader_writer::{
+use dat_ruster_writer::{
     Generated::Enums::DatFileType::DatFileType,
     Lib::IO::BlockAllocators::{
         BaseBlockAllocator::BaseBlockAllocator,
@@ -24,7 +24,7 @@ fn temp_dat_path(name: &str) -> PathBuf {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_nanos();
-    std::env::temp_dir().join(format!("dat_reader_writer_{name}_{stamp}.dat"))
+    std::env::temp_dir().join(format!("dat_ruster_writer_{name}_{stamp}.dat"))
 }
 
 fn read_write_options(path: &PathBuf) -> DatDatabaseOptions {

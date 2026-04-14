@@ -6,7 +6,7 @@ use std::{
 
 use futures::executor::block_on;
 
-use dat_reader_writer::{
+use dat_ruster_writer::{
     CellDatabase::CellDatabase,
     DBObjs::{Iteration::Iteration, MasterProperty::MasterProperty, Palette::Palette},
     DatCollection::DatCollection,
@@ -29,7 +29,7 @@ fn unique_temp_dir() -> PathBuf {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_nanos();
-    let dir = std::env::temp_dir().join(format!("dat_reader_writer_tests_{stamp}"));
+    let dir = std::env::temp_dir().join(format!("dat_ruster_writer_tests_{stamp}"));
     fs::create_dir_all(&dir).unwrap();
     dir
 }
@@ -70,9 +70,9 @@ fn build_single_block_dat(dat_type: DatFileType, file_id: u32, payload: &[u8]) -
     header.file_size = (file_offset + block_size) as i32;
 
     let mut root_node =
-        dat_reader_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::new(root_offset as i32);
+        dat_ruster_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::new(root_offset as i32);
     root_node.file_count = 1;
-    root_node.files[0] = dat_reader_writer::Lib::IO::DatBTree::DatBTreeFile::DatBTreeFile {
+    root_node.files[0] = dat_ruster_writer::Lib::IO::DatBTree::DatBTreeFile::DatBTreeFile {
         version: 2,
         id: file_id,
         offset: file_offset as i32,
@@ -85,7 +85,7 @@ fn build_single_block_dat(dat_type: DatFileType, file_id: u32, payload: &[u8]) -
     assert!(header.pack(&mut DatBinWriter::new(&mut bytes[..DatHeader::SIZE])));
 
     let mut node_bytes =
-        vec![0u8; dat_reader_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::SIZE];
+        vec![0u8; dat_ruster_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::SIZE];
     assert!(root_node.pack(&mut DatBinWriter::new(&mut node_bytes)));
     bytes[root_offset + 4..root_offset + 4 + node_bytes.len()].copy_from_slice(&node_bytes);
     bytes[file_offset + 4..file_offset + 4 + payload.len()].copy_from_slice(payload);
@@ -332,7 +332,7 @@ fn dat_collection_can_write_portal_types_and_read_them_back() {
             id: 0x0400_0010,
             ..Default::default()
         },
-        colors: vec![dat_reader_writer::Types::ColorARGB::ColorARGB {
+        colors: vec![dat_ruster_writer::Types::ColorARGB::ColorARGB {
             blue: 0x11,
             green: 0x22,
             red: 0x33,
@@ -387,7 +387,7 @@ fn dat_collection_cached_reads_hold_until_clear_cache() {
             id: 0x0400_0020,
             ..Default::default()
         },
-        colors: vec![dat_reader_writer::Types::ColorARGB::ColorARGB {
+        colors: vec![dat_ruster_writer::Types::ColorARGB::ColorARGB {
             blue: 0x01,
             green: 0x02,
             red: 0x03,
@@ -400,7 +400,7 @@ fn dat_collection_cached_reads_hold_until_clear_cache() {
             id: 0x0400_0020,
             ..Default::default()
         },
-        colors: vec![dat_reader_writer::Types::ColorARGB::ColorARGB {
+        colors: vec![dat_ruster_writer::Types::ColorARGB::ColorARGB {
             blue: 0xAA,
             green: 0xBB,
             red: 0xCC,
@@ -484,7 +484,7 @@ fn dat_collection_can_write_with_template_metadata() {
             id: 0x0400_0030,
             ..Default::default()
         },
-        colors: vec![dat_reader_writer::Types::ColorARGB::ColorARGB {
+        colors: vec![dat_ruster_writer::Types::ColorARGB::ColorARGB {
             blue: 0x10,
             green: 0x20,
             red: 0x30,
@@ -536,7 +536,7 @@ fn dat_collection_async_writes_follow_template_and_read_back() {
             id: 0x0400_0060,
             ..Default::default()
         },
-        colors: vec![dat_reader_writer::Types::ColorARGB::ColorARGB {
+        colors: vec![dat_ruster_writer::Types::ColorARGB::ColorARGB {
             blue: 0x21,
             green: 0x43,
             red: 0x65,
