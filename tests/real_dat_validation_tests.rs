@@ -1,0 +1,60 @@
+use dat_reader_writer::{
+    DBObjs::{
+        Animation::Animation, CharGen::CharGen, ClothingTable::ClothingTable,
+        CombatTable::CombatTable, ExperienceTable::ExperienceTable, GfxObj::GfxObj,
+        Iteration::Iteration, MotionTable::MotionTable, Palette::Palette,
+        ParticleEmitter::ParticleEmitter, PhysicsScript::PhysicsScript,
+        PhysicsScriptTable::PhysicsScriptTable, Region::Region, RenderSurface::RenderSurface,
+        Scene::Scene, Setup::Setup, SkillTable::SkillTable, SoundTable::SoundTable,
+        Surface::Surface, SurfaceTexture::SurfaceTexture, VitalTable::VitalTable, Wave::Wave,
+    },
+    DatCollection::DatCollection,
+    Options::DatAccessType::DatAccessType,
+};
+
+fn real_dat_dir() -> String {
+    std::env::var("DAT_READER_WRITER_REAL_DAT_DIR")
+        .expect("set DAT_READER_WRITER_REAL_DAT_DIR to a real DAT directory before running this ignored test")
+}
+
+fn validate_sample<T>(collection: &DatCollection, sample_count: usize)
+where
+    T: dat_reader_writer::Lib::IO::IDBObj::IDBObj + Default,
+{
+    let ids = collection.get_all_ids_of_type::<T>().unwrap();
+    assert!(!ids.is_empty(), "no ids returned for {}", std::any::type_name::<T>());
+    for id in ids.into_iter().take(sample_count) {
+        let value = collection.try_get::<T>(id).unwrap();
+        assert!(value.is_some(), "failed to read {} id {id:#010X}", std::any::type_name::<T>());
+    }
+}
+
+#[test]
+#[ignore = "requires DAT_READER_WRITER_REAL_DAT_DIR and local retail DAT files"]
+fn validates_ported_types_against_real_dats() {
+    let collection = DatCollection::from_directory(real_dat_dir(), DatAccessType::Read).unwrap();
+
+    assert!(collection.try_get::<Iteration>(0xFFFF0001).unwrap().is_some());
+    assert!(collection.try_get::<CharGen>(0x0E000002).unwrap().is_some());
+    assert!(collection.try_get::<VitalTable>(0x0E000003).unwrap().is_some());
+    assert!(collection.try_get::<SkillTable>(0x0E000004).unwrap().is_some());
+    assert!(collection.try_get::<ExperienceTable>(0x0E000018).unwrap().is_some());
+
+    validate_sample::<Palette>(&collection, 5);
+    validate_sample::<SurfaceTexture>(&collection, 5);
+    validate_sample::<RenderSurface>(&collection, 5);
+    validate_sample::<MotionTable>(&collection, 5);
+    validate_sample::<Setup>(&collection, 5);
+    validate_sample::<Animation>(&collection, 5);
+    validate_sample::<Scene>(&collection, 3);
+    validate_sample::<Region>(&collection, 2);
+    validate_sample::<Surface>(&collection, 5);
+    validate_sample::<GfxObj>(&collection, 5);
+    validate_sample::<Wave>(&collection, 3);
+    validate_sample::<ParticleEmitter>(&collection, 3);
+    validate_sample::<PhysicsScript>(&collection, 5);
+    validate_sample::<SoundTable>(&collection, 3);
+    validate_sample::<PhysicsScriptTable>(&collection, 3);
+    validate_sample::<ClothingTable>(&collection, 3);
+    validate_sample::<CombatTable>(&collection, 1);
+}

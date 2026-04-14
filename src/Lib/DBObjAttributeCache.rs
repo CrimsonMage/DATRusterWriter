@@ -26,26 +26,32 @@ const PORTED_ATTRIBUTES: &[&DBObjTypeAttribute] = &[
     &crate::DBObjs::PhysicsScript::PHYSICS_SCRIPT_ATTR,
     &crate::DBObjs::PhysicsScriptTable::PHYSICS_SCRIPT_TABLE_ATTR,
     &crate::DBObjs::StringTable::STRING_TABLE_ATTR,
+    &crate::DBObjs::VitalTable::VITAL_TABLE_ATTR,
+    &crate::DBObjs::SkillTable::SKILL_TABLE_ATTR,
+    &crate::DBObjs::ExperienceTable::EXPERIENCE_TABLE_ATTR,
 ];
 
 fn dat_type_matches(attr: &DBObjTypeAttribute, dat_type: DatFileType) -> bool {
     attr.dat_file_type == DatFileType::Undefined || attr.dat_file_type == dat_type
 }
 
-fn attr_matches_id(attr: &DBObjTypeAttribute, id: u32) -> bool {
-    if attr.is_singular() {
-        return id == attr.first_id;
-    }
+fn attrs_for_dat_type(dat_type: DatFileType) -> impl Iterator<Item = &'static DBObjTypeAttribute> {
+    PORTED_ATTRIBUTES
+        .iter()
+        .copied()
+        .filter(move |attr| dat_type_matches(attr, dat_type))
+}
 
-    if attr.has_range_data() {
-        return id >= attr.first_id && id <= attr.last_id;
-    }
+fn exact_id_matches(attr: &DBObjTypeAttribute, id: u32) -> bool {
+    attr.is_singular() && id == attr.first_id
+}
 
-    if attr.has_mask() {
-        return (id & 0x0000_FFFF) == attr.mask_id;
-    }
+fn range_matches(attr: &DBObjTypeAttribute, id: u32) -> bool {
+    attr.has_range_data() && id >= attr.first_id && id <= attr.last_id
+}
 
-    false
+fn mask_matches(attr: &DBObjTypeAttribute, id: u32) -> bool {
+    attr.has_mask() && (id & 0x0000_FFFF) == attr.mask_id
 }
 
 pub fn all_ported_attributes() -> &'static [&'static DBObjTypeAttribute] {
@@ -53,10 +59,20 @@ pub fn all_ported_attributes() -> &'static [&'static DBObjTypeAttribute] {
 }
 
 pub fn type_from_id(dat_type: DatFileType, id: u32) -> Option<&'static DBObjTypeAttribute> {
-    PORTED_ATTRIBUTES
-        .iter()
-        .copied()
-        .find(|attr| dat_type_matches(attr, dat_type) && attr_matches_id(attr, id))
+    if id == 0xFFFF0001 {
+        return Some(&crate::DBObjs::Iteration::ITERATION_ATTR);
+    }
+
+    match dat_type {
+        DatFileType::Cell => attrs_for_dat_type(dat_type)
+            .find(|attr| exact_id_matches(attr, id) || mask_matches(attr, id)),
+        DatFileType::Portal => attrs_for_dat_type(dat_type)
+            .find(|attr| exact_id_matches(attr, id) || range_matches(attr, id)),
+        DatFileType::Local => attrs_for_dat_type(dat_type)
+            .find(|attr| exact_id_matches(attr, id) || mask_matches(attr, id) || range_matches(attr, id)),
+        DatFileType::Undefined => attrs_for_dat_type(dat_type)
+            .find(|attr| exact_id_matches(attr, id) || mask_matches(attr, id) || range_matches(attr, id)),
+    }
 }
 
 pub fn db_obj_type_from_id(dat_type: DatFileType, id: u32) -> DBObjType {

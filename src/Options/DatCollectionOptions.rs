@@ -158,7 +158,7 @@ impl DatCollectionOptions {
 impl Default for DatCollectionOptions {
     fn default() -> Self {
         Self {
-            dat_directory: r"C:\Turbine\Asheron's Call\".to_string(),
+            dat_directory: ".".to_string(),
             access_type: DatAccessType::Read,
             portal_dat_file_name: "client_portal.dat".to_string(),
             cell_dat_file_name: "client_cell_1.dat".to_string(),

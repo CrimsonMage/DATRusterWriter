@@ -8,6 +8,8 @@ pub mod CharGen;
 pub mod ClothingTable;
 #[path = "CombatTable.rs"]
 pub mod CombatTable;
+#[path = "ExperienceTable.rs"]
+pub mod ExperienceTable;
 #[path = "GfxObj.rs"]
 pub mod GfxObj;
 #[path = "Iteration.rs"]
@@ -34,6 +36,8 @@ pub mod RenderSurface;
 pub mod Scene;
 #[path = "Setup.rs"]
 pub mod Setup;
+#[path = "SkillTable.rs"]
+pub mod SkillTable;
 #[path = "SoundTable.rs"]
 pub mod SoundTable;
 #[path = "StringTable.rs"]
@@ -42,5 +46,7 @@ pub mod StringTable;
 pub mod Surface;
 #[path = "SurfaceTexture.rs"]
 pub mod SurfaceTexture;
+#[path = "VitalTable.rs"]
+pub mod VitalTable;
 #[path = "Wave.rs"]
 pub mod Wave;

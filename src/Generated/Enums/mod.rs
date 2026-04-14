@@ -10,6 +10,8 @@ pub mod AnimationHookType;
 pub mod AttackHeight;
 #[path = "AttackType.rs"]
 pub mod AttackType;
+#[path = "AttributeId.rs"]
+pub mod AttributeId;
 #[path = "BSPNodeType.rs"]
 pub mod BSPNodeType;
 #[path = "CullMode.rs"]
@@ -44,6 +46,8 @@ pub mod Placement;
 pub mod PlayScript;
 #[path = "SetupFlags.rs"]
 pub mod SetupFlags;
+#[path = "SkillCategory.rs"]
+pub mod SkillCategory;
 #[path = "SkillId.rs"]
 pub mod SkillId;
 #[path = "Sound.rs"]
@@ -58,4 +62,3 @@ pub mod TerrainTextureType;
 pub mod TextureType;
 #[path = "VertexType.rs"]
 pub mod VertexType;
-

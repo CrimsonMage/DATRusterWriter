@@ -88,3 +88,40 @@ fn stream_allocator_reuses_existing_start_block_for_rewrite() {
 
     let _ = fs::remove_file(path);
 }
+
+fn block_on<F: std::future::Future>(future: F) -> F::Output {
+    use std::{pin::pin, task::{Context, Poll, RawWaker, RawWakerVTable, Waker}};
+
+    fn raw_waker() -> RawWaker {
+        fn clone(_: *const ()) -> RawWaker { raw_waker() }
+        fn wake(_: *const ()) {}
+        fn wake_by_ref(_: *const ()) {}
+        fn drop(_: *const ()) {}
+        RawWaker::new(std::ptr::null(), &RawWakerVTable::new(clone, wake, wake_by_ref, drop))
+    }
+
+    let waker = unsafe { Waker::from_raw(raw_waker()) };
+    let mut future = pin!(future);
+    loop {
+        match future.as_mut().poll(&mut Context::from_waker(&waker)) {
+            Poll::Ready(value) => return value,
+            Poll::Pending => std::thread::yield_now(),
+        }
+    }
+}
+
+#[test]
+fn stream_allocator_async_wrappers_roundtrip_blocks() {
+    let path = temp_dat_path("stream_async");
+    let allocator = StreamBlockAllocator::new(&read_write_options(&path)).unwrap();
+    allocator.init_new(DatFileType::Portal, 0, 64, 2).unwrap();
+
+    let payload: Vec<u8> = (0..90).map(|value| (value % 251) as u8).collect();
+    let start = block_on(allocator.write_block_async(&payload, payload.len(), 0)).unwrap();
+
+    let mut read_back = vec![0u8; payload.len()];
+    block_on(allocator.read_block_async(&mut read_back, start as usize)).unwrap();
+    assert_eq!(payload, read_back);
+
+    let _ = fs::remove_file(path);
+}

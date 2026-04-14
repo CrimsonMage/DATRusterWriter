@@ -1,4 +1,4 @@
-use std::io;
+use std::{future::Future, io, pin::Pin};
 
 use crate::{
     Generated::Enums::DatFileType::DatFileType,
@@ -31,6 +31,14 @@ pub trait IDatBlockAllocator: Send + Sync {
         num_bytes: usize,
         starting_block: i32,
     ) -> io::Result<i32>;
+    fn write_block_async<'a>(
+        &'a self,
+        buffer: &'a [u8],
+        num_bytes: usize,
+        starting_block: i32,
+    ) -> Pin<Box<dyn Future<Output = io::Result<i32>> + Send + 'a>> {
+        Box::pin(async move { self.write_block(buffer, num_bytes, starting_block) })
+    }
     fn read_bytes(
         &self,
         buffer: &mut [u8],
@@ -39,6 +47,13 @@ pub trait IDatBlockAllocator: Send + Sync {
         num_bytes: usize,
     ) -> io::Result<()>;
     fn read_block(&self, buffer: &mut [u8], starting_block: usize) -> io::Result<()>;
+    fn read_block_async<'a>(
+        &'a self,
+        buffer: &'a mut [u8],
+        starting_block: usize,
+    ) -> Pin<Box<dyn Future<Output = io::Result<()>> + Send + 'a>> {
+        Box::pin(async move { self.read_block(buffer, starting_block) })
+    }
     fn try_get_block_offsets(&self, starting_block: i32) -> io::Result<Option<Vec<i32>>>;
     fn allocate_empty_blocks(&self, num_blocks_to_allocate: i32) -> io::Result<()>;
     fn reserve_block(&self) -> io::Result<i32>;

@@ -3,18 +3,18 @@ use crate::{
         DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
         IUnpackable::IUnpackable,
     },
-    Types::{AC1LegacyString::AC1LegacyString, Position::Position},
+    Types::{PStringBase::PStringBase, Position::Position},
 };
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct StartingArea {
-    pub name: AC1LegacyString,
+    pub name: PStringBase<u8>,
     pub locations: Vec<Position>,
 }
 
 impl IUnpackable for StartingArea {
     fn unpack(&mut self, reader: &mut DatBinReader<'_>) -> bool {
-        self.name = reader.read_item::<AC1LegacyString>();
+        self.name = reader.read_item::<PStringBase<u8>>();
         let count = reader.read_compressed_uint() as usize;
         self.locations.clear();
         for _ in 0..count {
@@ -34,3 +34,4 @@ impl IPackable for StartingArea {
         true
     }
 }
+

@@ -9,15 +9,15 @@ use crate::{
         IUnpackable::IUnpackable,
     },
     Types::{
-        AC1LegacyString::AC1LegacyString, EyeStripCG::EyeStripCG, FaceStripCG::FaceStripCG,
-        GearCG::GearCG, HairStyleCG::HairStyleCG, ObjDesc::ObjDesc,
+        EyeStripCG::EyeStripCG, FaceStripCG::FaceStripCG, GearCG::GearCG,
+        HairStyleCG::HairStyleCG, ObjDesc::ObjDesc, PStringBase::PStringBase,
         QualifiedDataId::QualifiedDataId,
     },
 };
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct SexCG {
-    pub name: AC1LegacyString,
+    pub name: PStringBase<u8>,
     pub scale: u32,
     pub setup_id: QualifiedDataId<Setup>,
     pub sound_table: QualifiedDataId<SoundTable>,
@@ -81,7 +81,7 @@ fn write_u32_vec(writer: &mut DatBinWriter<'_>, values: &[u32]) {
 
 impl IUnpackable for SexCG {
     fn unpack(&mut self, reader: &mut DatBinReader<'_>) -> bool {
-        self.name = reader.read_item::<AC1LegacyString>();
+        self.name = reader.read_item::<PStringBase<u8>>();
         self.scale = reader.read_u32();
         self.setup_id = reader.read_item::<QualifiedDataId<Setup>>();
         self.sound_table = reader.read_item::<QualifiedDataId<SoundTable>>();
@@ -134,3 +134,4 @@ impl IPackable for SexCG {
         true
     }
 }
+

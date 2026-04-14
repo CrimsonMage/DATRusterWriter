@@ -104,8 +104,12 @@ pub mod ScriptAndModData;
 pub mod Season;
 #[path = "SexCG.rs"]
 pub mod SexCG;
+#[path = "SkillBase.rs"]
+pub mod SkillBase;
 #[path = "SkillCG.rs"]
 pub mod SkillCG;
+#[path = "SkillFormula.rs"]
+pub mod SkillFormula;
 #[path = "SkyDesc.rs"]
 pub mod SkyDesc;
 #[path = "SkyObject.rs"]

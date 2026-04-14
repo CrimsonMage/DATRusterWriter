@@ -5,12 +5,12 @@ use crate::{
         DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
         IUnpackable::IUnpackable,
     },
-    Types::{AC1LegacyString::AC1LegacyString, QualifiedDataId::QualifiedDataId},
+    Types::{PStringBase::PStringBase, QualifiedDataId::QualifiedDataId},
 };
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct TemplateCG {
-    pub name: AC1LegacyString,
+    pub name: PStringBase<u8>,
     pub icon_id: QualifiedDataId<RenderSurface>,
     pub title: u32,
     pub strength: i32,
@@ -25,7 +25,7 @@ pub struct TemplateCG {
 
 impl IUnpackable for TemplateCG {
     fn unpack(&mut self, reader: &mut DatBinReader<'_>) -> bool {
-        self.name = reader.read_item::<AC1LegacyString>();
+        self.name = reader.read_item::<PStringBase<u8>>();
         self.icon_id = reader.read_item::<QualifiedDataId<RenderSurface>>();
         self.title = reader.read_u32();
         self.strength = reader.read_i32();
@@ -70,3 +70,4 @@ impl IPackable for TemplateCG {
         true
     }
 }
+

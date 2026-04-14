@@ -5,14 +5,14 @@ use crate::{
         IUnpackable::IUnpackable,
     },
     Types::{
-        AC1LegacyString::AC1LegacyString, HashTable::HashTable, QualifiedDataId::QualifiedDataId,
+        HashTable::HashTable, PStringBase::PStringBase, QualifiedDataId::QualifiedDataId,
         SexCG::SexCG, SkillCG::SkillCG, TemplateCG::TemplateCG,
     },
 };
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct HeritageGroupCG {
-    pub name: AC1LegacyString,
+    pub name: PStringBase<u8>,
     pub icon_id: QualifiedDataId<RenderSurface>,
     pub setup_id: QualifiedDataId<Setup>,
     pub environment_setup_id: QualifiedDataId<Setup>,
@@ -27,7 +27,7 @@ pub struct HeritageGroupCG {
 
 impl IUnpackable for HeritageGroupCG {
     fn unpack(&mut self, reader: &mut DatBinReader<'_>) -> bool {
-        self.name = reader.read_item::<AC1LegacyString>();
+        self.name = reader.read_item::<PStringBase<u8>>();
         self.icon_id = reader.read_item::<QualifiedDataId<RenderSurface>>();
         self.setup_id = reader.read_item::<QualifiedDataId<Setup>>();
         self.environment_setup_id = reader.read_item::<QualifiedDataId<Setup>>();
@@ -91,3 +91,4 @@ impl IPackable for HeritageGroupCG {
         true
     }
 }
+

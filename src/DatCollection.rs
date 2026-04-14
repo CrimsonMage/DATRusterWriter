@@ -90,7 +90,21 @@ impl DatCollection {
                 }
             }
             DatFileType::Local => self.local.inner.try_get_file_entry(file_id),
-            DatFileType::Undefined => Ok(None),
+            DatFileType::Undefined => {
+                let portal = self.portal.inner.try_get_file_entry(file_id)?;
+                if portal.is_some() {
+                    return Ok(portal);
+                }
+                let high_res = self.high_res.inner.try_get_file_entry(file_id)?;
+                if high_res.is_some() {
+                    return Ok(high_res);
+                }
+                let local = self.local.inner.try_get_file_entry(file_id)?;
+                if local.is_some() {
+                    return Ok(local);
+                }
+                self.cell.inner.try_get_file_entry(file_id)
+            }
         }
     }
 
@@ -119,7 +133,21 @@ impl DatCollection {
                 .local
                 .inner
                 .try_get_file_bytes(file_id, auto_decompress),
-            DatFileType::Undefined => Ok(None),
+            DatFileType::Undefined => {
+                let portal = self.portal.inner.try_get_file_bytes(file_id, auto_decompress)?;
+                if portal.is_some() {
+                    return Ok(portal);
+                }
+                let high_res = self.high_res.inner.try_get_file_bytes(file_id, auto_decompress)?;
+                if high_res.is_some() {
+                    return Ok(high_res);
+                }
+                let local = self.local.inner.try_get_file_bytes(file_id, auto_decompress)?;
+                if local.is_some() {
+                    return Ok(local);
+                }
+                self.cell.inner.try_get_file_bytes(file_id, auto_decompress)
+            }
         }
     }
 
@@ -154,7 +182,21 @@ impl DatCollection {
                 }
             }
             DatFileType::Local => self.local.try_get::<T>(file_id),
-            DatFileType::Undefined => Ok(None),
+            DatFileType::Undefined => {
+                let portal = self.portal.try_get::<T>(file_id)?;
+                if portal.is_some() {
+                    return Ok(portal);
+                }
+                let high_res = self.high_res.try_get::<T>(file_id)?;
+                if high_res.is_some() {
+                    return Ok(high_res);
+                }
+                let local = self.local.try_get::<T>(file_id)?;
+                if local.is_some() {
+                    return Ok(local);
+                }
+                self.cell.try_get::<T>(file_id)
+            }
         }
     }
 
@@ -179,8 +221,15 @@ impl DatCollection {
                 Ok(ids)
             }
             DatFileType::Local => self.local.get_all_ids_of_type::<T>(),
-            DatFileType::Undefined => Ok(Vec::new()),
+            DatFileType::Undefined => {
+                let mut ids = self.portal.get_all_ids_of_type::<T>()?;
+                ids.extend(self.high_res.get_all_ids_of_type::<T>()?);
+                ids.extend(self.local.get_all_ids_of_type::<T>()?);
+                ids.extend(self.cell.get_all_ids_of_type::<T>()?);
+                ids.sort_unstable();
+                ids.dedup();
+                Ok(ids)
+            }
         }
     }
 }
-

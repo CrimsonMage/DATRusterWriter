@@ -1,4 +1,5 @@
 use crate::{
+    Generated::Enums::SkillId::SkillId,
     Lib::IO::{
         DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
         IUnpackable::IUnpackable,
@@ -38,6 +39,18 @@ impl HashTableKey for u32 {
     }
     fn hash_key(&self) -> u64 {
         *self as u64
+    }
+}
+
+impl HashTableKey for SkillId {
+    fn read_key(reader: &mut DatBinReader<'_>) -> Self {
+        SkillId::from(reader.read_i32())
+    }
+    fn write_key(&self, writer: &mut DatBinWriter<'_>) {
+        writer.write_i32((*self).into());
+    }
+    fn hash_key(&self) -> u64 {
+        self.0 as u32 as u64
     }
 }
 

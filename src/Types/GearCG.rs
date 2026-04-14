@@ -4,19 +4,19 @@ use crate::{
         DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
         IUnpackable::IUnpackable,
     },
-    Types::{AC1LegacyString::AC1LegacyString, QualifiedDataId::QualifiedDataId},
+    Types::{PStringBase::PStringBase, QualifiedDataId::QualifiedDataId},
 };
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct GearCG {
-    pub name: AC1LegacyString,
+    pub name: PStringBase<u8>,
     pub clothing_table: QualifiedDataId<ClothingTable>,
     pub weenie_default: u32,
 }
 
 impl IUnpackable for GearCG {
     fn unpack(&mut self, reader: &mut DatBinReader<'_>) -> bool {
-        self.name = reader.read_item::<AC1LegacyString>();
+        self.name = reader.read_item::<PStringBase<u8>>();
         self.clothing_table = reader.read_item::<QualifiedDataId<ClothingTable>>();
         self.weenie_default = reader.read_u32();
         true
@@ -31,3 +31,4 @@ impl IPackable for GearCG {
         true
     }
 }
+

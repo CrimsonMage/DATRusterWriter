@@ -20,6 +20,7 @@ use dat_reader_writer::{
     },
     Types::{
         AC1LegacyString::AC1LegacyString,
+        PStringBase::PStringBase,
         AmbientSTBDesc::AmbientSTBDesc,
         AmbientSoundDesc::AmbientSoundDesc,
         AnimationHook::AnimationHook,
@@ -824,9 +825,7 @@ fn char_gen_roundtrip_reads_heritage_groups() {
     genders.insert(
         0,
         SexCG {
-            name: AC1LegacyString {
-                value: "Male".to_string(),
-            },
+            name: PStringBase::from("Male"),
             scale: 100,
             setup_id: QualifiedDataId::new(0x02000010),
             sound_table: QualifiedDataId::new(0x20000011),
@@ -879,9 +878,7 @@ fn char_gen_roundtrip_reads_heritage_groups() {
                 obj_desc: ObjDesc::default(),
             }],
             headgears: vec![GearCG {
-                name: AC1LegacyString {
-                    value: "Helm".to_string(),
-                },
+                name: PStringBase::from("Helm"),
                 clothing_table: QualifiedDataId::new(0x10000040),
                 weenie_default: 0x02000041,
             }],
@@ -896,9 +893,7 @@ fn char_gen_roundtrip_reads_heritage_groups() {
     heritage_groups.insert(
         1,
         HeritageGroupCG {
-            name: AC1LegacyString {
-                value: "Aluvian".to_string(),
-            },
+            name: PStringBase::from("Aluvian"),
             icon_id: QualifiedDataId::new(0x06000050),
             setup_id: QualifiedDataId::new(0x02000051),
             environment_setup_id: QualifiedDataId::new(0x02000052),
@@ -912,9 +907,7 @@ fn char_gen_roundtrip_reads_heritage_groups() {
                 primary_cost: 3,
             }],
             templates: vec![TemplateCG {
-                name: AC1LegacyString {
-                    value: "Archer".to_string(),
-                },
+                name: PStringBase::from("Archer"),
                 icon_id: QualifiedDataId::new(0x06000053),
                 title: 7,
                 strength: 10,
@@ -933,9 +926,7 @@ fn char_gen_roundtrip_reads_heritage_groups() {
     let char_gen = CharGen {
         data_id: QualifiedDataId::new(0x0E000002),
         starting_areas: vec![StartingArea {
-            name: AC1LegacyString {
-                value: "Training Hall".to_string(),
-            },
+            name: PStringBase::from("Training Hall"),
             locations: vec![Position {
                 cell_id: 0x01020304,
                 frame: Frame::default(),
@@ -1243,5 +1234,139 @@ fn combat_table_roundtrip_reads_maneuvers() {
 
 
 
+
+
+
+#[test]
+fn vital_table_roundtrip_reads_formulas() {
+    use dat_reader_writer::{
+        DBObjs::VitalTable::VitalTable,
+        Generated::Enums::AttributeId::AttributeId,
+        Types::SkillFormula::SkillFormula,
+    };
+
+    let table = VitalTable {
+        health: SkillFormula {
+            additive_bonus: 10,
+            attribute1_multiplier: 1,
+            attribute2_multiplier: 0,
+            divisor: 2,
+            attribute1: AttributeId::STRENGTH,
+            attribute2: AttributeId::ENDURANCE,
+        },
+        stamina: SkillFormula {
+            additive_bonus: 20,
+            attribute1_multiplier: 1,
+            attribute2_multiplier: 1,
+            divisor: 3,
+            attribute1: AttributeId::ENDURANCE,
+            attribute2: AttributeId::SELF,
+        },
+        mana: SkillFormula {
+            additive_bonus: 30,
+            attribute1_multiplier: 0,
+            attribute2_multiplier: 1,
+            divisor: 4,
+            attribute1: AttributeId::FOCUS,
+            attribute2: AttributeId::SELF,
+        },
+        ..Default::default()
+    };
+
+    let mut bytes = vec![0u8; 256];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    assert!(table.pack(&mut writer));
+    let used = writer.offset();
+
+    let mut unpacked = VitalTable::default();
+    assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
+    assert_eq!(10, unpacked.health.additive_bonus);
+    assert_eq!(AttributeId::STRENGTH, unpacked.health.attribute1);
+    assert_eq!(AttributeId::SELF, unpacked.stamina.attribute2);
+    assert_eq!(4, unpacked.mana.divisor);
+}
+
+#[test]
+fn skill_table_roundtrip_reads_skill_entries() {
+    use dat_reader_writer::{
+        DBObjs::SkillTable::SkillTable,
+        DBObjs::RenderSurface::RenderSurface,
+        Generated::Enums::{AttributeId::AttributeId, SkillCategory::SkillCategory, SkillId::SkillId},
+        Types::{PackableHashTable::PackableHashTable, QualifiedDataId::QualifiedDataId, SkillBase::SkillBase, SkillFormula::SkillFormula},
+    };
+
+    let mut skills = PackableHashTable::<SkillId, SkillBase>::default();
+    skills.insert(
+        SkillId::BOW,
+        SkillBase {
+            description: AC1LegacyString { value: "Bow skill".to_string() },
+            name: AC1LegacyString { value: "Bow".to_string() },
+            icon_id: QualifiedDataId::<RenderSurface>::new(0x06000044),
+            trained_cost: 6,
+            specialized_cost: 4,
+            category: SkillCategory::COMBAT,
+            chargen_use: true,
+            min_level: 7,
+            formula: SkillFormula {
+                additive_bonus: 1,
+                attribute1_multiplier: 1,
+                attribute2_multiplier: 1,
+                divisor: 3,
+                attribute1: AttributeId::COORDINATION,
+                attribute2: AttributeId::QUICKNESS,
+            },
+            upper_bound: 400.0,
+            lower_bound: 5.0,
+            learn_mod: 1.25,
+        },
+    );
+
+    let table = SkillTable {
+        skills,
+        ..Default::default()
+    };
+
+    let mut bytes = vec![0u8; 1024];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    assert!(table.pack(&mut writer));
+    let used = writer.offset();
+
+    let mut unpacked = SkillTable::default();
+    assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
+    let bow = unpacked.skills.get(&SkillId::BOW).unwrap();
+    assert_eq!("Bow", bow.name.value);
+    assert_eq!(SkillCategory::COMBAT, bow.category);
+    assert!(bow.chargen_use);
+    assert_eq!(AttributeId::COORDINATION, bow.formula.attribute1);
+    assert_eq!(0x06000044, bow.icon_id.data_id);
+}
+
+#[test]
+fn experience_table_roundtrip_reads_progression_arrays() {
+    use dat_reader_writer::DBObjs::ExperienceTable::ExperienceTable;
+
+    let table = ExperienceTable {
+        attributes: vec![0, 10, 20, 30],
+        vitals: vec![0, 40, 50],
+        trained_skills: vec![0, 60, 70],
+        specialized_skills: vec![0, 80, 90],
+        levels: vec![0, 100, 200, 300],
+        skill_credits: vec![0, 6, 8, 10],
+        ..Default::default()
+    };
+
+    let mut bytes = vec![0u8; 256];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    assert!(table.pack(&mut writer));
+    let used = writer.offset();
+
+    let mut unpacked = ExperienceTable::default();
+    assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
+    assert_eq!(vec![0, 10, 20, 30], unpacked.attributes);
+    assert_eq!(vec![0, 40, 50], unpacked.vitals);
+    assert_eq!(vec![0, 80, 90], unpacked.specialized_skills);
+    assert_eq!(vec![0, 100, 200, 300], unpacked.levels);
+    assert_eq!(vec![0, 6, 8, 10], unpacked.skill_credits);
+}
 
 

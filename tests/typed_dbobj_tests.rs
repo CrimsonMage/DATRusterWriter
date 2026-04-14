@@ -252,3 +252,103 @@ fn dat_database_can_read_language_string_and_local_string_table() {
             .is_var_name_table_worth_packing
     );
 }
+
+#[test]
+fn db_obj_attribute_cache_resolves_new_gameplay_tables() {
+    let vital = DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E000003).unwrap();
+    let skill = DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E000004).unwrap();
+
+    assert_eq!(DBObjType::VitalTable, vital.db_obj_type);
+    assert_eq!(DBObjType::SkillTable, skill.db_obj_type);
+}
+
+#[test]
+fn db_obj_attribute_cache_tracks_new_gameplay_table_ports() {
+    let attrs = DBObjAttributeCache::all_ported_attributes();
+    assert!(attrs.iter().any(|attr| attr.db_obj_type == DBObjType::VitalTable));
+    assert!(attrs.iter().any(|attr| attr.db_obj_type == DBObjType::SkillTable));
+}
+
+#[test]
+fn dat_database_can_read_typed_vital_table() {
+    use dat_reader_writer::{
+        DBObjs::VitalTable::VitalTable,
+        Generated::Enums::AttributeId::AttributeId,
+        Types::SkillFormula::SkillFormula,
+    };
+
+    let vital = VitalTable {
+        health: SkillFormula {
+            additive_bonus: 1,
+            attribute1_multiplier: 2,
+            attribute2_multiplier: 3,
+            divisor: 4,
+            attribute1: AttributeId::STRENGTH,
+            attribute2: AttributeId::ENDURANCE,
+        },
+        stamina: SkillFormula::default(),
+        mana: SkillFormula::default(),
+        ..Default::default()
+    };
+
+    let mut payload = vec![0u8; 128];
+    let mut writer = DatBinWriter::new(&mut payload);
+    assert!(vital.pack(&mut writer));
+    let used = writer.offset();
+
+    let bytes = build_single_block_dat(DatFileType::Portal, 0x0E000003, &payload[..used]);
+    let path = unique_temp_file();
+    fs::write(&path, bytes).unwrap();
+
+    let db = DatDatabase::new(DatDatabaseOptions {
+        file_path: path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+
+    let read_vital = db.try_get::<VitalTable>(0x0E000003).unwrap().unwrap();
+    assert_eq!(1, read_vital.health.additive_bonus);
+    assert_eq!(AttributeId::STRENGTH, read_vital.health.attribute1);
+    assert_eq!(4, read_vital.health.divisor);
+}
+
+#[test]
+fn db_obj_attribute_cache_resolves_experience_table() {
+    let experience = DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E000018).unwrap();
+    assert_eq!(DBObjType::ExperienceTable, experience.db_obj_type);
+}
+
+#[test]
+fn dat_database_can_read_typed_experience_table() {
+    use dat_reader_writer::DBObjs::ExperienceTable::ExperienceTable;
+
+    let experience = ExperienceTable {
+        attributes: vec![0, 10, 20],
+        vitals: vec![0, 30],
+        trained_skills: vec![0, 40],
+        specialized_skills: vec![0, 50],
+        levels: vec![0, 100, 200],
+        skill_credits: vec![0, 6, 8],
+        ..Default::default()
+    };
+
+    let mut payload = vec![0u8; 128];
+    let mut writer = DatBinWriter::new(&mut payload);
+    assert!(experience.pack(&mut writer));
+    let used = writer.offset();
+
+    let bytes = build_single_block_dat(DatFileType::Portal, 0x0E000018, &payload[..used]);
+    let path = unique_temp_file();
+    fs::write(&path, bytes).unwrap();
+
+    let db = DatDatabase::new(DatDatabaseOptions {
+        file_path: path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+
+    let read_experience = db.try_get::<ExperienceTable>(0x0E000018).unwrap().unwrap();
+    assert_eq!(vec![0, 10, 20], read_experience.attributes);
+    assert_eq!(vec![0, 100, 200], read_experience.levels);
+    assert_eq!(vec![0, 6, 8], read_experience.skill_credits);
+}
