@@ -1,6 +1,12 @@
 use crate::{
-    Generated::Enums::{AttackHeight::AttackHeight, AttackType::AttackType, MotionCommand::MotionCommand, MotionStance::MotionStance},
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable},
+    Generated::Enums::{
+        AttackHeight::AttackHeight, AttackType::AttackType, MotionCommand::MotionCommand,
+        MotionStance::MotionStance,
+    },
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
 };
 
 #[derive(Debug, Clone, Default, PartialEq)]

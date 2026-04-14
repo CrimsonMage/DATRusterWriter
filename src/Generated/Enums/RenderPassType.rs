@@ -19,11 +19,15 @@ impl RenderPassType {
     pub const Invalid: Self = Self(0x0000002E);
 
     pub const DEFAULT: Self = Self::Default;
-    pub const DIRECTIONAL_LIGHT_DIFFUSE_AND_SPECULAR: Self = Self::DirectionalLightDiffuseAndSpecular;
+    pub const DIRECTIONAL_LIGHT_DIFFUSE_AND_SPECULAR: Self =
+        Self::DirectionalLightDiffuseAndSpecular;
     pub const POINT_LIGHT_DIFFUSE_AND_SPECULAR: Self = Self::PointLightDiffuseAndSpecular;
-    pub const POINT_LIGHT_DIFFUSE_AND_SPECULAR_PROJECTOR: Self = Self::PointLightDiffuseAndSpecularProjector;
-    pub const AMBIENT_LIGHT_DIRECTIONAL_LIGHT_DIFFUSE_AND_SPECULAR: Self = Self::AmbientLight_DirectionalLightDiffuseAndSpecular;
-    pub const AMBIENT_LIGHT_POINT_LIGHT_DIFFUSE_AND_SPECULAR: Self = Self::AmbientLight_PointLightDiffuseAndSpecular;
+    pub const POINT_LIGHT_DIFFUSE_AND_SPECULAR_PROJECTOR: Self =
+        Self::PointLightDiffuseAndSpecularProjector;
+    pub const AMBIENT_LIGHT_DIRECTIONAL_LIGHT_DIFFUSE_AND_SPECULAR: Self =
+        Self::AmbientLight_DirectionalLightDiffuseAndSpecular;
+    pub const AMBIENT_LIGHT_POINT_LIGHT_DIFFUSE_AND_SPECULAR: Self =
+        Self::AmbientLight_PointLightDiffuseAndSpecular;
     pub const DISTANCE_FOG: Self = Self::DistanceFog;
     pub const FIXED_FUNCTION_GLOW: Self = Self::FixedFunctionGlow;
     pub const SHADER_GLOW: Self = Self::ShaderGlow;

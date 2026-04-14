@@ -11,7 +11,10 @@ use crate::{
             IPackable::IPackable, IUnpackable::IUnpackable,
         },
     },
-    Types::{DBObj::{DBObj, DBObjBase}, GfxObjInfo::GfxObjInfo},
+    Types::{
+        DBObj::{DBObj, DBObjBase},
+        GfxObjInfo::GfxObjInfo,
+    },
 };
 
 pub const GFX_OBJ_DEGRADE_INFO_ATTR: DBObjTypeAttribute = DBObjTypeAttribute {
@@ -31,12 +34,24 @@ pub struct GfxObjDegradeInfo {
 }
 
 impl DBObj for GfxObjDegradeInfo {
-    fn header_flags(&self) -> DBObjHeaderFlags { DBObjHeaderFlags::HasId }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::GfxObjDegradeInfo }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn data_category(&self) -> u32 { self.base.data_category }
-    fn set_data_category(&mut self, data_category: u32) { self.base.data_category = data_category; }
+    fn header_flags(&self) -> DBObjHeaderFlags {
+        DBObjHeaderFlags::HasId
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::GfxObjDegradeInfo
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn data_category(&self) -> u32 {
+        self.base.data_category
+    }
+    fn set_data_category(&mut self, data_category: u32) {
+        self.base.data_category = data_category;
+    }
 }
 
 impl IUnpackable for GfxObjDegradeInfo {
@@ -64,9 +79,22 @@ impl IPackable for GfxObjDegradeInfo {
 }
 
 impl IDBObj for GfxObjDegradeInfo {
-    fn db_obj_type_attr() -> &'static DBObjTypeAttribute where Self: Sized { &GFX_OBJ_DEGRADE_INFO_ATTR }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::GfxObjDegradeInfo }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn as_any(&self) -> &dyn Any { self }
+    fn db_obj_type_attr() -> &'static DBObjTypeAttribute
+    where
+        Self: Sized,
+    {
+        &GFX_OBJ_DEGRADE_INFO_ATTR
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::GfxObjDegradeInfo
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }

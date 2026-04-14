@@ -1,10 +1,13 @@
-use std::{fs, path::PathBuf, time::{SystemTime, UNIX_EPOCH}};
+use std::{
+    fs,
+    path::PathBuf,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use dat_reader_writer::{
     Generated::Enums::DatFileType::DatFileType,
     Lib::IO::BlockAllocators::{
-        IDatBlockAllocator::IDatBlockAllocator,
-        StreamBlockAllocator::StreamBlockAllocator,
+        IDatBlockAllocator::IDatBlockAllocator, StreamBlockAllocator::StreamBlockAllocator,
     },
     Options::{
         DatAccessType::DatAccessType, DatDatabaseOptions::DatDatabaseOptions,
@@ -64,7 +67,9 @@ fn stream_allocator_writes_and_reads_chained_blocks() {
     assert!(offsets.len() >= 3);
 
     let mut read_back = vec![0u8; payload.len()];
-    allocator.read_block(&mut read_back, start as usize).unwrap();
+    allocator
+        .read_block(&mut read_back, start as usize)
+        .unwrap();
     assert_eq!(payload, read_back);
 
     let _ = fs::remove_file(path);
@@ -83,21 +88,31 @@ fn stream_allocator_reuses_existing_start_block_for_rewrite() {
 
     assert_eq!(start, rewritten);
     let mut read_back = vec![0u8; second.len()];
-    allocator.read_block(&mut read_back, start as usize).unwrap();
+    allocator
+        .read_block(&mut read_back, start as usize)
+        .unwrap();
     assert_eq!(second, read_back);
 
     let _ = fs::remove_file(path);
 }
 
 fn block_on<F: std::future::Future>(future: F) -> F::Output {
-    use std::{pin::pin, task::{Context, Poll, RawWaker, RawWakerVTable, Waker}};
+    use std::{
+        pin::pin,
+        task::{Context, Poll, RawWaker, RawWakerVTable, Waker},
+    };
 
     fn raw_waker() -> RawWaker {
-        fn clone(_: *const ()) -> RawWaker { raw_waker() }
+        fn clone(_: *const ()) -> RawWaker {
+            raw_waker()
+        }
         fn wake(_: *const ()) {}
         fn wake_by_ref(_: *const ()) {}
         fn drop(_: *const ()) {}
-        RawWaker::new(std::ptr::null(), &RawWakerVTable::new(clone, wake, wake_by_ref, drop))
+        RawWaker::new(
+            std::ptr::null(),
+            &RawWakerVTable::new(clone, wake, wake_by_ref, drop),
+        )
     }
 
     let waker = unsafe { Waker::from_raw(raw_waker()) };

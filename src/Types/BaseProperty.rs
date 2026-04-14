@@ -1,11 +1,8 @@
 use crate::{
     Generated::Enums::BasePropertyType::BasePropertyType,
     Lib::IO::{
-        DatBinReader::DatBinReader,
-        DatBinWriter::DatBinWriter,
-        IUnpackable::IUnpackable,
-        IPackable::IPackable,
-        Numerics::Vector3,
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable, Numerics::Vector3,
     },
     Types::{ColorARGB::ColorARGB, StringInfo::StringInfo},
 };
@@ -177,9 +174,7 @@ impl BaseProperty {
 impl IUnpackable for BaseProperty {
     fn unpack(&mut self, reader: &mut DatBinReader<'_>) -> bool {
         let property_type = self.property_type();
-        if let Some(value) =
-            Self::unpack_instance_from_type(reader, property_type, false, 0)
-        {
+        if let Some(value) = Self::unpack_instance_from_type(reader, property_type, false, 0) {
             *self = value;
             true
         } else {

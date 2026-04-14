@@ -1,6 +1,9 @@
 use crate::{
     Generated::Enums::AttributeId::AttributeId,
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable},
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
 };
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]

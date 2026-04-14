@@ -1,17 +1,19 @@
 use dat_reader_writer::{
     DBObjs::{
-        Animation::Animation, CharGen::CharGen, ClothingTable::ClothingTable,
-        CombatTable::CombatTable, ExperienceTable::ExperienceTable, Font::Font, GfxObj::GfxObj,
+        ActionMap::ActionMap, Animation::Animation, BadDataTable::BadDataTable, CharGen::CharGen,
+        ChatPoseTable::ChatPoseTable, ClothingTable::ClothingTable, CombatTable::CombatTable,
+        ContractTable::ContractTable, ExperienceTable::ExperienceTable, Font::Font, GfxObj::GfxObj,
         GfxObjDegradeInfo::GfxObjDegradeInfo, Iteration::Iteration, LanguageInfo::LanguageInfo,
-        MotionTable::MotionTable,
+        MasterInputMap::MasterInputMap, MasterProperty::MasterProperty,
         MaterialInstance::MaterialInstance, MaterialModifier::MaterialModifier,
-        NameFilterTable::NameFilterTable, Palette::Palette, ParticleEmitter::ParticleEmitter,
-        PhysicsScript::PhysicsScript, PhysicsScriptTable::PhysicsScriptTable, Region::Region,
-        QualityFilter::QualityFilter, RenderMaterial::RenderMaterial,
+        MotionTable::MotionTable, NameFilterTable::NameFilterTable,
+        ObjectHierarchy::ObjectHierarchy, Palette::Palette, ParticleEmitter::ParticleEmitter,
+        PhysicsScript::PhysicsScript, PhysicsScriptTable::PhysicsScriptTable,
+        QualityFilter::QualityFilter, Region::Region, RenderMaterial::RenderMaterial,
         RenderSurface::RenderSurface, RenderTexture::RenderTexture, Scene::Scene, Setup::Setup,
-        SkillTable::SkillTable, SpellComponentTable::SpellComponentTable,
-        SoundTable::SoundTable, Surface::Surface, SurfaceTexture::SurfaceTexture,
-        VitalTable::VitalTable, Wave::Wave,
+        SkillTable::SkillTable, SoundTable::SoundTable, SpellComponentTable::SpellComponentTable,
+        SpellTable::SpellTable, Surface::Surface, SurfaceTexture::SurfaceTexture,
+        TabooTable::TabooTable, VitalTable::VitalTable, Wave::Wave,
     },
     DatCollection::DatCollection,
     Options::DatAccessType::DatAccessType,
@@ -27,10 +29,18 @@ where
     T: dat_reader_writer::Lib::IO::IDBObj::IDBObj + Default,
 {
     let ids = collection.get_all_ids_of_type::<T>().unwrap();
-    assert!(!ids.is_empty(), "no ids returned for {}", std::any::type_name::<T>());
+    assert!(
+        !ids.is_empty(),
+        "no ids returned for {}",
+        std::any::type_name::<T>()
+    );
     for id in ids.into_iter().take(sample_count) {
         let value = collection.try_get::<T>(id).unwrap();
-        assert!(value.is_some(), "failed to read {} id {id:#010X}", std::any::type_name::<T>());
+        assert!(
+            value.is_some(),
+            "failed to read {} id {id:#010X}",
+            std::any::type_name::<T>()
+        );
     }
 }
 
@@ -39,11 +49,49 @@ where
 fn validates_ported_types_against_real_dats() {
     let collection = DatCollection::from_directory(real_dat_dir(), DatAccessType::Read).unwrap();
 
-    assert!(collection.try_get::<Iteration>(0xFFFF0001).unwrap().is_some());
+    assert!(
+        collection
+            .try_get::<Iteration>(0xFFFF0001)
+            .unwrap()
+            .is_some()
+    );
     assert!(collection.try_get::<CharGen>(0x0E000002).unwrap().is_some());
-    assert!(collection.try_get::<VitalTable>(0x0E000003).unwrap().is_some());
-    assert!(collection.try_get::<SkillTable>(0x0E000004).unwrap().is_some());
-    assert!(collection.try_get::<ExperienceTable>(0x0E000018).unwrap().is_some());
+    assert!(
+        collection
+            .try_get::<VitalTable>(0x0E000003)
+            .unwrap()
+            .is_some()
+    );
+    assert!(
+        collection
+            .try_get::<SkillTable>(0x0E000004)
+            .unwrap()
+            .is_some()
+    );
+    assert!(
+        collection
+            .try_get::<ChatPoseTable>(0x0E000007)
+            .unwrap()
+            .is_some()
+    );
+    assert!(
+        collection
+            .try_get::<ObjectHierarchy>(0x0E00000D)
+            .unwrap()
+            .is_some()
+    );
+    assert!(
+        collection
+            .try_get::<SpellTable>(0x0E00000E)
+            .unwrap()
+            .is_some()
+    );
+    assert!(
+        collection
+            .try_get::<ExperienceTable>(0x0E000018)
+            .unwrap()
+            .is_some()
+    );
 
     validate_sample::<Palette>(&collection, 5);
     validate_sample::<SurfaceTexture>(&collection, 5);
@@ -52,6 +100,9 @@ fn validates_ported_types_against_real_dats() {
     validate_sample::<RenderMaterial>(&collection, 3);
     validate_sample::<MaterialModifier>(&collection, 3);
     validate_sample::<MaterialInstance>(&collection, 3);
+    validate_sample::<ActionMap>(&collection, 1);
+    validate_sample::<MasterInputMap>(&collection, 1);
+    validate_sample::<MasterProperty>(&collection, 1);
     validate_sample::<GfxObjDegradeInfo>(&collection, 3);
     validate_sample::<MotionTable>(&collection, 5);
     validate_sample::<Setup>(&collection, 5);
@@ -67,7 +118,10 @@ fn validates_ported_types_against_real_dats() {
     validate_sample::<PhysicsScriptTable>(&collection, 3);
     validate_sample::<ClothingTable>(&collection, 3);
     validate_sample::<CombatTable>(&collection, 1);
+    validate_sample::<BadDataTable>(&collection, 1);
+    validate_sample::<ContractTable>(&collection, 1);
     validate_sample::<SpellComponentTable>(&collection, 1);
+    validate_sample::<TabooTable>(&collection, 1);
     validate_sample::<QualityFilter>(&collection, 1);
     validate_sample::<Font>(&collection, 3);
     validate_sample::<LanguageInfo>(&collection, 1);

@@ -70,4 +70,3 @@ impl IPackable for TemplateCG {
         true
     }
 }
-

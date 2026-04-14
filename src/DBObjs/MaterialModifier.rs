@@ -11,7 +11,10 @@ use crate::{
             IPackable::IPackable, IUnpackable::IUnpackable,
         },
     },
-    Types::{DBObj::{DBObj, DBObjBase}, MaterialProperty::MaterialProperty},
+    Types::{
+        DBObj::{DBObj, DBObjBase},
+        MaterialProperty::MaterialProperty,
+    },
 };
 
 pub const MATERIAL_MODIFIER_ATTR: DBObjTypeAttribute = DBObjTypeAttribute {
@@ -31,12 +34,24 @@ pub struct MaterialModifier {
 }
 
 impl DBObj for MaterialModifier {
-    fn header_flags(&self) -> DBObjHeaderFlags { DBObjHeaderFlags::HasId }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::MaterialModifier }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn data_category(&self) -> u32 { self.base.data_category }
-    fn set_data_category(&mut self, data_category: u32) { self.base.data_category = data_category; }
+    fn header_flags(&self) -> DBObjHeaderFlags {
+        DBObjHeaderFlags::HasId
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::MaterialModifier
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn data_category(&self) -> u32 {
+        self.base.data_category
+    }
+    fn set_data_category(&mut self, data_category: u32) {
+        self.base.data_category = data_category;
+    }
 }
 
 impl IUnpackable for MaterialModifier {
@@ -46,7 +61,8 @@ impl IUnpackable for MaterialModifier {
         self.material_properties.clear();
         self.material_properties.reserve(count);
         for _ in 0..count {
-            self.material_properties.push(reader.read_item::<MaterialProperty>());
+            self.material_properties
+                .push(reader.read_item::<MaterialProperty>());
         }
         true
     }
@@ -64,9 +80,22 @@ impl IPackable for MaterialModifier {
 }
 
 impl IDBObj for MaterialModifier {
-    fn db_obj_type_attr() -> &'static DBObjTypeAttribute where Self: Sized { &MATERIAL_MODIFIER_ATTR }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::MaterialModifier }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn as_any(&self) -> &dyn Any { self }
+    fn db_obj_type_attr() -> &'static DBObjTypeAttribute
+    where
+        Self: Sized,
+    {
+        &MATERIAL_MODIFIER_ATTR
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::MaterialModifier
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }

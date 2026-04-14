@@ -1,8 +1,14 @@
 use crate::{
     DBObjs::RenderSurface::RenderSurface,
     Generated::Enums::SkillCategory::SkillCategory,
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable},
-    Types::{AC1LegacyString::AC1LegacyString, QualifiedDataId::QualifiedDataId, SkillFormula::SkillFormula},
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
+    Types::{
+        AC1LegacyString::AC1LegacyString, QualifiedDataId::QualifiedDataId,
+        SkillFormula::SkillFormula,
+    },
 };
 
 #[derive(Debug, Clone, Default, PartialEq)]

@@ -40,8 +40,17 @@ const PORTED_ATTRIBUTES: &[&DBObjTypeAttribute] = &[
     &crate::DBObjs::MaterialModifier::MATERIAL_MODIFIER_ATTR,
     &crate::DBObjs::MaterialInstance::MATERIAL_INSTANCE_ATTR,
     &crate::DBObjs::GfxObjDegradeInfo::GFX_OBJ_DEGRADE_INFO_ATTR,
+    &crate::DBObjs::ActionMap::ACTION_MAP_ATTR,
+    &crate::DBObjs::SpellTable::SPELL_TABLE_ATTR,
     &crate::DBObjs::SpellComponentTable::SPELL_COMPONENT_TABLE_ATTR,
     &crate::DBObjs::QualityFilter::QUALITY_FILTER_ATTR,
+    &crate::DBObjs::BadDataTable::BAD_DATA_TABLE_ATTR,
+    &crate::DBObjs::ChatPoseTable::CHAT_POSE_TABLE_ATTR,
+    &crate::DBObjs::ContractTable::CONTRACT_TABLE_ATTR,
+    &crate::DBObjs::MasterInputMap::MASTER_INPUT_MAP_ATTR,
+    &crate::DBObjs::MasterProperty::MASTER_PROPERTY_ATTR,
+    &crate::DBObjs::ObjectHierarchy::OBJECT_HIERARCHY_ATTR,
+    &crate::DBObjs::TabooTable::TABOO_TABLE_ATTR,
 ];
 
 fn dat_type_matches(attr: &DBObjTypeAttribute, dat_type: DatFileType) -> bool {
@@ -81,10 +90,12 @@ pub fn type_from_id(dat_type: DatFileType, id: u32) -> Option<&'static DBObjType
             .find(|attr| exact_id_matches(attr, id) || mask_matches(attr, id)),
         DatFileType::Portal => attrs_for_dat_type(dat_type)
             .find(|attr| exact_id_matches(attr, id) || range_matches(attr, id)),
-        DatFileType::Local => attrs_for_dat_type(dat_type)
-            .find(|attr| exact_id_matches(attr, id) || mask_matches(attr, id) || range_matches(attr, id)),
-        DatFileType::Undefined => attrs_for_dat_type(dat_type)
-            .find(|attr| exact_id_matches(attr, id) || mask_matches(attr, id) || range_matches(attr, id)),
+        DatFileType::Local => attrs_for_dat_type(dat_type).find(|attr| {
+            exact_id_matches(attr, id) || mask_matches(attr, id) || range_matches(attr, id)
+        }),
+        DatFileType::Undefined => attrs_for_dat_type(dat_type).find(|attr| {
+            exact_id_matches(attr, id) || mask_matches(attr, id) || range_matches(attr, id)
+        }),
     }
 }
 

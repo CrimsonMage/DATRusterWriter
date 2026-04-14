@@ -5,9 +5,7 @@ use crate::{
         DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
         IUnpackable::IUnpackable,
     },
-    Types::{
-        ObfuscatedPStringBase::ObfuscatedPStringBase, QualifiedDataId::QualifiedDataId,
-    },
+    Types::{ObfuscatedPStringBase::ObfuscatedPStringBase, QualifiedDataId::QualifiedDataId},
 };
 
 #[derive(Debug, Clone, Default, PartialEq)]

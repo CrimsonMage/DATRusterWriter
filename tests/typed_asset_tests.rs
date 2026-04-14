@@ -1,18 +1,17 @@
 use dat_reader_writer::{
     DBObjs::{
-        CharGen::CharGen, GfxObj::GfxObj,
-        MotionTable::MotionTable, Palette::Palette, ParticleEmitter::ParticleEmitter,
-        PhysicsScript::PhysicsScript, Region::Region, RenderSurface::RenderSurface, Scene::Scene,
-        Surface::Surface, SurfaceTexture::SurfaceTexture, Wave::Wave,
+        CharGen::CharGen, GfxObj::GfxObj, MotionTable::MotionTable, Palette::Palette,
+        ParticleEmitter::ParticleEmitter, PhysicsScript::PhysicsScript, Region::Region,
+        RenderSurface::RenderSurface, Scene::Scene, Surface::Surface,
+        SurfaceTexture::SurfaceTexture, Wave::Wave,
     },
     Generated::Enums::{
-        AnimationHookDir::AnimationHookDir,
-        CullMode::CullMode, EmitterType::EmitterType, GfxObjFlags::GfxObjFlags,
-        MotionCommand::MotionCommand, ParentLocation::ParentLocation, ParticleType::ParticleType,
-        Placement::Placement,
-        PartsMask::PartsMask, PixelFormat::PixelFormat, SkillId::SkillId, Sound::Sound,
-        StipplingType::StipplingType, SurfaceType::SurfaceType,
-        TerrainTextureType::TerrainTextureType, TextureType::TextureType, VertexType::VertexType,
+        AnimationHookDir::AnimationHookDir, CullMode::CullMode, EmitterType::EmitterType,
+        GfxObjFlags::GfxObjFlags, MotionCommand::MotionCommand, ParentLocation::ParentLocation,
+        ParticleType::ParticleType, PartsMask::PartsMask, PixelFormat::PixelFormat,
+        Placement::Placement, SkillId::SkillId, Sound::Sound, StipplingType::StipplingType,
+        SurfaceType::SurfaceType, TerrainTextureType::TerrainTextureType, TextureType::TextureType,
+        VertexType::VertexType,
     },
     Lib::IO::{
         DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
@@ -20,7 +19,6 @@ use dat_reader_writer::{
     },
     Types::{
         AC1LegacyString::AC1LegacyString,
-        PStringBase::PStringBase,
         AmbientSTBDesc::AmbientSTBDesc,
         AmbientSoundDesc::AmbientSoundDesc,
         AnimationHook::AnimationHook,
@@ -37,6 +35,7 @@ use dat_reader_writer::{
         MotionData::MotionData,
         ObjDesc::{ObjDesc, SubPalette, TextureMapChange},
         ObjectDesc::ObjectDesc,
+        PStringBase::PStringBase,
         PackedQualifiedDataId::PackedQualifiedDataId,
         PhysicsScriptData::PhysicsScriptData,
         Polygon::Polygon,
@@ -1150,12 +1149,9 @@ fn clothing_table_roundtrip_reads_base_and_subpal_effects() {
     use dat_reader_writer::{
         DBObjs::ClothingTable::ClothingTable,
         Types::{
-            CloObjectEffect::CloObjectEffect,
-            CloSubPalEffect::CloSubPalEffect,
-            CloSubPalette::CloSubPalette,
-            CloSubPaletteRange::CloSubPaletteRange,
-            CloTextureEffect::CloTextureEffect,
-            ClothingBaseEffect::ClothingBaseEffect,
+            CloObjectEffect::CloObjectEffect, CloSubPalEffect::CloSubPalEffect,
+            CloSubPalette::CloSubPalette, CloSubPaletteRange::CloSubPaletteRange,
+            CloTextureEffect::CloTextureEffect, ClothingBaseEffect::ClothingBaseEffect,
             PackableHashTable::PackableHashTable,
         },
     };
@@ -1181,7 +1177,10 @@ fn clothing_table_roundtrip_reads_base_and_subpal_effects() {
         CloSubPalEffect {
             icon: QualifiedDataId::new(0x06000040),
             clo_sub_palettes: vec![CloSubPalette {
-                ranges: vec![CloSubPaletteRange { offset: 2, num_colors: 3 }],
+                ranges: vec![CloSubPaletteRange {
+                    offset: 2,
+                    num_colors: 3,
+                }],
                 palette_set: QualifiedDataId::new(0x0F000050),
             }],
         },
@@ -1195,16 +1194,46 @@ fn clothing_table_roundtrip_reads_base_and_subpal_effects() {
     let mut unpacked = ClothingTable::default();
     assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
     assert_eq!(1, unpacked.clothing_base_effects.len());
-    assert_eq!(0x01000020, unpacked.clothing_base_effects.get(&QualifiedDataId::new(0x02000010)).unwrap().clo_object_effects[0].model_id.data_id);
-    assert_eq!(0x05000031, unpacked.clothing_base_effects.get(&QualifiedDataId::new(0x02000010)).unwrap().clo_object_effects[0].clo_texture_effects[0].new_texture.data_id);
-    assert_eq!(0x0F000050, unpacked.clothing_sub_pal_effects.get(&9).unwrap().clo_sub_palettes[0].palette_set.data_id);
+    assert_eq!(
+        0x01000020,
+        unpacked
+            .clothing_base_effects
+            .get(&QualifiedDataId::new(0x02000010))
+            .unwrap()
+            .clo_object_effects[0]
+            .model_id
+            .data_id
+    );
+    assert_eq!(
+        0x05000031,
+        unpacked
+            .clothing_base_effects
+            .get(&QualifiedDataId::new(0x02000010))
+            .unwrap()
+            .clo_object_effects[0]
+            .clo_texture_effects[0]
+            .new_texture
+            .data_id
+    );
+    assert_eq!(
+        0x0F000050,
+        unpacked
+            .clothing_sub_pal_effects
+            .get(&9)
+            .unwrap()
+            .clo_sub_palettes[0]
+            .palette_set
+            .data_id
+    );
 }
 
 #[test]
 fn combat_table_roundtrip_reads_maneuvers() {
     use dat_reader_writer::{
         DBObjs::CombatTable::CombatTable,
-        Generated::Enums::{AttackHeight::AttackHeight, AttackType::AttackType, MotionStance::MotionStance},
+        Generated::Enums::{
+            AttackHeight::AttackHeight, AttackType::AttackType, MotionStance::MotionStance,
+        },
         Types::CombatManeuver::CombatManeuver,
     };
 
@@ -1227,21 +1256,22 @@ fn combat_table_roundtrip_reads_maneuvers() {
     let mut unpacked = CombatTable::default();
     assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
     assert_eq!(1, unpacked.combat_maneuvers.len());
-    assert_eq!(MotionStance::SWORD_COMBAT, unpacked.combat_maneuvers[0].style);
-    assert!(unpacked.combat_maneuvers[0].attack_type.contains(AttackType::Slash));
+    assert_eq!(
+        MotionStance::SWORD_COMBAT,
+        unpacked.combat_maneuvers[0].style
+    );
+    assert!(
+        unpacked.combat_maneuvers[0]
+            .attack_type
+            .contains(AttackType::Slash)
+    );
     assert_eq!(250, unpacked.combat_maneuvers[0].min_skill_level);
 }
-
-
-
-
-
 
 #[test]
 fn vital_table_roundtrip_reads_formulas() {
     use dat_reader_writer::{
-        DBObjs::VitalTable::VitalTable,
-        Generated::Enums::AttributeId::AttributeId,
+        DBObjs::VitalTable::VitalTable, Generated::Enums::AttributeId::AttributeId,
         Types::SkillFormula::SkillFormula,
     };
 
@@ -1289,18 +1319,27 @@ fn vital_table_roundtrip_reads_formulas() {
 #[test]
 fn skill_table_roundtrip_reads_skill_entries() {
     use dat_reader_writer::{
-        DBObjs::SkillTable::SkillTable,
         DBObjs::RenderSurface::RenderSurface,
-        Generated::Enums::{AttributeId::AttributeId, SkillCategory::SkillCategory, SkillId::SkillId},
-        Types::{PackableHashTable::PackableHashTable, QualifiedDataId::QualifiedDataId, SkillBase::SkillBase, SkillFormula::SkillFormula},
+        DBObjs::SkillTable::SkillTable,
+        Generated::Enums::{
+            AttributeId::AttributeId, SkillCategory::SkillCategory, SkillId::SkillId,
+        },
+        Types::{
+            PackableHashTable::PackableHashTable, QualifiedDataId::QualifiedDataId,
+            SkillBase::SkillBase, SkillFormula::SkillFormula,
+        },
     };
 
     let mut skills = PackableHashTable::<SkillId, SkillBase>::default();
     skills.insert(
         SkillId::BOW,
         SkillBase {
-            description: AC1LegacyString { value: "Bow skill".to_string() },
-            name: AC1LegacyString { value: "Bow".to_string() },
+            description: AC1LegacyString {
+                value: "Bow skill".to_string(),
+            },
+            name: AC1LegacyString {
+                value: "Bow".to_string(),
+            },
             icon_id: QualifiedDataId::<RenderSurface>::new(0x06000044),
             trained_cost: 6,
             specialized_cost: 4,
@@ -1395,8 +1434,16 @@ fn string_info_roundtrip_reads_override_and_table_link() {
     assert_eq!(7, unpacked.token);
     assert_eq!(0x52BA517, unpacked.string_id);
     assert_eq!(0x23000001, unpacked.table_id.data_id);
-    assert!(unpacked.override_flag.contains(StringInfoOverrideFlag::Literal));
-    assert!(unpacked.override_flag.contains(StringInfoOverrideFlag::AutoGen));
+    assert!(
+        unpacked
+            .override_flag
+            .contains(StringInfoOverrideFlag::Literal)
+    );
+    assert!(
+        unpacked
+            .override_flag
+            .contains(StringInfoOverrideFlag::AutoGen)
+    );
 }
 
 #[test]
@@ -1530,7 +1577,11 @@ fn base_property_roundtrip_reads_string_info_and_scalar_variants() {
             | BaseProperty::InstanceId { header, .. }
             | BaseProperty::Bitfield32 { header, .. }
             | BaseProperty::Bitfield64 { header, .. } => {
-                if header.should_pack_master_property_id { 4 } else { 0 }
+                if header.should_pack_master_property_id {
+                    4
+                } else {
+                    0
+                }
             }
         };
 
@@ -1540,7 +1591,10 @@ fn base_property_roundtrip_reads_string_info_and_scalar_variants() {
         assert_eq!(property_type, unpacked.property_type());
     }
 
-    assert_eq!(BasePropertyType::STRING_INFO, BasePropertyType::from(0x8_u32));
+    assert_eq!(
+        BasePropertyType::STRING_INFO,
+        BasePropertyType::from(0x8_u32)
+    );
 }
 
 #[test]
@@ -1551,8 +1605,7 @@ fn base_property_desc_roundtrip_reads_bounds_flags_and_available_properties() {
         Generated::Enums::{
             BasePropertyType::BasePropertyType, PatchFlags::PatchFlags,
             PropertyCachingType::PropertyCachingType, PropertyDatFileType::PropertyDatFileType,
-            PropertyGroupName::PropertyGroupName,
-            PropertyInheritanceType::PropertyInheritanceType,
+            PropertyGroupName::PropertyGroupName, PropertyInheritanceType::PropertyInheritanceType,
             PropertyPropagationType::PropertyPropagationType,
         },
         Types::{
@@ -1620,5 +1673,3 @@ fn base_property_desc_roundtrip_reads_bounds_flags_and_available_properties() {
         other => panic!("unexpected property variant: {other:?}"),
     }
 }
-
-

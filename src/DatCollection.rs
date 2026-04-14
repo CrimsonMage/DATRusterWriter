@@ -134,15 +134,24 @@ impl DatCollection {
                 .inner
                 .try_get_file_bytes(file_id, auto_decompress),
             DatFileType::Undefined => {
-                let portal = self.portal.inner.try_get_file_bytes(file_id, auto_decompress)?;
+                let portal = self
+                    .portal
+                    .inner
+                    .try_get_file_bytes(file_id, auto_decompress)?;
                 if portal.is_some() {
                     return Ok(portal);
                 }
-                let high_res = self.high_res.inner.try_get_file_bytes(file_id, auto_decompress)?;
+                let high_res = self
+                    .high_res
+                    .inner
+                    .try_get_file_bytes(file_id, auto_decompress)?;
                 if high_res.is_some() {
                     return Ok(high_res);
                 }
-                let local = self.local.inner.try_get_file_bytes(file_id, auto_decompress)?;
+                let local = self
+                    .local
+                    .inner
+                    .try_get_file_bytes(file_id, auto_decompress)?;
                 if local.is_some() {
                     return Ok(local);
                 }

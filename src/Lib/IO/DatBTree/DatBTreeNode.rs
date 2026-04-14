@@ -89,12 +89,7 @@ impl DatBTreeNode {
         self.file_count += count;
     }
 
-    pub fn append_branches_from(
-        &mut self,
-        source: &DatBTreeNode,
-        src_index: usize,
-        count: usize,
-    ) {
+    pub fn append_branches_from(&mut self, source: &DatBTreeNode, src_index: usize, count: usize) {
         for i in 0..count {
             self.branches[self.branch_count + i] = source.branches[src_index + i];
         }

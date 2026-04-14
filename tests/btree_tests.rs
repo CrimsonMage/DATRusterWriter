@@ -42,27 +42,84 @@ impl ReadOnlyMockBlockAllocator {
 }
 
 impl IDatBlockAllocator for ReadOnlyMockBlockAllocator {
-    fn can_write(&self) -> bool { false }
-    fn has_header_data(&self) -> bool { true }
-    fn header(&self) -> DatHeader { self.header.clone() }
-    fn init_new(&self, _file_type: DatFileType, _subset: u32, _block_size: i32, _num_blocks_to_allocate: i32) -> io::Result<()> { Err(io::Error::new(io::ErrorKind::Unsupported, "read-only")) }
-    fn set_version(&self, _version: &str, _engine_version: i32, _game_version: i32, _major_version: Uuid, _minor_version: u32) -> io::Result<()> { Err(io::Error::new(io::ErrorKind::Unsupported, "read-only")) }
-    fn write_bytes(&self, _buffer: &[u8], _byte_offset: usize, _num_bytes: usize) -> io::Result<()> { Err(io::Error::new(io::ErrorKind::Unsupported, "read-only")) }
-    fn write_block(&self, _buffer: &[u8], _num_bytes: usize, _starting_block: i32) -> io::Result<i32> { Err(io::Error::new(io::ErrorKind::Unsupported, "read-only")) }
-    fn read_bytes(&self, buffer: &mut [u8], buffer_offset: usize, byte_offset: usize, num_bytes: usize) -> io::Result<()> {
-        let block = self.blocks.get(&byte_offset).ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "missing raw block"))?;
+    fn can_write(&self) -> bool {
+        false
+    }
+    fn has_header_data(&self) -> bool {
+        true
+    }
+    fn header(&self) -> DatHeader {
+        self.header.clone()
+    }
+    fn init_new(
+        &self,
+        _file_type: DatFileType,
+        _subset: u32,
+        _block_size: i32,
+        _num_blocks_to_allocate: i32,
+    ) -> io::Result<()> {
+        Err(io::Error::new(io::ErrorKind::Unsupported, "read-only"))
+    }
+    fn set_version(
+        &self,
+        _version: &str,
+        _engine_version: i32,
+        _game_version: i32,
+        _major_version: Uuid,
+        _minor_version: u32,
+    ) -> io::Result<()> {
+        Err(io::Error::new(io::ErrorKind::Unsupported, "read-only"))
+    }
+    fn write_bytes(
+        &self,
+        _buffer: &[u8],
+        _byte_offset: usize,
+        _num_bytes: usize,
+    ) -> io::Result<()> {
+        Err(io::Error::new(io::ErrorKind::Unsupported, "read-only"))
+    }
+    fn write_block(
+        &self,
+        _buffer: &[u8],
+        _num_bytes: usize,
+        _starting_block: i32,
+    ) -> io::Result<i32> {
+        Err(io::Error::new(io::ErrorKind::Unsupported, "read-only"))
+    }
+    fn read_bytes(
+        &self,
+        buffer: &mut [u8],
+        buffer_offset: usize,
+        byte_offset: usize,
+        num_bytes: usize,
+    ) -> io::Result<()> {
+        let block = self
+            .blocks
+            .get(&byte_offset)
+            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "missing raw block"))?;
         buffer[buffer_offset..buffer_offset + num_bytes].copy_from_slice(&block[..num_bytes]);
         Ok(())
     }
     fn read_block(&self, buffer: &mut [u8], starting_block: usize) -> io::Result<()> {
-        let block = self.blocks.get(&starting_block).ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "missing block"))?;
+        let block = self
+            .blocks
+            .get(&starting_block)
+            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "missing block"))?;
         buffer[..block.len()].copy_from_slice(block);
         Ok(())
     }
-    fn try_get_block_offsets(&self, _starting_block: i32) -> io::Result<Option<Vec<i32>>> { Ok(None) }
-    fn allocate_empty_blocks(&self, _num_blocks_to_allocate: i32) -> io::Result<()> { Err(io::Error::new(io::ErrorKind::Unsupported, "read-only")) }
-    fn reserve_block(&self) -> io::Result<i32> { Err(io::Error::new(io::ErrorKind::Unsupported, "read-only")) }
-    fn set_root_block(&self, _offset: i32) -> io::Result<()> { Err(io::Error::new(io::ErrorKind::Unsupported, "read-only")) }
+    fn try_get_block_offsets(&self, _starting_block: i32) -> io::Result<Option<Vec<i32>>> {
+        Ok(None)
+    }
+    fn allocate_empty_blocks(&self, _num_blocks_to_allocate: i32) -> io::Result<()> {
+        Err(io::Error::new(io::ErrorKind::Unsupported, "read-only"))
+    }
+    fn reserve_block(&self) -> io::Result<i32> {
+        Err(io::Error::new(io::ErrorKind::Unsupported, "read-only"))
+    }
+    fn set_root_block(&self, _offset: i32) -> io::Result<()> {
+        Err(io::Error::new(io::ErrorKind::Unsupported, "read-only"))
+    }
 }
 
 struct WritableState {
@@ -117,10 +174,22 @@ impl WritableMockBlockAllocator {
 }
 
 impl IDatBlockAllocator for WritableMockBlockAllocator {
-    fn can_write(&self) -> bool { true }
-    fn has_header_data(&self) -> bool { true }
-    fn header(&self) -> DatHeader { self.state.lock().unwrap().header.clone() }
-    fn init_new(&self, file_type: DatFileType, subset: u32, block_size: i32, num_blocks_to_allocate: i32) -> io::Result<()> {
+    fn can_write(&self) -> bool {
+        true
+    }
+    fn has_header_data(&self) -> bool {
+        true
+    }
+    fn header(&self) -> DatHeader {
+        self.state.lock().unwrap().header.clone()
+    }
+    fn init_new(
+        &self,
+        file_type: DatFileType,
+        subset: u32,
+        block_size: i32,
+        num_blocks_to_allocate: i32,
+    ) -> io::Result<()> {
         let mut state = self.state.lock().unwrap();
         state.header = DatHeader::new(file_type, subset, block_size, None, 0, 0, Uuid::nil(), 0);
         state.next_block = ((DatHeader::SIZE as i32 + block_size - 1) / block_size) * block_size;
@@ -129,7 +198,14 @@ impl IDatBlockAllocator for WritableMockBlockAllocator {
         }
         Ok(())
     }
-    fn set_version(&self, version: &str, engine_version: i32, game_version: i32, major_version: Uuid, minor_version: u32) -> io::Result<()> {
+    fn set_version(
+        &self,
+        version: &str,
+        engine_version: i32,
+        game_version: i32,
+        major_version: Uuid,
+        minor_version: u32,
+    ) -> io::Result<()> {
         let mut state = self.state.lock().unwrap();
         state.header.version = Some(version.to_string());
         state.header.engine_version = engine_version;
@@ -140,7 +216,9 @@ impl IDatBlockAllocator for WritableMockBlockAllocator {
     }
     fn write_bytes(&self, buffer: &[u8], byte_offset: usize, num_bytes: usize) -> io::Result<()> {
         let mut state = self.state.lock().unwrap();
-        state.blocks.insert(byte_offset as i32, buffer[..num_bytes].to_vec());
+        state
+            .blocks
+            .insert(byte_offset as i32, buffer[..num_bytes].to_vec());
         Ok(())
     }
     fn write_block(&self, buffer: &[u8], num_bytes: usize, starting_block: i32) -> io::Result<i32> {
@@ -158,19 +236,33 @@ impl IDatBlockAllocator for WritableMockBlockAllocator {
         state.blocks.insert(offset, block);
         Ok(offset)
     }
-    fn read_bytes(&self, buffer: &mut [u8], buffer_offset: usize, byte_offset: usize, num_bytes: usize) -> io::Result<()> {
+    fn read_bytes(
+        &self,
+        buffer: &mut [u8],
+        buffer_offset: usize,
+        byte_offset: usize,
+        num_bytes: usize,
+    ) -> io::Result<()> {
         let state = self.state.lock().unwrap();
-        let block = state.blocks.get(&(byte_offset as i32)).ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "missing raw block"))?;
+        let block = state
+            .blocks
+            .get(&(byte_offset as i32))
+            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "missing raw block"))?;
         buffer[buffer_offset..buffer_offset + num_bytes].copy_from_slice(&block[..num_bytes]);
         Ok(())
     }
     fn read_block(&self, buffer: &mut [u8], starting_block: usize) -> io::Result<()> {
         let state = self.state.lock().unwrap();
-        let block = state.blocks.get(&(starting_block as i32)).ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "missing block"))?;
+        let block = state
+            .blocks
+            .get(&(starting_block as i32))
+            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "missing block"))?;
         buffer[..block.len()].copy_from_slice(block);
         Ok(())
     }
-    fn try_get_block_offsets(&self, starting_block: i32) -> io::Result<Option<Vec<i32>>> { Ok((starting_block > 0).then_some(vec![starting_block])) }
+    fn try_get_block_offsets(&self, starting_block: i32) -> io::Result<Option<Vec<i32>>> {
+        Ok((starting_block > 0).then_some(vec![starting_block]))
+    }
     fn allocate_empty_blocks(&self, num_blocks_to_allocate: i32) -> io::Result<()> {
         let mut state = self.state.lock().unwrap();
         state.header.file_size += num_blocks_to_allocate * state.header.block_size;
@@ -341,7 +433,10 @@ fn btree_insert_splits_full_root() {
     let inserted = sample_file(9999, 3333, 2);
     assert!(tree.insert(inserted).unwrap().is_none());
 
-    assert_eq!(DatBTreeReaderWriter::MAX_ITEMS + 1, tree.all_files().unwrap().len());
+    assert_eq!(
+        DatBTreeReaderWriter::MAX_ITEMS + 1,
+        tree.all_files().unwrap().len()
+    );
     assert_eq!(inserted, tree.try_get_file(9999).unwrap().unwrap());
     assert_ne!(2048, allocator.header().root_block);
 }
@@ -359,7 +454,12 @@ fn btree_delete_removes_leaf_entry() {
     let deleted = tree.try_delete(20).unwrap().unwrap();
     assert_eq!(20, deleted.id);
     assert!(tree.try_get_file(20).unwrap().is_none());
-    let ids: Vec<u32> = tree.all_files().unwrap().into_iter().map(|file| file.id).collect();
+    let ids: Vec<u32> = tree
+        .all_files()
+        .unwrap()
+        .into_iter()
+        .map(|file| file.id)
+        .collect();
     assert_eq!(vec![10, 30], ids);
 }
 
@@ -381,12 +481,18 @@ fn btree_delete_can_collapse_empty_root_to_child() {
     root.add_file(middle);
     root.add_branch(right.offset);
 
-    let allocator = Arc::new(WritableMockBlockAllocator::with_nodes(root, vec![left, right]));
+    let allocator = Arc::new(WritableMockBlockAllocator::with_nodes(
+        root,
+        vec![left, right],
+    ));
     let tree = DatBTreeReaderWriter::new(allocator.clone());
 
     let deleted = tree.try_delete(500).unwrap().unwrap();
     assert_eq!(500, deleted.id);
     assert!(tree.try_get_file(500).unwrap().is_none());
     assert_ne!(2048, allocator.header().root_block);
-    assert_eq!(DatBTreeReaderWriter::MIN_ITEMS * 2, tree.all_files().unwrap().len());
+    assert_eq!(
+        DatBTreeReaderWriter::MIN_ITEMS * 2,
+        tree.all_files().unwrap().len()
+    );
 }

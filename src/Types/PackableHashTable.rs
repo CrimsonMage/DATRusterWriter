@@ -1,7 +1,10 @@
 use std::collections::BTreeMap;
 
 use crate::{
-    Lib::IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable, IUnpackable::IUnpackable},
+    Lib::IO::{
+        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+        IUnpackable::IUnpackable,
+    },
     Types::HashTable::HashTableKey,
 };
 
@@ -13,7 +16,10 @@ pub struct PackableHashTable<K, V> {
 
 impl<K, V> Default for PackableHashTable<K, V> {
     fn default() -> Self {
-        Self { bucket_size: 32, entries: BTreeMap::new() }
+        Self {
+            bucket_size: 32,
+            entries: BTreeMap::new(),
+        }
     }
 }
 
@@ -32,7 +38,9 @@ impl<K, V> PackableHashTable<K, V> {
         self.entries.get(key)
     }
 
-    pub fn len(&self) -> usize { self.entries.len() }
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
 }
 
 impl<K, V> IUnpackable for PackableHashTable<K, V>

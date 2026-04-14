@@ -179,7 +179,10 @@ impl DatBTreeReaderWriter {
         node.offset = self
             .block_allocator
             .write_block(&buffer, DatBTreeNode::SIZE, node.offset)?;
-        self.node_cache.lock().unwrap().insert(node.offset, node.clone());
+        self.node_cache
+            .lock()
+            .unwrap()
+            .insert(node.offset, node.clone());
         Ok(())
     }
 
@@ -194,7 +197,12 @@ impl DatBTreeReaderWriter {
         let child_idx = parent.branches[..parent.branch_count]
             .iter()
             .position(|offset| *offset == child.offset)
-            .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "child not found in parent branches"))?;
+            .ok_or_else(|| {
+                io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "child not found in parent branches",
+                )
+            })?;
 
         parent.insert_file(child_idx, child.files[Self::DEGREE - 1]);
         parent.insert_branch(child_idx + 1, new_node.offset);
@@ -257,9 +265,7 @@ impl DatBTreeReaderWriter {
 
     fn insert_non_full(&self, node: &mut DatBTreeNode, file: DatBTreeFile) -> io::Result<()> {
         let mut position_to_insert = 0_usize;
-        while position_to_insert < node.file_count
-            && file.id >= node.files[position_to_insert].id
-        {
+        while position_to_insert < node.file_count && file.id >= node.files[position_to_insert].id {
             position_to_insert += 1;
         }
 
@@ -271,7 +277,12 @@ impl DatBTreeReaderWriter {
 
         let mut child = self
             .try_get_node(node.branches[position_to_insert])?
-            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "child node not found during insertion"))?;
+            .ok_or_else(|| {
+                io::Error::new(
+                    io::ErrorKind::NotFound,
+                    "child node not found during insertion",
+                )
+            })?;
 
         if child.file_count == Self::MAX_ITEMS {
             self.split_child(node, &mut child)?;
@@ -279,7 +290,9 @@ impl DatBTreeReaderWriter {
                 position_to_insert += 1;
                 child = self
                     .try_get_node(node.branches[position_to_insert])?
-                    .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "child node not found after split"))?;
+                    .ok_or_else(|| {
+                        io::Error::new(io::ErrorKind::NotFound, "child node not found after split")
+                    })?;
             }
         }
 
@@ -309,7 +322,9 @@ impl DatBTreeReaderWriter {
     ) -> io::Result<()> {
         let mut child_node = self
             .try_get_node(parent_node.branches[subtree_index_in_node])?
-            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "unable to lookup child node"))?;
+            .ok_or_else(|| {
+                io::Error::new(io::ErrorKind::NotFound, "unable to lookup child node")
+            })?;
 
         if child_node.file_count == Self::MIN_ITEMS {
             let left_index = subtree_index_in_node as i32 - 1;
@@ -333,7 +348,8 @@ impl DatBTreeReaderWriter {
                     left_sibling.remove_file_at(left_sibling.file_count - 1);
 
                     if !left_sibling.is_leaf() {
-                        child_node.insert_branch(0, left_sibling.branches[left_sibling.branch_count - 1]);
+                        child_node
+                            .insert_branch(0, left_sibling.branches[left_sibling.branch_count - 1]);
                         left_sibling.remove_branch_at(left_sibling.branch_count - 1);
                     }
 
@@ -398,7 +414,11 @@ impl DatBTreeReaderWriter {
                     child_node.add_file(parent_node.files[subtree_index_in_node]);
                     child_node.append_files_from(&right_sibling, 0, right_sibling.file_count);
                     if !right_sibling.is_leaf() {
-                        child_node.append_branches_from(&right_sibling, 0, right_sibling.branch_count);
+                        child_node.append_branches_from(
+                            &right_sibling,
+                            0,
+                            right_sibling.branch_count,
+                        );
                     }
 
                     parent_node.remove_branch_at(right_index);
@@ -427,7 +447,12 @@ impl DatBTreeReaderWriter {
 
         let mut predecessor_child = self
             .try_get_node(node.branches[key_index_in_node])?
-            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "unable to lookup predecessor child"))?;
+            .ok_or_else(|| {
+                io::Error::new(
+                    io::ErrorKind::NotFound,
+                    "unable to lookup predecessor child",
+                )
+            })?;
 
         if predecessor_child.file_count >= Self::DEGREE {
             let predecessor = self.delete_predecessor(predecessor_child)?;
@@ -436,7 +461,9 @@ impl DatBTreeReaderWriter {
         } else {
             let successor_child = self
                 .try_get_node(node.branches[key_index_in_node + 1])?
-                .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "unable to lookup successor child"))?;
+                .ok_or_else(|| {
+                    io::Error::new(io::ErrorKind::NotFound, "unable to lookup successor child")
+                })?;
 
             if successor_child.file_count >= Self::DEGREE {
                 let successor = self.delete_successor(successor_child)?;
@@ -444,8 +471,16 @@ impl DatBTreeReaderWriter {
                 self.write_node(&mut node)
             } else {
                 predecessor_child.add_file(node.files[key_index_in_node]);
-                predecessor_child.append_files_from(&successor_child, 0, successor_child.file_count);
-                predecessor_child.append_branches_from(&successor_child, 0, successor_child.branch_count);
+                predecessor_child.append_files_from(
+                    &successor_child,
+                    0,
+                    successor_child.file_count,
+                );
+                predecessor_child.append_branches_from(
+                    &successor_child,
+                    0,
+                    successor_child.branch_count,
+                );
 
                 node.remove_file_at(key_index_in_node);
                 node.remove_branch_at(key_index_in_node + 1);
@@ -468,7 +503,9 @@ impl DatBTreeReaderWriter {
 
         let predecessor = self
             .try_get_node(node.branches[node.branch_count - 1])?
-            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "failed to look up predecessor"))?;
+            .ok_or_else(|| {
+                io::Error::new(io::ErrorKind::NotFound, "failed to look up predecessor")
+            })?;
         self.delete_predecessor(predecessor)
     }
 
@@ -480,9 +517,9 @@ impl DatBTreeReaderWriter {
             return Ok(result);
         }
 
-        let successor = self
-            .try_get_node(node.branches[0])?
-            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "failed to look up successor"))?;
+        let successor = self.try_get_node(node.branches[0])?.ok_or_else(|| {
+            io::Error::new(io::ErrorKind::NotFound, "failed to look up successor")
+        })?;
         self.delete_successor(successor)
     }
 

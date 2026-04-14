@@ -91,4 +91,3 @@ impl IPackable for HeritageGroupCG {
         true
     }
 }
-

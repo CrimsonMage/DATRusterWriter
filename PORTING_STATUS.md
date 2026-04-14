@@ -247,8 +247,16 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 - Added the explicit enum-mapper family support with concrete `AutoGrowHashTable` / `IntrusiveHashTable` containers, `EnumMapperData`, `EnumMapper`, `EnumIDMap`, and `DualEnumIDMap`.
 - Added the explicit material/render asset slice with `RenderTexture`, `RenderMaterial`, `MaterialModifier`, `MaterialInstance`, `MaterialProperty`, and their immediate enum dependencies.
 - Added the explicit degrade/filter/spell-component slice with `GfxObjDegradeInfo`, `QualityFilter`, `SpellComponentTable`, `GfxObjInfo`, `SpellComponentBase`, `ObfuscatedPStringBase`, and `ComponentType`.
+- Added the explicit bad-data/contract/taboo slice with `BadDataTable`, `ContractTable`, `TabooTable`, `Contract`, `TabooTableEntry`, and the `AC1LegacyPStringBase` compatibility layer.
+- Added the explicit `ChatPoseTable` slice with `ChatEmoteData` and legacy packed-string keyed table handling kept local to the DBObj instead of broadening the generic container surface.
+- Added the explicit `ObjectHierarchy` slice with recursive `ObjHierarchyNode` support on top of the already-ported obfuscated string format.
+- Added the explicit `MasterInputMap` slice with `DeviceType`, `DeviceKeyMapEntry`, `ControlSpecification`, `QualifiedControl`, and `CInputMap`.
 - Re-ran external retail DAT validation against `C:\Turbine\Asheron's call\` after the new material slice, and the ignored real-DAT suite still passes without hardcoding that path into the crate.
 - Re-ran external retail DAT validation against `C:\Turbine\Asheron's call\` after the new degrade/filter/spell-component slice, and the ignored real-DAT suite still passes without hardcoding that path into the crate.
+- Re-ran external retail DAT validation against `C:\Turbine\Asheron's call\` after the new bad-data/contract/taboo slice, and the ignored real-DAT suite still passes without hardcoding that path into the crate.
+- Re-ran external retail DAT validation against `C:\Turbine\Asheron's call\` after the new `ChatPoseTable` slice, and the ignored real-DAT suite still passes without hardcoding that path into the crate.
+- Re-ran external retail DAT validation against `C:\Turbine\Asheron's call\` after the new `ObjectHierarchy` slice, and the ignored real-DAT suite still passes without hardcoding that path into the crate.
+- Re-ran external retail DAT validation against `C:\Turbine\Asheron's call\` after the new `MasterInputMap` slice, and the ignored real-DAT suite still passes without hardcoding that path into the crate.
 
 ## Remaining Major Areas
 
@@ -287,6 +295,7 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 
 - Restored from `PORTING_STATUS_snapshot_298f8bd.md`, sourced from commit `298f8bdad60cdc4842583958161e853d2537c749` in the `CrimsonMage/DATRusterWriter` repository.
 - The original local `PORTING_STATUS.md` became unreadable due to null-padded contents and was rebuilt from this snapshot plus subsequent verified port work.
+- The temporary `PORTING_STATUS_ADDENDUM.md` recovery notes have been merged back into this main tracker, and the addendum is no longer needed.
 
 ## Progress Since Snapshot Recovery
 
@@ -336,11 +345,45 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/DBObjs/GfxObjDegradeInfo.generated.cs` | `src/DBObjs/GfxObjDegradeInfo.rs` | Verified | Explicit degrade-info DBObj now reads typed degrade entries and is validated against retail DATs |
 | `DatReaderWriter/Generated/DBObjs/QualityFilter.generated.cs` | `src/DBObjs/QualityFilter.rs` | Verified | Explicit quality-filter DBObj now reads all stat-filter arrays and is validated against retail DATs |
 | `DatReaderWriter/Generated/DBObjs/SpellComponentTable.generated.cs` | `src/DBObjs/SpellComponentTable.rs` | Verified | Explicit spell-component table DBObj now reads typed packable component entries and is validated against retail DATs |
+| `DatReaderWriter/Types/AC1LegacyPStringBase.cs` | `src/Types/AC1LegacyPStringBase.rs` | Verified | Explicit AC1 legacy packed string compatibility wrapper now mirrors the current byte-string read/write format used by contract records |
+| `DatReaderWriter/Generated/Types/Contract.generated.cs` | `src/Types/Contract.rs` | Verified | Explicit contract payload now reads quest strings and positions and is covered by focused tests |
+| `DatReaderWriter/Generated/Types/TabooTableEntry.generated.cs` | `src/Types/TabooTableEntry.rs` | Verified | Explicit taboo-entry payload now reads the key, flag, and banned pattern list and is covered by focused tests |
+| `DatReaderWriter/Generated/DBObjs/BadDataTable.generated.cs` | `src/DBObjs/BadDataTable.rs` | Verified | Explicit bad-data table DBObj now reads its qualified-id to raw-value map and is validated against retail DATs |
+| `DatReaderWriter/Generated/Types/ChatEmoteData.generated.cs` | `src/Types/ChatEmoteData.rs` | Verified | Explicit chat-emote payload now reads both legacy packed emote strings and is covered by focused tests |
+| `DatReaderWriter/Generated/DBObjs/ChatPoseTable.generated.cs` | `src/DBObjs/ChatPoseTable.rs` | Verified | Explicit chat-pose table DBObj now reads legacy-string keyed pose and emote maps and is validated against retail DATs |
+| `DatReaderWriter/Generated/DBObjs/ContractTable.generated.cs` | `src/DBObjs/ContractTable.rs` | Verified | Explicit contract table DBObj now reads typed contract entries and is validated against retail DATs |
+| `DatReaderWriter/Generated/Types/ObjHierarchyNode.generated.cs` | `src/Types/ObjHierarchyNode.rs` | Verified | Explicit recursive hierarchy-node payload now reads menu text, WCID, and child nodes and is covered by focused tests |
+| `DatReaderWriter/Generated/DBObjs/ObjectHierarchy.generated.cs` | `src/DBObjs/ObjectHierarchy.rs` | Verified | Explicit object-hierarchy DBObj now reads the recursive root node and is validated against retail DATs |
+| `DatReaderWriter/Generated/Enums/DeviceType.generated.cs` | `src/Generated/Enums/DeviceType.rs` | Ported | Explicit input-device enum mirrored from the reference |
+| `DatReaderWriter/Generated/Types/ControlSpecification.generated.cs` | `src/Types/ControlSpecification.rs` | Verified | Explicit key/modifier pair payload now roundtrips in focused tests |
+| `DatReaderWriter/Generated/Types/DeviceKeyMapEntry.generated.cs` | `src/Types/DeviceKeyMapEntry.rs` | Verified | Explicit device-keymap entry now reads device type plus GUID and is covered by focused tests |
+| `DatReaderWriter/Generated/Types/QualifiedControl.generated.cs` | `src/Types/QualifiedControl.rs` | Verified | Explicit input binding payload now reads control spec plus activation fields and is covered by focused tests |
+| `DatReaderWriter/Generated/Types/CInputMap.generated.cs` | `src/Types/CInputMap.rs` | Verified | Explicit input-map payload now reads qualified-control lists and is covered by focused tests |
+| `DatReaderWriter/Generated/DBObjs/MasterInputMap.generated.cs` | `src/DBObjs/MasterInputMap.rs` | Verified | Explicit master-input-map DBObj now reads name, GUID, devices, meta keys, and keyed input maps and is validated against retail DATs |
+| `DatReaderWriter/Generated/DBObjs/TabooTable.generated.cs` | `src/DBObjs/TabooTable.rs` | Verified | Explicit taboo table DBObj now reads audience-keyed banned-pattern groups and is validated against retail DATs |
+| `DatReaderWriter/Generated/Enums/EquipmentSet.generated.cs` | `src/Generated/Enums/EquipmentSet.rs` | Ported | Explicit equipment-set enum mirrored from the reference for `SpellTable` spell-set keys |
+| `DatReaderWriter/Generated/Enums/ItemType.generated.cs` | `src/Generated/Enums/ItemType.rs` | Ported | Explicit item-type enum mirrored from the reference for spell targeting metadata |
+| `DatReaderWriter/Generated/Enums/MagicSchool.generated.cs` | `src/Generated/Enums/MagicSchool.rs` | Ported | Explicit magic-school enum mirrored from the reference for spell records |
+| `DatReaderWriter/Generated/Enums/SpellCategory.generated.cs` | `src/Generated/Enums/SpellCategory.rs` | Partial | Explicit spell-category wrapper is in place with the currently used named surface; full long-tail constant coverage still remains |
+| `DatReaderWriter/Generated/Enums/SpellIndex.generated.cs` | `src/Generated/Enums/SpellIndex.rs` | Ported | Explicit spell-index bitflags mirrored from the reference |
+| `DatReaderWriter/Generated/Enums/SpellType.generated.cs` | `src/Generated/Enums/SpellType.rs` | Ported | Explicit meta-spell type enum mirrored from the reference |
+| `DatReaderWriter/Types/PHashTable.cs` | `src/Types/PHashTable.rs` | Verified | Explicit packable hash-table variant now mirrors count/bucket storage without re-sorting entries and is covered by focused spell-table tests |
+| `DatReaderWriter/Generated/Types/SpellSetTiers.generated.cs` | `src/Types/SpellSetTiers.rs` | Verified | Explicit spell-set tier payload now roundtrips tier spell lists in focused tests |
+| `DatReaderWriter/Generated/Types/SpellSet.generated.cs` | `src/Types/SpellSet.rs` | Verified | Explicit spell-set payload now reads nested tier tables and is covered by focused spell-table tests |
+| `DatReaderWriter/Types/SpellBase.cs` | `src/Types/SpellBase.rs` | Verified | Explicit spell payload now mirrors name/description hashing, encrypted component decoding, meta-spell variant fields, and roundtrips in focused tests |
+| `DatReaderWriter/Generated/DBObjs/SpellTable.generated.cs` | `src/DBObjs/SpellTable.rs` | Verified | Explicit spell-table DBObj now reads typed spell records plus equipment-set spell groups and is validated against retail DATs |
+| `DatReaderWriter/Enums/ToggleType.cs` | `src/Generated/Enums/ToggleType.rs` | Ported | Explicit action-map toggle enum mirrored from the reference |
+| `DatReaderWriter/Types/UserBindingData.cs` | `src/Types/UserBindingData.rs` | Verified | Explicit action-map user-binding payload now roundtrips class/name/description ids in focused tests |
+| `DatReaderWriter/Types/InputConflictsValue.cs` | `src/Types/InputsConflictsValue.rs` | Verified | Explicit conflicting-input-map payload now roundtrips conflict lists in focused tests |
+| `DatReaderWriter/Types/ActionMapValue.cs` | `src/Types/ActionMapValue.rs` | Verified | Explicit action-map value payload now reads toggle mode plus user-binding data and is covered by focused tests |
+| `DatReaderWriter/DBObjs/ActionMap.cs` | `src/DBObjs/ActionMap.rs` | Verified | Explicit action-map DBObj now reads nested input maps and conflict tables and is validated against retail DATs |
+| `DatReaderWriter/DBObjs/MasterProperty.cs` | `src/DBObjs/MasterProperty.rs` | Verified | Explicit master-property DBObj now reads enum mapper data plus typed property descriptors and is validated against retail DATs |
 
 ## Updated Remaining Major Areas
 
 - Remaining base-property variants and the broader `MasterProperty`/property-description pipeline required for full UI/property-driven local resource types
-- Remaining generated DBObjs outside the current asset, gameplay, CharGen, string, language, first material/render, and degrade/filter/spell-component subsets
+- `DBProperties` and any readers that require full `BaseProperty::UnpackGeneric` database-backed master-property resolution
+- Remaining generated DBObjs outside the current asset, gameplay, CharGen, string, language, first material/render, degrade/filter/spell-component, and bad-data/contract/taboo subsets
 - Remaining generated Types outside the currently ported dependency tree
 - `DBObjAttributeCache` coverage beyond the currently ported Rust DBObj set, including broader Local and Cell coverage
 - Generated database readers

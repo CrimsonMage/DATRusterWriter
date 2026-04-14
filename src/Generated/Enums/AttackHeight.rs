@@ -7,5 +7,13 @@ impl AttackHeight {
     pub const LOW: Self = Self(0x00000003);
 }
 
-impl From<i32> for AttackHeight { fn from(value: i32) -> Self { Self(value) } }
-impl From<AttackHeight> for i32 { fn from(value: AttackHeight) -> Self { value.0 } }
+impl From<i32> for AttackHeight {
+    fn from(value: i32) -> Self {
+        Self(value)
+    }
+}
+impl From<AttackHeight> for i32 {
+    fn from(value: AttackHeight) -> Self {
+        value.0
+    }
+}

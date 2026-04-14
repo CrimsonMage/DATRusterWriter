@@ -35,12 +35,24 @@ pub struct MaterialInstance {
 }
 
 impl DBObj for MaterialInstance {
-    fn header_flags(&self) -> DBObjHeaderFlags { DBObjHeaderFlags::HasId }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::MaterialInstance }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn data_category(&self) -> u32 { self.base.data_category }
-    fn set_data_category(&mut self, data_category: u32) { self.base.data_category = data_category; }
+    fn header_flags(&self) -> DBObjHeaderFlags {
+        DBObjHeaderFlags::HasId
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::MaterialInstance
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn data_category(&self) -> u32 {
+        self.base.data_category
+    }
+    fn set_data_category(&mut self, data_category: u32) {
+        self.base.data_category = data_category;
+    }
 }
 
 impl IUnpackable for MaterialInstance {
@@ -76,9 +88,22 @@ impl IPackable for MaterialInstance {
 }
 
 impl IDBObj for MaterialInstance {
-    fn db_obj_type_attr() -> &'static DBObjTypeAttribute where Self: Sized { &MATERIAL_INSTANCE_ATTR }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::MaterialInstance }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn as_any(&self) -> &dyn Any { self }
+    fn db_obj_type_attr() -> &'static DBObjTypeAttribute
+    where
+        Self: Sized,
+    {
+        &MATERIAL_INSTANCE_ATTR
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::MaterialInstance
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }

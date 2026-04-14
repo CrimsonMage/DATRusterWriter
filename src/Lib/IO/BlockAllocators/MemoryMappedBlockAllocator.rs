@@ -84,7 +84,12 @@ impl IDatBlockAllocator for MemoryMappedBlockAllocator {
         Err(Self::write_unsupported())
     }
 
-    fn write_bytes(&self, _buffer: &[u8], _byte_offset: usize, _num_bytes: usize) -> io::Result<()> {
+    fn write_bytes(
+        &self,
+        _buffer: &[u8],
+        _byte_offset: usize,
+        _num_bytes: usize,
+    ) -> io::Result<()> {
         Err(Self::write_unsupported())
     }
 

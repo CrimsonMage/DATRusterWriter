@@ -1,9 +1,22 @@
 use std::any::Any;
 
 use crate::{
-    Generated::Enums::{DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType, SkillId::SkillId},
-    Lib::{Attributes::DBObjTypeAttribute::DBObjTypeAttribute, IO::{DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj, IPackable::IPackable, IUnpackable::IUnpackable}},
-    Types::{DBObj::{DBObj, DBObjBase}, PackableHashTable::PackableHashTable, SkillBase::SkillBase},
+    Generated::Enums::{
+        DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType,
+        SkillId::SkillId,
+    },
+    Lib::{
+        Attributes::DBObjTypeAttribute::DBObjTypeAttribute,
+        IO::{
+            DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IDBObj::IDBObj,
+            IPackable::IPackable, IUnpackable::IUnpackable,
+        },
+    },
+    Types::{
+        DBObj::{DBObj, DBObjBase},
+        PackableHashTable::PackableHashTable,
+        SkillBase::SkillBase,
+    },
 };
 
 pub const SKILL_TABLE_ATTR: DBObjTypeAttribute = DBObjTypeAttribute {
@@ -23,12 +36,24 @@ pub struct SkillTable {
 }
 
 impl DBObj for SkillTable {
-    fn header_flags(&self) -> DBObjHeaderFlags { DBObjHeaderFlags::HasId }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::SkillTable }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn data_category(&self) -> u32 { self.base.data_category }
-    fn set_data_category(&mut self, data_category: u32) { self.base.data_category = data_category; }
+    fn header_flags(&self) -> DBObjHeaderFlags {
+        DBObjHeaderFlags::HasId
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::SkillTable
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn data_category(&self) -> u32 {
+        self.base.data_category
+    }
+    fn set_data_category(&mut self, data_category: u32) {
+        self.base.data_category = data_category;
+    }
 }
 
 impl IUnpackable for SkillTable {
@@ -48,9 +73,22 @@ impl IPackable for SkillTable {
 }
 
 impl IDBObj for SkillTable {
-    fn db_obj_type_attr() -> &'static DBObjTypeAttribute where Self: Sized { &SKILL_TABLE_ATTR }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::SkillTable }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn as_any(&self) -> &dyn Any { self }
+    fn db_obj_type_attr() -> &'static DBObjTypeAttribute
+    where
+        Self: Sized,
+    {
+        &SKILL_TABLE_ATTR
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::SkillTable
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }

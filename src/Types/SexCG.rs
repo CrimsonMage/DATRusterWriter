@@ -9,9 +9,8 @@ use crate::{
         IUnpackable::IUnpackable,
     },
     Types::{
-        EyeStripCG::EyeStripCG, FaceStripCG::FaceStripCG, GearCG::GearCG,
-        HairStyleCG::HairStyleCG, ObjDesc::ObjDesc, PStringBase::PStringBase,
-        QualifiedDataId::QualifiedDataId,
+        EyeStripCG::EyeStripCG, FaceStripCG::FaceStripCG, GearCG::GearCG, HairStyleCG::HairStyleCG,
+        ObjDesc::ObjDesc, PStringBase::PStringBase, QualifiedDataId::QualifiedDataId,
     },
 };
 
@@ -134,4 +133,3 @@ impl IPackable for SexCG {
         true
     }
 }
-

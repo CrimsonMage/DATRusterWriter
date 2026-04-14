@@ -1,13 +1,21 @@
 #![allow(non_snake_case)]
 
+#[path = "ActionMap.rs"]
+pub mod ActionMap;
 #[path = "Animation.rs"]
 pub mod Animation;
+#[path = "BadDataTable.rs"]
+pub mod BadDataTable;
 #[path = "CharGen.rs"]
 pub mod CharGen;
+#[path = "ChatPoseTable.rs"]
+pub mod ChatPoseTable;
 #[path = "ClothingTable.rs"]
 pub mod ClothingTable;
 #[path = "CombatTable.rs"]
 pub mod CombatTable;
+#[path = "ContractTable.rs"]
+pub mod ContractTable;
 #[path = "DualEnumIDMap.rs"]
 pub mod DualEnumIDMap;
 #[path = "EnumIDMap.rs"]
@@ -28,6 +36,10 @@ pub mod Iteration;
 pub mod LanguageInfo;
 #[path = "LanguageString.rs"]
 pub mod LanguageString;
+#[path = "MasterInputMap.rs"]
+pub mod MasterInputMap;
+#[path = "MasterProperty.rs"]
+pub mod MasterProperty;
 #[path = "MaterialInstance.rs"]
 pub mod MaterialInstance;
 #[path = "MaterialModifier.rs"]
@@ -36,6 +48,8 @@ pub mod MaterialModifier;
 pub mod MotionTable;
 #[path = "NameFilterTable.rs"]
 pub mod NameFilterTable;
+#[path = "ObjectHierarchy.rs"]
+pub mod ObjectHierarchy;
 #[path = "PalSet.rs"]
 pub mod PalSet;
 #[path = "Palette.rs"]
@@ -46,12 +60,14 @@ pub mod ParticleEmitter;
 pub mod PhysicsScript;
 #[path = "PhysicsScriptTable.rs"]
 pub mod PhysicsScriptTable;
+#[path = "QualityFilter.rs"]
+pub mod QualityFilter;
 #[path = "Region.rs"]
 pub mod Region;
-#[path = "RenderSurface.rs"]
-pub mod RenderSurface;
 #[path = "RenderMaterial.rs"]
 pub mod RenderMaterial;
+#[path = "RenderSurface.rs"]
+pub mod RenderSurface;
 #[path = "RenderTexture.rs"]
 pub mod RenderTexture;
 #[path = "Scene.rs"]
@@ -64,14 +80,16 @@ pub mod SkillTable;
 pub mod SoundTable;
 #[path = "SpellComponentTable.rs"]
 pub mod SpellComponentTable;
+#[path = "SpellTable.rs"]
+pub mod SpellTable;
 #[path = "StringTable.rs"]
 pub mod StringTable;
 #[path = "Surface.rs"]
 pub mod Surface;
 #[path = "SurfaceTexture.rs"]
 pub mod SurfaceTexture;
-#[path = "QualityFilter.rs"]
-pub mod QualityFilter;
+#[path = "TabooTable.rs"]
+pub mod TabooTable;
 #[path = "VitalTable.rs"]
 pub mod VitalTable;
 #[path = "Wave.rs"]

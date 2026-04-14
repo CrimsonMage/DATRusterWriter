@@ -34,4 +34,3 @@ impl IPackable for StartingArea {
         true
     }
 }
-

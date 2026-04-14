@@ -55,12 +55,24 @@ fn write_u32_vec(writer: &mut DatBinWriter<'_>, values: &[u32]) {
 }
 
 impl DBObj for QualityFilter {
-    fn header_flags(&self) -> DBObjHeaderFlags { DBObjHeaderFlags::HasId }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::QualityFilter }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn data_category(&self) -> u32 { self.base.data_category }
-    fn set_data_category(&mut self, data_category: u32) { self.base.data_category = data_category; }
+    fn header_flags(&self) -> DBObjHeaderFlags {
+        DBObjHeaderFlags::HasId
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::QualityFilter
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn data_category(&self) -> u32 {
+        self.base.data_category
+    }
+    fn set_data_category(&mut self, data_category: u32) {
+        self.base.data_category = data_category;
+    }
 }
 
 impl IUnpackable for QualityFilter {
@@ -124,9 +136,22 @@ impl IPackable for QualityFilter {
 }
 
 impl IDBObj for QualityFilter {
-    fn db_obj_type_attr() -> &'static DBObjTypeAttribute where Self: Sized { &QUALITY_FILTER_ATTR }
-    fn db_obj_type(&self) -> DBObjType { DBObjType::QualityFilter }
-    fn id(&self) -> u32 { self.base.id }
-    fn set_id(&mut self, id: u32) { self.base.id = id; }
-    fn as_any(&self) -> &dyn Any { self }
+    fn db_obj_type_attr() -> &'static DBObjTypeAttribute
+    where
+        Self: Sized,
+    {
+        &QUALITY_FILTER_ATTR
+    }
+    fn db_obj_type(&self) -> DBObjType {
+        DBObjType::QualityFilter
+    }
+    fn id(&self) -> u32 {
+        self.base.id
+    }
+    fn set_id(&mut self, id: u32) {
+        self.base.id = id;
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }

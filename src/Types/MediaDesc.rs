@@ -21,11 +21,7 @@ pub(crate) fn read_header(reader: &mut DatBinReader<'_>) -> (MediaType, MediaTyp
     )
 }
 
-pub(crate) fn write_header(
-    writer: &mut DatBinWriter<'_>,
-    media_type: MediaType,
-    ty: MediaType,
-) {
+pub(crate) fn write_header(writer: &mut DatBinWriter<'_>, media_type: MediaType, ty: MediaType) {
     writer.write_i32(media_type.into());
     writer.write_i32(ty.into());
 }

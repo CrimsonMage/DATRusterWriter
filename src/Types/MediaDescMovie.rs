@@ -4,7 +4,10 @@ use crate::{
         DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
         IUnpackable::IUnpackable,
     },
-    Types::{MediaDesc::{read_header, write_header}, PStringBase::PStringBase},
+    Types::{
+        MediaDesc::{read_header, write_header},
+        PStringBase::PStringBase,
+    },
 };
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]

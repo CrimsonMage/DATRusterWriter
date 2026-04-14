@@ -46,7 +46,11 @@ fn get_bucket_size_index(count: usize, auto_grow: bool) -> u8 {
         return 1;
     }
 
-    let target = if auto_grow { count.saturating_mul(2) } else { count };
+    let target = if auto_grow {
+        count.saturating_mul(2)
+    } else {
+        count
+    };
     BUCKET_SIZES
         .iter()
         .position(|bucket_size| *bucket_size as usize >= target)

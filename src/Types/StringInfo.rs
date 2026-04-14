@@ -23,8 +23,7 @@ impl IUnpackable for StringInfo {
         self.token = reader.read_byte();
         self.string_id = reader.read_u32();
         self.table_id = reader.read_item::<QualifiedDataId<StringTable>>();
-        self.override_flag =
-            StringInfoOverrideFlag::from_bits_truncate(reader.read_byte());
+        self.override_flag = StringInfoOverrideFlag::from_bits_truncate(reader.read_byte());
         self.english = reader.read_byte();
         self.comment = reader.read_byte();
         true

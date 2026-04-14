@@ -6,27 +6,43 @@ use std::{
 
 use dat_reader_writer::{
     DBObjs::{
-        DualEnumIDMap::DualEnumIDMap, EnumIDMap::EnumIDMap, EnumMapper::EnumMapper, Font::Font,
-        GfxObjDegradeInfo::GfxObjDegradeInfo, Iteration::Iteration, LanguageInfo::LanguageInfo,
-        LanguageString::LanguageString,
+        ActionMap::ActionMap, BadDataTable::BadDataTable, ChatPoseTable::ChatPoseTable,
+        ContractTable::ContractTable, DualEnumIDMap::DualEnumIDMap, EnumIDMap::EnumIDMap,
+        EnumMapper::EnumMapper, Font::Font, GfxObjDegradeInfo::GfxObjDegradeInfo,
+        Iteration::Iteration, LanguageInfo::LanguageInfo, LanguageString::LanguageString,
+        MasterInputMap::MasterInputMap, MasterProperty::MasterProperty,
         MaterialInstance::MaterialInstance, MaterialModifier::MaterialModifier,
-        NameFilterTable::NameFilterTable, Palette::Palette, QualityFilter::QualityFilter,
-        SpellComponentTable::SpellComponentTable, StringTable::StringTable,
-        RenderMaterial::RenderMaterial, RenderTexture::RenderTexture,
+        NameFilterTable::NameFilterTable, ObjectHierarchy::ObjectHierarchy, Palette::Palette,
+        QualityFilter::QualityFilter, RenderMaterial::RenderMaterial, RenderTexture::RenderTexture,
+        SpellComponentTable::SpellComponentTable, SpellTable::SpellTable, StringTable::StringTable,
+        TabooTable::TabooTable,
     },
     DatDatabase::DatDatabase,
-    Generated::Enums::{DBObjType::DBObjType, DatFileType::DatFileType},
+    Generated::Enums::{
+        DBObjType::DBObjType, DatFileType::DatFileType, EquipmentSet::EquipmentSet,
+        ItemType::ItemType, MagicSchool::MagicSchool, PlayScript::PlayScript,
+        SpellCategory::SpellCategory, SpellIndex::SpellIndex, SpellType::SpellType,
+        ToggleType::ToggleType,
+    },
     Lib::{
         DBObjAttributeCache,
         IO::{DatBinWriter::DatBinWriter, DatHeader::DatHeader, IPackable::IPackable},
     },
     Options::DatDatabaseOptions::DatDatabaseOptions,
     Types::{
-        AutoGrowHashTable::AutoGrowHashTable, FontCharDesc::FontCharDesc, HashTable::HashTable,
-        IntrusiveHashTable::IntrusiveHashTable, NameFilterLanguageData::NameFilterLanguageData,
-        MaterialProperty::MaterialProperty, ObfuscatedPStringBase::ObfuscatedPStringBase,
-        PStringBase::PStringBase, QualifiedDataId::QualifiedDataId,
-        SpellComponentBase::SpellComponentBase, StringTableString::StringTableString,
+        AC1LegacyPStringBase::AC1LegacyPStringBase, ActionMapValue::ActionMapValue,
+        AutoGrowHashTable::AutoGrowHashTable, BaseProperty::BaseProperty,
+        BasePropertyDesc::BasePropertyDesc, CInputMap::CInputMap, ChatEmoteData::ChatEmoteData,
+        Contract::Contract, DeviceKeyMapEntry::DeviceKeyMapEntry, EnumMapperData::EnumMapperData,
+        FontCharDesc::FontCharDesc, Frame::Frame, HashTable::HashTable,
+        InputsConflictsValue::InputsConflictsValue, IntrusiveHashTable::IntrusiveHashTable,
+        MaterialProperty::MaterialProperty, NameFilterLanguageData::NameFilterLanguageData,
+        ObfuscatedPStringBase::ObfuscatedPStringBase, ObjHierarchyNode::ObjHierarchyNode,
+        PHashTable::PHashTable, PStringBase::PStringBase, Position::Position,
+        QualifiedControl::QualifiedControl, QualifiedDataId::QualifiedDataId, SpellBase::SpellBase,
+        SpellComponentBase::SpellComponentBase, SpellSet::SpellSet, SpellSetTiers::SpellSetTiers,
+        StringTableString::StringTableString, TabooTableEntry::TabooTableEntry,
+        UserBindingData::UserBindingData,
     },
 };
 use uuid::Uuid;
@@ -96,10 +112,8 @@ fn db_obj_attribute_cache_resolves_ported_range_and_singular_types() {
         DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x31000010).unwrap();
     let string_table = DBObjAttributeCache::type_from_id(DatFileType::Local, 0x23000001).unwrap();
     let font = DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x40000010).unwrap();
-    let language_info =
-        DBObjAttributeCache::type_from_id(DatFileType::Local, 0x41000010).unwrap();
-    let name_filter =
-        DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E000020).unwrap();
+    let language_info = DBObjAttributeCache::type_from_id(DatFileType::Local, 0x41000010).unwrap();
+    let name_filter = DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E000020).unwrap();
     let enum_mapper = DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x22000010).unwrap();
     let enum_id_map = DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x25000010).unwrap();
     let dual_enum_id_map =
@@ -114,10 +128,25 @@ fn db_obj_attribute_cache_resolves_ported_range_and_singular_types() {
         DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x18000010).unwrap();
     let gfx_obj_degrade_info =
         DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x11000010).unwrap();
+    let action_map = DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x26000010).unwrap();
     let spell_component_table =
         DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E00000F).unwrap();
+    let spell_table = DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E00000E).unwrap();
     let quality_filter =
         DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E010010).unwrap();
+    let bad_data_table =
+        DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E00001A).unwrap();
+    let chat_pose_table =
+        DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E000007).unwrap();
+    let contract_table =
+        DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E00001D).unwrap();
+    let master_input_map =
+        DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x14000010).unwrap();
+    let master_property =
+        DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x39000010).unwrap();
+    let object_hierarchy =
+        DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E00000D).unwrap();
+    let taboo_table = DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E00001E).unwrap();
 
     assert_eq!(DBObjType::Palette, palette.db_obj_type);
     assert_eq!(DBObjType::ClothingTable, clothing.db_obj_type);
@@ -134,9 +163,24 @@ fn db_obj_attribute_cache_resolves_ported_range_and_singular_types() {
     assert_eq!(DBObjType::RenderMaterial, render_material.db_obj_type);
     assert_eq!(DBObjType::MaterialModifier, material_modifier.db_obj_type);
     assert_eq!(DBObjType::MaterialInstance, material_instance.db_obj_type);
-    assert_eq!(DBObjType::GfxObjDegradeInfo, gfx_obj_degrade_info.db_obj_type);
-    assert_eq!(DBObjType::SpellComponentTable, spell_component_table.db_obj_type);
+    assert_eq!(
+        DBObjType::GfxObjDegradeInfo,
+        gfx_obj_degrade_info.db_obj_type
+    );
+    assert_eq!(DBObjType::ActionMap, action_map.db_obj_type);
+    assert_eq!(DBObjType::SpellTable, spell_table.db_obj_type);
+    assert_eq!(
+        DBObjType::SpellComponentTable,
+        spell_component_table.db_obj_type
+    );
     assert_eq!(DBObjType::QualityFilter, quality_filter.db_obj_type);
+    assert_eq!(DBObjType::BadDataTable, bad_data_table.db_obj_type);
+    assert_eq!(DBObjType::ChatPoseTable, chat_pose_table.db_obj_type);
+    assert_eq!(DBObjType::ContractTable, contract_table.db_obj_type);
+    assert_eq!(DBObjType::MasterInputMap, master_input_map.db_obj_type);
+    assert_eq!(DBObjType::MasterProperty, master_property.db_obj_type);
+    assert_eq!(DBObjType::ObjectHierarchy, object_hierarchy.db_obj_type);
+    assert_eq!(DBObjType::TabooTable, taboo_table.db_obj_type);
 }
 
 #[test]
@@ -178,20 +222,101 @@ fn db_obj_attribute_cache_tracks_current_ported_dbobjs() {
             .iter()
             .any(|attr| attr.db_obj_type == DBObjType::NameFilterTable)
     );
-    assert!(attrs.iter().any(|attr| attr.db_obj_type == DBObjType::EnumMapper));
-    assert!(attrs.iter().any(|attr| attr.db_obj_type == DBObjType::EnumIDMap));
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::EnumMapper)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::EnumIDMap)
+    );
     assert!(
         attrs
             .iter()
             .any(|attr| attr.db_obj_type == DBObjType::DualEnumIDMap)
     );
-    assert!(attrs.iter().any(|attr| attr.db_obj_type == DBObjType::RenderTexture));
-    assert!(attrs.iter().any(|attr| attr.db_obj_type == DBObjType::RenderMaterial));
-    assert!(attrs.iter().any(|attr| attr.db_obj_type == DBObjType::MaterialModifier));
-    assert!(attrs.iter().any(|attr| attr.db_obj_type == DBObjType::MaterialInstance));
-    assert!(attrs.iter().any(|attr| attr.db_obj_type == DBObjType::GfxObjDegradeInfo));
-    assert!(attrs.iter().any(|attr| attr.db_obj_type == DBObjType::SpellComponentTable));
-    assert!(attrs.iter().any(|attr| attr.db_obj_type == DBObjType::QualityFilter));
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::RenderTexture)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::RenderMaterial)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::MaterialModifier)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::MaterialInstance)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::GfxObjDegradeInfo)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::ActionMap)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::SpellTable)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::SpellComponentTable)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::QualityFilter)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::BadDataTable)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::ChatPoseTable)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::ContractTable)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::MasterInputMap)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::MasterProperty)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::ObjectHierarchy)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::TabooTable)
+    );
 }
 
 #[test]
@@ -334,15 +459,22 @@ fn db_obj_attribute_cache_resolves_new_gameplay_tables() {
 #[test]
 fn db_obj_attribute_cache_tracks_new_gameplay_table_ports() {
     let attrs = DBObjAttributeCache::all_ported_attributes();
-    assert!(attrs.iter().any(|attr| attr.db_obj_type == DBObjType::VitalTable));
-    assert!(attrs.iter().any(|attr| attr.db_obj_type == DBObjType::SkillTable));
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::VitalTable)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::SkillTable)
+    );
 }
 
 #[test]
 fn dat_database_can_read_typed_vital_table() {
     use dat_reader_writer::{
-        DBObjs::VitalTable::VitalTable,
-        Generated::Enums::AttributeId::AttributeId,
+        DBObjs::VitalTable::VitalTable, Generated::Enums::AttributeId::AttributeId,
         Types::SkillFormula::SkillFormula,
     };
 
@@ -581,7 +713,15 @@ fn dat_database_can_read_font_language_info_and_name_filter_table() {
         .try_get::<NameFilterTable>(0x0E000020)
         .unwrap()
         .unwrap();
-    assert_eq!(2, read_name_filter.language_data.get(&1).unwrap().compound_letter_groups.len());
+    assert_eq!(
+        2,
+        read_name_filter
+            .language_data
+            .get(&1)
+            .unwrap()
+            .compound_letter_groups
+            .len()
+    );
     assert_eq!(
         "th",
         read_name_filter
@@ -648,7 +788,11 @@ fn dat_database_can_read_enum_mapper_family() {
 
     fs::write(
         &mapper_path,
-        build_single_block_dat(DatFileType::Portal, 0x22000010, &mapper_payload[..mapper_used]),
+        build_single_block_dat(
+            DatFileType::Portal,
+            0x22000010,
+            &mapper_payload[..mapper_used],
+        ),
     )
     .unwrap();
     fs::write(
@@ -686,19 +830,31 @@ fn dat_database_can_read_enum_mapper_family() {
     })
     .unwrap();
 
-    let read_mapper = mapper_db.try_get::<EnumMapper>(0x22000010).unwrap().unwrap();
+    let read_mapper = mapper_db
+        .try_get::<EnumMapper>(0x22000010)
+        .unwrap()
+        .unwrap();
     assert_eq!(0x10, read_mapper.base_enum_map);
     assert_eq!("one", read_mapper.id_to_string_map.get(&1).unwrap().value);
 
-    let read_enum_id = enum_id_db.try_get::<EnumIDMap>(0x25000010).unwrap().unwrap();
+    let read_enum_id = enum_id_db
+        .try_get::<EnumIDMap>(0x25000010)
+        .unwrap()
+        .unwrap();
     assert_eq!(Some(&0x05000010), read_enum_id.client_enum_to_id.get(&4));
-    assert_eq!("client", read_enum_id.client_enum_to_name.get(&2).unwrap().value);
+    assert_eq!(
+        "client",
+        read_enum_id.client_enum_to_name.get(&2).unwrap().value
+    );
 
     let read_dual_enum_id = dual_enum_id_db
         .try_get::<DualEnumIDMap>(0x27000010)
         .unwrap()
         .unwrap();
-    assert_eq!(Some(&0x05000020), read_dual_enum_id.server_enum_to_id.get(&5));
+    assert_eq!(
+        Some(&0x05000020),
+        read_dual_enum_id.server_enum_to_id.get(&5)
+    );
     assert_eq!(
         "server",
         read_dual_enum_id.server_enum_to_name.get(&3).unwrap().value
@@ -711,7 +867,10 @@ fn dat_database_can_read_render_material_family() {
 
     let render_texture = RenderTexture {
         texture_type: TextureType::TEXTURE2D,
-        source_levels: vec![QualifiedDataId::new(0x06000010), QualifiedDataId::new(0x06000011)],
+        source_levels: vec![
+            QualifiedDataId::new(0x06000010),
+            QualifiedDataId::new(0x06000011),
+        ],
         ..Default::default()
     };
 
@@ -840,16 +999,192 @@ fn dat_database_can_read_render_material_family() {
         .unwrap()
         .unwrap();
     assert_eq!(1, read_material_modifier.material_properties.len());
-    assert_eq!(0x11223344, read_material_modifier.material_properties[0].name_id);
+    assert_eq!(
+        0x11223344,
+        read_material_modifier.material_properties[0].name_id
+    );
 
     let read_material_instance = material_instance_db
         .try_get::<MaterialInstance>(0x18000010)
         .unwrap()
         .unwrap();
     assert_eq!(0x16000010, read_material_instance.material_id);
-    assert_eq!(vec![0x17000010, 0x17000011], read_material_instance.modifier_refs);
+    assert_eq!(
+        vec![0x17000010, 0x17000011],
+        read_material_instance.modifier_refs
+    );
     assert!(read_material_instance.allow_stencil_shadows);
     assert!(!read_material_instance.want_discard_geometry);
+}
+
+#[test]
+fn dat_database_can_read_action_map_and_master_property() {
+    use dat_reader_writer::Generated::Enums::{
+        BasePropertyType::BasePropertyType, PatchFlags::PatchFlags,
+        PropertyCachingType::PropertyCachingType, PropertyDatFileType::PropertyDatFileType,
+        PropertyGroupName::PropertyGroupName, PropertyInheritanceType::PropertyInheritanceType,
+        PropertyPropagationType::PropertyPropagationType,
+    };
+
+    let mut child_map = std::collections::BTreeMap::new();
+    child_map.insert(
+        7,
+        ActionMapValue {
+            magic: 0,
+            unknown: 0,
+            toggle_type: ToggleType::Toggle,
+            dummy_list_length: 0,
+            user_binding: UserBindingData {
+                action_class: 10,
+                action_name: 20,
+                action_description: 30,
+            },
+        },
+    );
+
+    let mut input_maps = std::collections::BTreeMap::new();
+    input_maps.insert(5, child_map);
+
+    let mut conflicting_maps = std::collections::BTreeMap::new();
+    conflicting_maps.insert(
+        9,
+        InputsConflictsValue {
+            input_map: 9,
+            conflicting_input_maps: vec![5, 6],
+        },
+    );
+
+    let action_map = ActionMap {
+        input_maps,
+        string_table_id: 0x23000001,
+        conflicting_maps,
+        ..Default::default()
+    };
+
+    let mut enum_mapper_strings = AutoGrowHashTable::<u32, PStringBase<u8>>::default();
+    enum_mapper_strings.insert(1, PStringBase::from("Visible"));
+
+    let mut properties = std::collections::BTreeMap::new();
+    properties.insert(
+        0x10,
+        BasePropertyDesc {
+            name: 0x10,
+            property_type: BasePropertyType::Integer,
+            group: PropertyGroupName::from(1),
+            provider: 2,
+            data: 3,
+            patch_flags: PatchFlags::default(),
+            default_value: Some(BaseProperty::Integer {
+                header: Default::default(),
+                value: 42,
+            }),
+            max_value: Some(BaseProperty::Integer {
+                header: Default::default(),
+                value: 99,
+            }),
+            min_value: Some(BaseProperty::Integer {
+                header: Default::default(),
+                value: -5,
+            }),
+            prediction_timeout: 1.5,
+            inheritance_type: PropertyInheritanceType::from(1),
+            dat_file_type: PropertyDatFileType::from(1),
+            propagation_type: PropertyPropagationType::from(1),
+            caching_type: PropertyCachingType::from(1),
+            required: true,
+            read_only: false,
+            no_checkpoint: false,
+            recorded: true,
+            do_not_replay: false,
+            absolute_time_stamp: false,
+            groupable: true,
+            propagate_to_children: true,
+            available_properties: std::collections::BTreeMap::from([(1, 2)]),
+        },
+    );
+
+    let master_property = MasterProperty {
+        enum_mapper: EnumMapperData {
+            base_enum_map: 11,
+            unknown: 22,
+            id_to_string_map: enum_mapper_strings,
+        },
+        properties,
+        ..Default::default()
+    };
+
+    let mut action_payload = vec![0u8; 2048];
+    let mut writer = DatBinWriter::new(&mut action_payload);
+    assert!(action_map.pack(&mut writer));
+    let action_used = writer.offset();
+
+    let mut master_payload = vec![0u8; 2048];
+    let mut writer = DatBinWriter::new(&mut master_payload);
+    assert!(master_property.pack(&mut writer));
+    let master_used = writer.offset();
+
+    let action_path = unique_temp_file();
+    let master_path = unique_temp_file();
+
+    fs::write(
+        &action_path,
+        build_single_block_dat(
+            DatFileType::Portal,
+            0x26000010,
+            &action_payload[..action_used],
+        ),
+    )
+    .unwrap();
+    fs::write(
+        &master_path,
+        build_single_block_dat(
+            DatFileType::Portal,
+            0x39000010,
+            &master_payload[..master_used],
+        ),
+    )
+    .unwrap();
+
+    let action_db = DatDatabase::new(DatDatabaseOptions {
+        file_path: action_path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+    let master_db = DatDatabase::new(DatDatabaseOptions {
+        file_path: master_path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+
+    let read_action_map = action_db.try_get::<ActionMap>(0x26000010).unwrap().unwrap();
+    assert_eq!(0x23000001, read_action_map.string_table_id);
+    let read_action = read_action_map.input_maps.get(&5).unwrap().get(&7).unwrap();
+    assert_eq!(ToggleType::Toggle, read_action.toggle_type);
+    assert_eq!(20, read_action.user_binding.action_name);
+    let read_conflict = read_action_map.conflicting_maps.get(&9).unwrap();
+    assert_eq!(vec![5, 6], read_conflict.conflicting_input_maps);
+
+    let read_master = master_db
+        .try_get::<MasterProperty>(0x39000010)
+        .unwrap()
+        .unwrap();
+    assert_eq!(11, read_master.enum_mapper.base_enum_map);
+    assert_eq!(
+        "Visible",
+        read_master
+            .enum_mapper
+            .id_to_string_map
+            .get(&1)
+            .unwrap()
+            .value
+    );
+    let read_property = read_master.properties.get(&0x10).unwrap();
+    assert_eq!(BasePropertyType::Integer, read_property.property_type);
+    assert_eq!(1.5, read_property.prediction_timeout);
+    match read_property.default_value.as_ref().unwrap() {
+        BaseProperty::Integer { value, .. } => assert_eq!(42, *value),
+        other => panic!("unexpected default property variant: {other:?}"),
+    }
 }
 
 #[test]
@@ -883,7 +1218,10 @@ fn dat_database_can_read_degrade_quality_and_spell_component_tables() {
         ..Default::default()
     };
 
-    let mut components = dat_reader_writer::Types::PackableHashTable::PackableHashTable::<u32, SpellComponentBase>::default();
+    let mut components = dat_reader_writer::Types::PackableHashTable::PackableHashTable::<
+        u32,
+        SpellComponentBase,
+    >::default();
     components.insert(
         0x100,
         SpellComponentBase {
@@ -987,4 +1325,419 @@ fn dat_database_can_read_degrade_quality_and_spell_component_tables() {
     assert_eq!("Scarab", component.name.value);
     assert_eq!(ComponentType::Scarab, component.component_type);
     assert_eq!(0x06000010, component.icon.data_id);
+}
+
+#[test]
+fn dat_database_can_read_spell_table() {
+    let spell = SpellBase {
+        name: ObfuscatedPStringBase::from("Test"),
+        description: ObfuscatedPStringBase::from("This is a description"),
+        components: vec![1, 2, 3, 4, 5, 6, 7, 8],
+        school: MagicSchool::ItemEnchantment,
+        icon: 0x12345678,
+        category: SpellCategory::StrengthRaising,
+        bitfield: SpellIndex::Resistable,
+        base_mana: 103,
+        base_range_constant: 1.1,
+        base_range_mod: 0.5,
+        power: 500,
+        spell_economy_mod: 0.3,
+        formula_version: 1,
+        component_loss: 0.2,
+        meta_spell_type: SpellType::Enchantment,
+        meta_spell_id: 0x87654321,
+        duration: 2.2,
+        degrade_modifier: 0.5,
+        degrade_limit: 1.0,
+        portal_lifetime: 0.0,
+        caster_effect: PlayScript::LAUNCH,
+        target_effect: PlayScript::EXPLODE,
+        fizzle_effect: PlayScript::FIZZLE,
+        recovery_interval: 0.1,
+        recovery_amount: 1.0,
+        display_order: 123,
+        non_component_target_type: ItemType::Armor,
+        mana_mod: 5,
+    };
+
+    let mut spells =
+        dat_reader_writer::Types::PackableHashTable::PackableHashTable::<u32, SpellBase>::default();
+    spells.insert(1, spell);
+
+    let mut spell_set_tiers = PHashTable::<u32, SpellSetTiers>::default();
+    spell_set_tiers.insert(
+        0,
+        SpellSetTiers {
+            spells: vec![1, 2, 3],
+        },
+    );
+    spell_set_tiers.insert(
+        1,
+        SpellSetTiers {
+            spells: vec![4, 5, 6],
+        },
+    );
+
+    let mut spell_sets = PHashTable::<EquipmentSet, SpellSet>::default();
+    spell_sets.insert(EquipmentSet::Ninja, SpellSet { spell_set_tiers });
+
+    let spell_table = SpellTable {
+        spells,
+        spell_sets,
+        ..Default::default()
+    };
+
+    let mut payload = vec![0u8; 2048];
+    let mut writer = DatBinWriter::new(&mut payload);
+    assert!(spell_table.pack(&mut writer));
+    let used = writer.offset();
+
+    let path = unique_temp_file();
+    fs::write(
+        &path,
+        build_single_block_dat(DatFileType::Portal, 0x0E00000E, &payload[..used]),
+    )
+    .unwrap();
+
+    let db = DatDatabase::new(DatDatabaseOptions {
+        file_path: path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+
+    let read_spell_table = db.try_get::<SpellTable>(0x0E00000E).unwrap().unwrap();
+    let read_spell = read_spell_table.spells.get(&1).unwrap();
+    assert_eq!("Test", read_spell.name.value);
+    assert_eq!("This is a description", read_spell.description.value);
+    assert_eq!(MagicSchool::ItemEnchantment, read_spell.school);
+    assert_eq!(SpellCategory::StrengthRaising, read_spell.category);
+    assert_eq!(SpellIndex::Resistable, read_spell.bitfield);
+    assert_eq!(vec![1, 2, 3, 4, 5, 6, 7, 8], read_spell.components);
+    assert_eq!(ItemType::Armor, read_spell.non_component_target_type);
+    assert_eq!(PlayScript::LAUNCH, read_spell.caster_effect);
+    let read_set = read_spell_table
+        .spell_sets
+        .get(&EquipmentSet::Ninja)
+        .unwrap();
+    assert_eq!(
+        vec![1, 2, 3],
+        read_set.spell_set_tiers.get(&0).unwrap().spells
+    );
+    assert_eq!(
+        vec![4, 5, 6],
+        read_set.spell_set_tiers.get(&1).unwrap().spells
+    );
+}
+
+#[test]
+fn dat_database_can_read_bad_contract_and_taboo_tables() {
+    let mut bad_ids = dat_reader_writer::Types::PackableHashTable::PackableHashTable::<
+        QualifiedDataId<BadDataTable>,
+        u32,
+    >::default();
+    bad_ids.insert(QualifiedDataId::new(0x0E00001A), 77);
+    let bad_data_table = BadDataTable {
+        bad_ids,
+        ..Default::default()
+    };
+
+    let mut contracts =
+        dat_reader_writer::Types::PackableHashTable::PackableHashTable::<u32, Contract>::default();
+    contracts.insert(
+        1,
+        Contract {
+            version: 2,
+            contract_id: 10,
+            contract_name: AC1LegacyPStringBase::from("Contract"),
+            description: AC1LegacyPStringBase::from("Description"),
+            description_progress: AC1LegacyPStringBase::from("Progress"),
+            name_npc_start: AC1LegacyPStringBase::from("StartNPC"),
+            name_npc_end: AC1LegacyPStringBase::from("EndNPC"),
+            questflag_stamped: AC1LegacyPStringBase::from("Stamped"),
+            questflag_started: AC1LegacyPStringBase::from("Started"),
+            questflag_finished: AC1LegacyPStringBase::from("Finished"),
+            questflag_progress: AC1LegacyPStringBase::from("QuestProgress"),
+            questflag_timer: AC1LegacyPStringBase::from("Timer"),
+            questflag_repeat_time: AC1LegacyPStringBase::from("Repeat"),
+            location_npc_start: Position {
+                cell_id: 1,
+                frame: Frame {
+                    origin: dat_reader_writer::Lib::IO::Numerics::Vector3::new(1.0, 2.0, 3.0),
+                    orientation: dat_reader_writer::Lib::IO::Numerics::Quaternion::new(
+                        0.0, 0.0, 0.0, 1.0,
+                    ),
+                },
+            },
+            location_npc_end: Position::default(),
+            location_quest_area: Position::default(),
+        },
+    );
+    let contract_table = ContractTable {
+        contracts,
+        ..Default::default()
+    };
+
+    let mut taboo_entries = HashTable::<u32, TabooTableEntry>::default();
+    taboo_entries.insert(
+        5,
+        TabooTableEntry {
+            key: 5,
+            unknown2: 2,
+            banned_patterns: vec![PStringBase::from("badword"), PStringBase::from("worseword")],
+        },
+    );
+    let taboo_table = TabooTable {
+        audience_to_banned_patterns: taboo_entries,
+        ..Default::default()
+    };
+
+    let mut bad_payload = vec![0u8; 256];
+    let mut writer = DatBinWriter::new(&mut bad_payload);
+    assert!(bad_data_table.pack(&mut writer));
+    let bad_used = writer.offset();
+
+    let mut contract_payload = vec![0u8; 2048];
+    let mut writer = DatBinWriter::new(&mut contract_payload);
+    assert!(contract_table.pack(&mut writer));
+    let contract_used = writer.offset();
+
+    let mut taboo_payload = vec![0u8; 512];
+    let mut writer = DatBinWriter::new(&mut taboo_payload);
+    assert!(taboo_table.pack(&mut writer));
+    let taboo_used = writer.offset();
+
+    let bad_path = unique_temp_file();
+    let contract_path = unique_temp_file();
+    let taboo_path = unique_temp_file();
+
+    fs::write(
+        &bad_path,
+        build_single_block_dat(DatFileType::Portal, 0x0E00001A, &bad_payload[..bad_used]),
+    )
+    .unwrap();
+    fs::write(
+        &contract_path,
+        build_single_block_dat(
+            DatFileType::Portal,
+            0x0E00001D,
+            &contract_payload[..contract_used],
+        ),
+    )
+    .unwrap();
+    fs::write(
+        &taboo_path,
+        build_single_block_dat(
+            DatFileType::Portal,
+            0x0E00001E,
+            &taboo_payload[..taboo_used],
+        ),
+    )
+    .unwrap();
+
+    let bad_db = DatDatabase::new(DatDatabaseOptions {
+        file_path: bad_path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+    let contract_db = DatDatabase::new(DatDatabaseOptions {
+        file_path: contract_path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+    let taboo_db = DatDatabase::new(DatDatabaseOptions {
+        file_path: taboo_path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+
+    let read_bad = bad_db.try_get::<BadDataTable>(0x0E00001A).unwrap().unwrap();
+    assert_eq!(
+        Some(&77),
+        read_bad.bad_ids.get(&QualifiedDataId::new(0x0E00001A))
+    );
+
+    let read_contract = contract_db
+        .try_get::<ContractTable>(0x0E00001D)
+        .unwrap()
+        .unwrap();
+    let contract = read_contract.contracts.get(&1).unwrap();
+    assert_eq!("Contract", contract.contract_name.value);
+    assert_eq!(10, contract.contract_id);
+
+    let read_taboo = taboo_db.try_get::<TabooTable>(0x0E00001E).unwrap().unwrap();
+    let entry = read_taboo.audience_to_banned_patterns.get(&5).unwrap();
+    assert_eq!(2, entry.banned_patterns.len());
+    assert_eq!("badword", entry.banned_patterns[0].value);
+}
+
+#[test]
+fn dat_database_can_read_chat_pose_table() {
+    let mut chat_poses = dat_reader_writer::Types::PackableHashTable::PackableHashTable::<
+        AC1LegacyPStringBase<u8>,
+        AC1LegacyPStringBase<u8>,
+    >::default();
+    chat_poses.insert(
+        AC1LegacyPStringBase::from("wave"),
+        AC1LegacyPStringBase::from("anim_wave"),
+    );
+
+    let mut chat_emotes = dat_reader_writer::Types::PackableHashTable::PackableHashTable::<
+        AC1LegacyPStringBase<u8>,
+        ChatEmoteData,
+    >::default();
+    chat_emotes.insert(
+        AC1LegacyPStringBase::from("anim_wave"),
+        ChatEmoteData {
+            my_emote: AC1LegacyPStringBase::from("You wave."),
+            other_emote: AC1LegacyPStringBase::from("%s waves."),
+        },
+    );
+
+    let chat_pose_table = ChatPoseTable {
+        chat_poses,
+        chat_emotes,
+        ..Default::default()
+    };
+
+    let mut payload = vec![0u8; 1024];
+    let mut writer = DatBinWriter::new(&mut payload);
+    assert!(chat_pose_table.pack(&mut writer));
+    let used = writer.offset();
+
+    let path = unique_temp_file();
+    fs::write(
+        &path,
+        build_single_block_dat(DatFileType::Portal, 0x0E000007, &payload[..used]),
+    )
+    .unwrap();
+
+    let db = DatDatabase::new(DatDatabaseOptions {
+        file_path: path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+
+    let read_chat_pose = db.try_get::<ChatPoseTable>(0x0E000007).unwrap().unwrap();
+    assert_eq!(
+        "anim_wave",
+        read_chat_pose
+            .chat_poses
+            .get(&AC1LegacyPStringBase::from("wave"))
+            .unwrap()
+            .value
+    );
+    let emote = read_chat_pose
+        .chat_emotes
+        .get(&AC1LegacyPStringBase::from("anim_wave"))
+        .unwrap();
+    assert_eq!("You wave.", emote.my_emote.value);
+    assert_eq!("%s waves.", emote.other_emote.value);
+}
+
+#[test]
+fn dat_database_can_read_object_hierarchy() {
+    let object_hierarchy = ObjectHierarchy {
+        root_node: ObjHierarchyNode {
+            menu_name: ObfuscatedPStringBase::from("Root"),
+            wcid: 100,
+            children: vec![ObjHierarchyNode {
+                menu_name: ObfuscatedPStringBase::from("Child"),
+                wcid: 200,
+                children: vec![],
+            }],
+        },
+        ..Default::default()
+    };
+
+    let mut payload = vec![0u8; 1024];
+    let mut writer = DatBinWriter::new(&mut payload);
+    assert!(object_hierarchy.pack(&mut writer));
+    let used = writer.offset();
+
+    let path = unique_temp_file();
+    fs::write(
+        &path,
+        build_single_block_dat(DatFileType::Portal, 0x0E00000D, &payload[..used]),
+    )
+    .unwrap();
+
+    let db = DatDatabase::new(DatDatabaseOptions {
+        file_path: path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+
+    let read_hierarchy = db.try_get::<ObjectHierarchy>(0x0E00000D).unwrap().unwrap();
+    assert_eq!("Root", read_hierarchy.root_node.menu_name.value);
+    assert_eq!(100, read_hierarchy.root_node.wcid);
+    assert_eq!(1, read_hierarchy.root_node.children.len());
+    assert_eq!(
+        "Child",
+        read_hierarchy.root_node.children[0].menu_name.value
+    );
+    assert_eq!(200, read_hierarchy.root_node.children[0].wcid);
+}
+
+#[test]
+fn dat_database_can_read_master_input_map() {
+    use dat_reader_writer::Generated::Enums::DeviceType::DeviceType;
+
+    let mut input_maps = std::collections::BTreeMap::new();
+    input_maps.insert(
+        1,
+        CInputMap {
+            mappings: vec![QualifiedControl {
+                key: dat_reader_writer::Types::ControlSpecification::ControlSpecification {
+                    key: 0x41,
+                    modifier: 0x02,
+                },
+                activation: 3,
+                unknown: 4,
+            }],
+        },
+    );
+
+    let master_input_map = MasterInputMap {
+        name: PStringBase::from("default"),
+        guid_map: Uuid::from_u128(0x11223344556677889900AABBCCDDEEFF),
+        devices: vec![DeviceKeyMapEntry {
+            device_type: DeviceType::KEYBOARD,
+            guid: Uuid::from_u128(0x0102030405060708090A0B0C0D0E0F10),
+        }],
+        meta_keys: vec![
+            dat_reader_writer::Types::ControlSpecification::ControlSpecification {
+                key: 0x11,
+                modifier: 0x22,
+            },
+        ],
+        input_maps,
+        ..Default::default()
+    };
+
+    let mut payload = vec![0u8; 1024];
+    let mut writer = DatBinWriter::new(&mut payload);
+    assert!(master_input_map.pack(&mut writer));
+    let used = writer.offset();
+
+    let path = unique_temp_file();
+    fs::write(
+        &path,
+        build_single_block_dat(DatFileType::Portal, 0x14000010, &payload[..used]),
+    )
+    .unwrap();
+
+    let db = DatDatabase::new(DatDatabaseOptions {
+        file_path: path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+
+    let read_input_map = db.try_get::<MasterInputMap>(0x14000010).unwrap().unwrap();
+    assert_eq!("default", read_input_map.name.value);
+    assert_eq!(1, read_input_map.devices.len());
+    assert_eq!(DeviceType::KEYBOARD, read_input_map.devices[0].device_type);
+    assert_eq!(1, read_input_map.input_maps.len());
+    let mapping = &read_input_map.input_maps.get(&1).unwrap().mappings[0];
+    assert_eq!(0x41, mapping.key.key);
+    assert_eq!(3, mapping.activation);
 }

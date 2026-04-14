@@ -23,5 +23,13 @@ impl MotionStance {
     pub const THROWN_SHIELD_COMBAT: Self = Self(0x8000013C);
 }
 
-impl From<u32> for MotionStance { fn from(value: u32) -> Self { Self(value) } }
-impl From<MotionStance> for u32 { fn from(value: MotionStance) -> Self { value.0 } }
+impl From<u32> for MotionStance {
+    fn from(value: u32) -> Self {
+        Self(value)
+    }
+}
+impl From<MotionStance> for u32 {
+    fn from(value: MotionStance) -> Self {
+        value.0
+    }
+}

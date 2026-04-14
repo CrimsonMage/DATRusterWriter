@@ -4,8 +4,7 @@ use crate::{
     Generated::Enums::{
         BasePropertyType::BasePropertyType, PatchFlags::PatchFlags,
         PropertyCachingType::PropertyCachingType, PropertyDatFileType::PropertyDatFileType,
-        PropertyGroupName::PropertyGroupName,
-        PropertyInheritanceType::PropertyInheritanceType,
+        PropertyGroupName::PropertyGroupName, PropertyInheritanceType::PropertyInheritanceType,
         PropertyPropagationType::PropertyPropagationType,
     },
     Lib::IO::{

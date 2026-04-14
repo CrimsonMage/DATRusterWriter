@@ -31,4 +31,3 @@ impl IPackable for GearCG {
         true
     }
 }
-

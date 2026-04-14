@@ -1,9 +1,6 @@
 use std::{future::Future, io, pin::Pin};
 
-use crate::{
-    Generated::Enums::DatFileType::DatFileType,
-    Lib::IO::DatHeader::DatHeader,
-};
+use crate::{Generated::Enums::DatFileType::DatFileType, Lib::IO::DatHeader::DatHeader};
 
 pub trait IDatBlockAllocator: Send + Sync {
     fn can_write(&self) -> bool;
@@ -25,12 +22,7 @@ pub trait IDatBlockAllocator: Send + Sync {
         minor_version: u32,
     ) -> io::Result<()>;
     fn write_bytes(&self, buffer: &[u8], byte_offset: usize, num_bytes: usize) -> io::Result<()>;
-    fn write_block(
-        &self,
-        buffer: &[u8],
-        num_bytes: usize,
-        starting_block: i32,
-    ) -> io::Result<i32>;
+    fn write_block(&self, buffer: &[u8], num_bytes: usize, starting_block: i32) -> io::Result<i32>;
     fn write_block_async<'a>(
         &'a self,
         buffer: &'a [u8],

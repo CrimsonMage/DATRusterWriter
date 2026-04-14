@@ -29,7 +29,10 @@ pub struct StreamBlockAllocator {
 
 impl StreamBlockAllocator {
     pub fn new(options: &DatDatabaseOptions) -> io::Result<Arc<Self>> {
-        let can_write = matches!(options.access_type, crate::Options::DatAccessType::DatAccessType::ReadWrite);
+        let can_write = matches!(
+            options.access_type,
+            crate::Options::DatAccessType::DatAccessType::ReadWrite
+        );
         let file = if can_write {
             OpenOptions::new()
                 .read(true)
@@ -104,7 +107,10 @@ impl StreamBlockAllocator {
         Ok(())
     }
 
-    fn allocate_empty_blocks_locked(state: &mut StreamState, num_blocks_to_allocate: i32) -> io::Result<()> {
+    fn allocate_empty_blocks_locked(
+        state: &mut StreamState,
+        num_blocks_to_allocate: i32,
+    ) -> io::Result<()> {
         if num_blocks_to_allocate <= 0 {
             return Ok(());
         }
@@ -173,16 +179,7 @@ impl IDatBlockAllocator for StreamBlockAllocator {
         }
         let mut state = self.state.lock().unwrap();
         let header_block_count = ((DatHeader::SIZE as i32 + block_size - 1) / block_size).max(1);
-        state.header = DatHeader::new(
-            file_type,
-            subset,
-            block_size,
-            None,
-            0,
-            0,
-            Uuid::nil(),
-            0,
-        );
+        state.header = DatHeader::new(file_type, subset, block_size, None, 0, 0, Uuid::nil(), 0);
         state.header.root_block = 0;
         state.header.file_size = header_block_count * block_size;
         if num_blocks_to_allocate > 0 {
@@ -231,12 +228,7 @@ impl IDatBlockAllocator for StreamBlockAllocator {
         state.file.flush()
     }
 
-    fn write_block(
-        &self,
-        buffer: &[u8],
-        num_bytes: usize,
-        starting_block: i32,
-    ) -> io::Result<i32> {
+    fn write_block(&self, buffer: &[u8], num_bytes: usize, starting_block: i32) -> io::Result<i32> {
         if !self.can_write {
             return Err(Self::unsupported_write());
         }
@@ -253,8 +245,12 @@ impl IDatBlockAllocator for StreamBlockAllocator {
 
         while buffer_index < num_bytes {
             let size = ((state.header.block_size - 4) as usize).min(num_bytes - buffer_index);
-            state.file.seek(SeekFrom::Start((current_block + 4) as u64))?;
-            state.file.write_all(&buffer[buffer_index..buffer_index + size])?;
+            state
+                .file
+                .seek(SeekFrom::Start((current_block + 4) as u64))?;
+            state
+                .file
+                .write_all(&buffer[buffer_index..buffer_index + size])?;
             buffer_index += size;
 
             let old_offset = current_block;
@@ -302,8 +298,11 @@ impl IDatBlockAllocator for StreamBlockAllocator {
         let mut total_read = 0usize;
 
         while current_block != 0 && total_read < buffer.len() {
-            let bytes_to_read = ((state.header.block_size - 4) as usize).min(buffer.len() - total_read);
-            state.file.seek(SeekFrom::Start((current_block + 4) as u64))?;
+            let bytes_to_read =
+                ((state.header.block_size - 4) as usize).min(buffer.len() - total_read);
+            state
+                .file
+                .seek(SeekFrom::Start((current_block + 4) as u64))?;
             state
                 .file
                 .read_exact(&mut buffer[total_read..total_read + bytes_to_read])?;
