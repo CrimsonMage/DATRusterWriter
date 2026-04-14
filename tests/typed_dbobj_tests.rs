@@ -32,7 +32,10 @@ use dat_reader_writer::{
     },
     Lib::{
         DBObjAttributeCache,
-        IO::{DatBinWriter::DatBinWriter, DatHeader::DatHeader, IPackable::IPackable},
+        IO::{
+            DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, DatHeader::DatHeader,
+            IPackable::IPackable, IUnpackable::IUnpackable,
+        },
     },
     Options::{DatAccessType::DatAccessType, DatDatabaseOptions::DatDatabaseOptions},
     Types::{
@@ -42,20 +45,30 @@ use dat_reader_writer::{
         BSPTrees::{CellBSPNode, CellBSPTree},
         BaseProperty::{BaseProperty, BasePropertyHeader},
         BasePropertyDesc::BasePropertyDesc,
+        Bitfield32BaseProperty::Bitfield32BaseProperty,
+        Bitfield64BaseProperty::Bitfield64BaseProperty,
+        BoolBaseProperty::BoolBaseProperty,
         BuildingInfo::BuildingInfo,
         BuildingPortal::BuildingPortal,
         CInputMap::CInputMap,
         CellPortal::CellPortal,
         CellStruct::CellStruct,
         ChatEmoteData::ChatEmoteData,
+        ColorARGB::ColorARGB,
+        ColorBaseProperty::ColorBaseProperty,
         Contract::Contract,
+        DataIdBaseProperty::DataIdBaseProperty,
         DeviceKeyMapEntry::DeviceKeyMapEntry,
         ElementDesc::ElementDesc,
+        EnumBaseProperty::EnumBaseProperty,
         EnumMapperData::EnumMapperData,
+        FloatBaseProperty::FloatBaseProperty,
         FontCharDesc::FontCharDesc,
         Frame::Frame,
         HashTable::HashTable,
         InputsConflictsValue::InputsConflictsValue,
+        InstanceIdBaseProperty::InstanceIdBaseProperty,
+        IntegerBaseProperty::IntegerBaseProperty,
         MaterialProperty::MaterialProperty,
         NameFilterLanguageData::NameFilterLanguageData,
         ObfuscatedPStringBase::ObfuscatedPStringBase,
@@ -75,6 +88,7 @@ use dat_reader_writer::{
         TabooTableEntry::TabooTableEntry,
         TerrainInfo::TerrainInfo,
         UserBindingData::UserBindingData,
+        VectorBaseProperty::VectorBaseProperty,
     },
 };
 use uuid::Uuid;
@@ -2529,4 +2543,172 @@ fn dat_database_can_read_palette_set_clothing_and_particle_emitter_info() {
     assert_eq!(ParticleType::Still, read_emitter.particle_type);
     assert_eq!(0x01000030, read_emitter.gfx_obj_id.data_id);
     assert!(read_emitter.is_parent_local);
+}
+
+#[test]
+fn hash_table_roundtrip_reads_string_and_primitive_entries() {
+    let mut strings = HashTable::<String, u32>::default();
+    strings.bucket_size_index = 2;
+    strings.insert("alpha".to_string(), 1);
+    strings.insert("beta".to_string(), 2);
+
+    let mut flags = HashTable::<u32, bool>::default();
+    flags.insert(7, true);
+    flags.insert(9, false);
+
+    let mut string_bytes = vec![0u8; 256];
+    let mut writer = DatBinWriter::new(&mut string_bytes);
+    assert!(strings.pack(&mut writer));
+    let string_used = writer.offset();
+
+    let mut flag_bytes = vec![0u8; 128];
+    let mut writer = DatBinWriter::new(&mut flag_bytes);
+    assert!(flags.pack(&mut writer));
+    let flag_used = writer.offset();
+
+    let mut unpacked_strings = HashTable::<String, u32>::default();
+    assert!(unpacked_strings.unpack(&mut DatBinReader::new(&string_bytes[..string_used])));
+    assert_eq!(Some(&1), unpacked_strings.get(&"alpha".to_string()));
+    assert_eq!(Some(&2), unpacked_strings.get(&"beta".to_string()));
+
+    let mut unpacked_flags = HashTable::<u32, bool>::default();
+    assert!(unpacked_flags.unpack(&mut DatBinReader::new(&flag_bytes[..flag_used])));
+    assert_eq!(Some(&true), unpacked_flags.get(&7));
+    assert_eq!(Some(&false), unpacked_flags.get(&9));
+}
+
+#[test]
+fn explicit_base_property_wrappers_roundtrip_current_scalar_variants() {
+    let header = BasePropertyHeader {
+        master_property_id: 0x1234_5678,
+        should_pack_master_property_id: true,
+    };
+
+    let bool_property = BoolBaseProperty {
+        header: header.clone(),
+        value: true,
+    };
+    let integer_property = IntegerBaseProperty {
+        header: header.clone(),
+        value: -42,
+    };
+    let float_property = FloatBaseProperty {
+        header: header.clone(),
+        value: 3.25,
+    };
+    let vector_property = VectorBaseProperty {
+        header: header.clone(),
+        value: dat_reader_writer::Lib::IO::Numerics::Vector3::new(1.0, 2.0, 3.0),
+    };
+    let color_property = ColorBaseProperty {
+        header: header.clone(),
+        value: ColorARGB {
+            blue: 4,
+            green: 3,
+            red: 2,
+            alpha: 1,
+        },
+    };
+    let enum_property = EnumBaseProperty {
+        header: header.clone(),
+        value: 0xAA55_AA55,
+    };
+    let data_id_property = DataIdBaseProperty {
+        header: header.clone(),
+        value: 0x0400_0010,
+    };
+    let instance_id_property = InstanceIdBaseProperty {
+        header: header.clone(),
+        value: 0x5000_0010,
+    };
+    let bitfield32_property = Bitfield32BaseProperty {
+        header: header.clone(),
+        value: 0xF0F0_0F0F,
+    };
+    let bitfield64_property = Bitfield64BaseProperty {
+        header,
+        value: 0x1122_3344_5566_7788,
+    };
+
+    let mut bool_bytes = vec![0u8; 16];
+    let mut integer_bytes = vec![0u8; 16];
+    let mut float_bytes = vec![0u8; 16];
+    let mut vector_bytes = vec![0u8; 32];
+    let mut color_bytes = vec![0u8; 16];
+    let mut enum_bytes = vec![0u8; 16];
+    let mut data_id_bytes = vec![0u8; 16];
+    let mut instance_id_bytes = vec![0u8; 16];
+    let mut bitfield32_bytes = vec![0u8; 16];
+    let mut bitfield64_bytes = vec![0u8; 16];
+
+    assert!(bool_property.pack(&mut DatBinWriter::new(&mut bool_bytes)));
+    assert!(integer_property.pack(&mut DatBinWriter::new(&mut integer_bytes)));
+    assert!(float_property.pack(&mut DatBinWriter::new(&mut float_bytes)));
+    assert!(vector_property.pack(&mut DatBinWriter::new(&mut vector_bytes)));
+    assert!(color_property.pack(&mut DatBinWriter::new(&mut color_bytes)));
+    assert!(enum_property.pack(&mut DatBinWriter::new(&mut enum_bytes)));
+    assert!(data_id_property.pack(&mut DatBinWriter::new(&mut data_id_bytes)));
+    assert!(instance_id_property.pack(&mut DatBinWriter::new(&mut instance_id_bytes)));
+    assert!(bitfield32_property.pack(&mut DatBinWriter::new(&mut bitfield32_bytes)));
+    assert!(bitfield64_property.pack(&mut DatBinWriter::new(&mut bitfield64_bytes)));
+
+    let mut unpacked_bool = BoolBaseProperty::default();
+    let mut unpacked_integer = IntegerBaseProperty::default();
+    let mut unpacked_float = FloatBaseProperty::default();
+    let mut unpacked_vector = VectorBaseProperty::default();
+    let mut unpacked_color = ColorBaseProperty::default();
+    let mut unpacked_enum = EnumBaseProperty::default();
+    let mut unpacked_data_id = DataIdBaseProperty::default();
+    let mut unpacked_instance_id = InstanceIdBaseProperty::default();
+    let mut unpacked_bitfield32 = Bitfield32BaseProperty::default();
+    let mut unpacked_bitfield64 = Bitfield64BaseProperty::default();
+
+    assert!(unpacked_bool.unpack(&mut DatBinReader::new(&bool_bytes[4..5])));
+    assert!(unpacked_integer.unpack(&mut DatBinReader::new(&integer_bytes[4..8])));
+    assert!(unpacked_float.unpack(&mut DatBinReader::new(&float_bytes[4..8])));
+    assert!(unpacked_vector.unpack(&mut DatBinReader::new(&vector_bytes[4..16])));
+    assert!(unpacked_color.unpack(&mut DatBinReader::new(&color_bytes[4..8])));
+    assert!(unpacked_enum.unpack(&mut DatBinReader::new(&enum_bytes[4..8])));
+    assert!(unpacked_data_id.unpack(&mut DatBinReader::new(&data_id_bytes[4..8])));
+    assert!(unpacked_instance_id.unpack(&mut DatBinReader::new(&instance_id_bytes[4..8])));
+    assert!(unpacked_bitfield32.unpack(&mut DatBinReader::new(&bitfield32_bytes[4..8])));
+    assert!(unpacked_bitfield64.unpack(&mut DatBinReader::new(&bitfield64_bytes[4..12])));
+
+    assert_eq!(true, unpacked_bool.value);
+    assert_eq!(-42, unpacked_integer.value);
+    assert_eq!(3.25, unpacked_float.value);
+    assert_eq!(
+        dat_reader_writer::Lib::IO::Numerics::Vector3::new(1.0, 2.0, 3.0),
+        unpacked_vector.value
+    );
+    assert_eq!(
+        ColorARGB {
+            blue: 4,
+            green: 3,
+            red: 2,
+            alpha: 1
+        },
+        unpacked_color.value
+    );
+    assert_eq!(0xAA55_AA55, unpacked_enum.value);
+    assert_eq!(0x0400_0010, unpacked_data_id.value);
+    assert_eq!(0x5000_0010, unpacked_instance_id.value);
+    assert_eq!(0xF0F0_0F0F, unpacked_bitfield32.value);
+    assert_eq!(0x1122_3344_5566_7788, unpacked_bitfield64.value);
+
+    assert!(matches!(
+        bool_property.as_base_property(),
+        BaseProperty::Bool { value: true, .. }
+    ));
+    assert!(matches!(
+        integer_property.as_base_property(),
+        BaseProperty::Integer { value: -42, .. }
+    ));
+    assert!(matches!(
+        enum_property.as_base_property(),
+        BaseProperty::Enum {
+            value: 0xAA55_AA55,
+            ..
+        }
+    ));
 }

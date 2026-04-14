@@ -151,6 +151,10 @@ impl<'a> DatBinWriter<'a> {
         self.write_bytes(value.as_bytes(), 16);
     }
 
+    pub fn write_string16_l(&mut self, value: &str) {
+        writer_string16_l(self, value);
+    }
+
     pub fn write_string16_l_byte(&mut self, value: &str) {
         let (encoded, _, _) = WINDOWS_1252.encode(value);
         self.write_compressed_uint(encoded.len() as u32);
@@ -193,5 +197,12 @@ impl<'a> DatBinWriter<'a> {
         let end = start + num_bytes;
         self.offset = end;
         &mut self.data[start..end]
+    }
+}
+
+fn writer_string16_l(writer: &mut DatBinWriter<'_>, value: &str) {
+    writer.write_compressed_uint(value.chars().count() as u32);
+    for ch in value.chars() {
+        writer.write_u16(ch as u16);
     }
 }

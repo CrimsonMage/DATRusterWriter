@@ -114,3 +114,5 @@ pub mod ToggleType;
 pub mod UIStateId;
 #[path = "VertexType.rs"]
 pub mod VertexType;
+#[path = "VitalId.rs"]
+pub mod VitalId;

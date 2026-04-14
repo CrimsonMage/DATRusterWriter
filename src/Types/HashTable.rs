@@ -12,54 +12,133 @@ const BUCKET_SIZES: [u32; 23] = [
     786431, 1572853, 3145721, 6291449, 12582893, 25165813, 50331599,
 ];
 
-pub trait HashTableKey: Copy + Ord {
+pub trait HashTableItem: Sized {
+    fn read_item(reader: &mut DatBinReader<'_>) -> Self;
+    fn write_item(&self, writer: &mut DatBinWriter<'_>);
+}
+
+pub trait HashTableKey: Ord {
     fn read_key(reader: &mut DatBinReader<'_>) -> Self;
     fn write_key(&self, writer: &mut DatBinWriter<'_>);
     fn hash_key(&self) -> u64;
 }
 
-impl HashTableKey for i32 {
-    fn read_key(reader: &mut DatBinReader<'_>) -> Self {
-        reader.read_i32()
+macro_rules! impl_hash_item_numeric {
+    ($ty:ty, $read:ident, $write:ident, $hash:expr) => {
+        impl HashTableItem for $ty {
+            fn read_item(reader: &mut DatBinReader<'_>) -> Self {
+                reader.$read()
+            }
+            fn write_item(&self, writer: &mut DatBinWriter<'_>) {
+                writer.$write(*self);
+            }
+        }
+
+        impl HashTableKey for $ty {
+            fn read_key(reader: &mut DatBinReader<'_>) -> Self {
+                <Self as HashTableItem>::read_item(reader)
+            }
+            fn write_key(&self, writer: &mut DatBinWriter<'_>) {
+                <Self as HashTableItem>::write_item(self, writer);
+            }
+            fn hash_key(&self) -> u64 {
+                $hash(*self)
+            }
+        }
+    };
+}
+
+impl_hash_item_numeric!(i8, read_sbyte, write_sbyte, |v: i8| v as u8 as u64);
+impl_hash_item_numeric!(u8, read_byte, write_byte, |v: u8| v as u64);
+impl_hash_item_numeric!(i16, read_i16, write_i16, |v: i16| v as u16 as u64);
+impl_hash_item_numeric!(u16, read_u16, write_u16, |v: u16| v as u64);
+impl_hash_item_numeric!(i32, read_i32, write_i32, |v: i32| v as u32 as u64);
+impl_hash_item_numeric!(u32, read_u32, write_u32, |v: u32| v as u64);
+
+impl HashTableItem for bool {
+    fn read_item(reader: &mut DatBinReader<'_>) -> Self {
+        reader.read_bool(4)
     }
-    fn write_key(&self, writer: &mut DatBinWriter<'_>) {
-        writer.write_i32(*self);
-    }
-    fn hash_key(&self) -> u64 {
-        *self as u32 as u64
+    fn write_item(&self, writer: &mut DatBinWriter<'_>) {
+        writer.write_bool(*self, 4);
     }
 }
 
-impl HashTableKey for u32 {
+impl HashTableItem for f32 {
+    fn read_item(reader: &mut DatBinReader<'_>) -> Self {
+        reader.read_single()
+    }
+    fn write_item(&self, writer: &mut DatBinWriter<'_>) {
+        writer.write_single(*self);
+    }
+}
+
+impl HashTableItem for f64 {
+    fn read_item(reader: &mut DatBinReader<'_>) -> Self {
+        reader.read_double()
+    }
+    fn write_item(&self, writer: &mut DatBinWriter<'_>) {
+        writer.write_double(*self);
+    }
+}
+
+impl HashTableItem for String {
+    fn read_item(reader: &mut DatBinReader<'_>) -> Self {
+        reader.read_string16_l()
+    }
+    fn write_item(&self, writer: &mut DatBinWriter<'_>) {
+        writer.write_string16_l(self);
+    }
+}
+
+impl HashTableKey for String {
     fn read_key(reader: &mut DatBinReader<'_>) -> Self {
-        reader.read_u32()
+        <Self as HashTableItem>::read_item(reader)
     }
     fn write_key(&self, writer: &mut DatBinWriter<'_>) {
-        writer.write_u32(*self);
+        <Self as HashTableItem>::write_item(self, writer);
     }
     fn hash_key(&self) -> u64 {
-        *self as u64
+        self.encode_utf16().map(u64::from).sum()
+    }
+}
+
+impl HashTableItem for SkillId {
+    fn read_item(reader: &mut DatBinReader<'_>) -> Self {
+        SkillId::from(reader.read_i32())
+    }
+    fn write_item(&self, writer: &mut DatBinWriter<'_>) {
+        writer.write_i32((*self).into());
     }
 }
 
 impl HashTableKey for SkillId {
     fn read_key(reader: &mut DatBinReader<'_>) -> Self {
-        SkillId::from(reader.read_i32())
+        <Self as HashTableItem>::read_item(reader)
     }
     fn write_key(&self, writer: &mut DatBinWriter<'_>) {
-        writer.write_i32((*self).into());
+        <Self as HashTableItem>::write_item(self, writer);
     }
     fn hash_key(&self) -> u64 {
         self.0 as u32 as u64
     }
 }
 
-impl HashTableKey for UIStateId {
-    fn read_key(reader: &mut DatBinReader<'_>) -> Self {
+impl HashTableItem for UIStateId {
+    fn read_item(reader: &mut DatBinReader<'_>) -> Self {
         UIStateId::from(reader.read_u32())
     }
-    fn write_key(&self, writer: &mut DatBinWriter<'_>) {
+    fn write_item(&self, writer: &mut DatBinWriter<'_>) {
         writer.write_u32((*self).into());
+    }
+}
+
+impl HashTableKey for UIStateId {
+    fn read_key(reader: &mut DatBinReader<'_>) -> Self {
+        <Self as HashTableItem>::read_item(reader)
+    }
+    fn write_key(&self, writer: &mut DatBinWriter<'_>) {
+        <Self as HashTableItem>::write_item(self, writer);
     }
     fn hash_key(&self) -> u64 {
         self.0 as u64
@@ -75,6 +154,18 @@ impl<T> HashTableKey for QualifiedDataId<T> {
     }
     fn hash_key(&self) -> u64 {
         self.data_id as u64
+    }
+}
+
+impl<T> HashTableItem for T
+where
+    T: IUnpackable + IPackable + Default,
+{
+    fn read_item(reader: &mut DatBinReader<'_>) -> Self {
+        reader.read_item::<T>()
+    }
+    fn write_item(&self, writer: &mut DatBinWriter<'_>) {
+        writer.write_item(self);
     }
 }
 
@@ -122,7 +213,7 @@ impl<K, V> HashTable<K, V> {
 impl<K, V> IUnpackable for HashTable<K, V>
 where
     K: HashTableKey,
-    V: IUnpackable + Default,
+    V: HashTableItem,
 {
     fn unpack(&mut self, reader: &mut DatBinReader<'_>) -> bool {
         self.bucket_size_index = reader.read_byte();
@@ -130,7 +221,7 @@ where
         self.entries.clear();
         for _ in 0..count {
             let key = K::read_key(reader);
-            let value = reader.read_item::<V>();
+            let value = V::read_item(reader);
             self.entries.insert(key, value);
         }
         true
@@ -140,7 +231,7 @@ where
 impl<K, V> IPackable for HashTable<K, V>
 where
     K: HashTableKey,
-    V: IPackable,
+    V: HashTableItem,
 {
     fn pack(&self, writer: &mut DatBinWriter<'_>) -> bool {
         writer.write_byte(self.bucket_size_index);
@@ -150,7 +241,7 @@ where
         items.sort_by_key(|(key, _)| key.hash_key() % bucket_size);
         for (key, value) in items {
             key.write_key(writer);
-            writer.write_item(value);
+            value.write_item(writer);
         }
         true
     }

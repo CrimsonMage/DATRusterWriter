@@ -187,6 +187,15 @@ impl<'a> DatBinReader<'a> {
         Uuid::from_bytes(self.read_array())
     }
 
+    pub fn read_string16_l(&mut self) -> String {
+        let length = self.read_compressed_uint() as usize;
+        let mut value = String::with_capacity(length);
+        for _ in 0..length {
+            value.push(char::from_u32(self.read_u16() as u32).unwrap_or('\u{FFFD}'));
+        }
+        value
+    }
+
     pub fn read_string16_l_byte(&mut self) -> String {
         let length = self.read_compressed_uint() as usize;
         let bytes = self.read_bytes_internal(length);

@@ -131,7 +131,7 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/Types/SoundEntry.generated.cs` | `src/Types/SoundEntry.rs` | Ported | Wave reference with sound weights |
 | `DatReaderWriter/Generated/Types/SoundHashData.generated.cs` | `src/Types/SoundHashData.rs` | Ported | Hash-keyed sound weights |
 | `DatReaderWriter/Types/PackedQualifiedDataId.cs` | `src/Types/PackedQualifiedDataId.rs` | Ported | Packed known-type id wrapper with collection resolution helper |
-| DatReaderWriter/Types/HashTable.cs | src/Types/HashTable.rs | Partial | Explicit read/write hash-table wrapper now supports primitive keys plus `QualifiedDataId<T>` keys for the current CharGen read path and other explicit typed map ports |
+| DatReaderWriter/Types/HashTable.cs | src/Types/HashTable.rs | Partial | Explicit read/write hash-table wrapper now supports broader primitive and string key/value surfaces plus `QualifiedDataId<T>` keys, and is covered by focused roundtrip tests; full generic parity with every reference generic case still remains |
 | DatReaderWriter/Types/PackableHashTable.cs | src/Types/PackableHashTable.rs | Ported | Explicit packable hash-table wrapper now covers the setup-keyed clothing and numeric sub-palette tables used on the read path |
 | DatReaderWriter/Generated/Types/CloSubPaletteRange.generated.cs | src/Types/CloSubPaletteRange.rs | Ported | Clothing sub-palette range payload |
 | DatReaderWriter/Generated/Types/CloSubPalette.generated.cs | src/Types/CloSubPalette.rs | Ported | Clothing sub-palette entry with PalSet reference |
@@ -323,8 +323,9 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/Enums/DrawModeType.generated.cs` | `src/Generated/Enums/DrawModeType.rs` | Ported | Media descriptor draw-mode enum |
 | `DatReaderWriter/Generated/Enums/MediaType.generated.cs` | `src/Generated/Enums/MediaType.rs` | Ported | Media descriptor discriminant enum |
 | `DatReaderWriter/Generated/Enums/StringInfoOverrideFlag.generated.cs` | `src/Generated/Enums/StringInfoOverrideFlag.rs` | Ported | String-info override flags |
-| `DatReaderWriter/Generated/Enums/UIStateId.generated.cs` | `src/Generated/Enums/UIStateId.rs` | Partial | Current UI state constants needed by `MediaDescState` are ported; full named surface still remains |
+| `DatReaderWriter/Generated/Enums/UIStateId.generated.cs` | `src/Generated/Enums/UIStateId.rs` | Verified | Full named UI state constant surface now mirrors the generated reference and is exercised in the enum-surface test |
 | `DatReaderWriter/Generated/Enums/BasePropertyType.generated.cs` | `src/Generated/Enums/BasePropertyType.rs` | Ported | Base-property discriminant enum for the local property pipeline |
+| `DatReaderWriter/Generated/Enums/VitalId.generated.cs` | `src/Generated/Enums/VitalId.rs` | Verified | Full named vital-id constant surface is now mirrored and exercised in the enum-surface test |
 | `DatReaderWriter/Generated/Enums/PatchFlags.generated.cs` | `src/Generated/Enums/PatchFlags.rs` | Ported | Property descriptor patch-flag enum |
 | `DatReaderWriter/Generated/Enums/PropertyCachingType.generated.cs` | `src/Generated/Enums/PropertyCachingType.rs` | Ported | Property descriptor caching enum |
 | `DatReaderWriter/Generated/Enums/PropertyDatFileType.generated.cs` | `src/Generated/Enums/PropertyDatFileType.rs` | Ported | Property descriptor dat-file enum |
@@ -334,10 +335,20 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | external retail DAT validation | `tests/real_dat_validation_tests.rs` | Verified | Live validation continues to pass against retail DATs in `C:\Turbine\Asheron's call\` via `DAT_READER_WRITER_REAL_DAT_DIR`, without hardcoding the path into the crate |
 | tracker recovery | `PORTING_STATUS.md` | Verified | Main tracker restored from the last good snapshot and updated with post-snapshot work |
 | `DatReaderWriter/Types/BaseProperty.cs` | `src/Types/BaseProperty.rs` | Partial | `MasterProperty`-driven generic unpack is now ported for current read paths, including array/struct and several raw property variants, but the full long-tail property surface still remains |
+| `DatReaderWriter/Generated/Types/BoolBaseProperty.generated.cs` | `src/Types/BoolBaseProperty.rs` | Verified | Explicit scalar bool property wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
+| `DatReaderWriter/Generated/Types/IntegerBaseProperty.generated.cs` | `src/Types/IntegerBaseProperty.rs` | Verified | Explicit scalar integer property wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
+| `DatReaderWriter/Generated/Types/FloatBaseProperty.generated.cs` | `src/Types/FloatBaseProperty.rs` | Verified | Explicit scalar float property wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
+| `DatReaderWriter/Generated/Types/VectorBaseProperty.generated.cs` | `src/Types/VectorBaseProperty.rs` | Verified | Explicit vector property wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
+| `DatReaderWriter/Generated/Types/ColorBaseProperty.generated.cs` | `src/Types/ColorBaseProperty.rs` | Verified | Explicit color property wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
+| `DatReaderWriter/Generated/Types/EnumBaseProperty.generated.cs` | `src/Types/EnumBaseProperty.rs` | Verified | Explicit enum property wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
+| `DatReaderWriter/Generated/Types/DataIdBaseProperty.generated.cs` | `src/Types/DataIdBaseProperty.rs` | Verified | Explicit data-id property wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
+| `DatReaderWriter/Generated/Types/InstanceIdBaseProperty.generated.cs` | `src/Types/InstanceIdBaseProperty.rs` | Verified | Explicit instance-id property wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
+| `DatReaderWriter/Generated/Types/Bitfield32BaseProperty.generated.cs` | `src/Types/Bitfield32BaseProperty.rs` | Verified | Explicit 32-bit bitfield property wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
+| `DatReaderWriter/Generated/Types/Bitfield64BaseProperty.generated.cs` | `src/Types/Bitfield64BaseProperty.rs` | Verified | Explicit 64-bit bitfield property wrapper now mirrors the generated file shape and is covered by focused roundtrip tests |
 | `DatReaderWriter/Generated/Types/StringInfoBaseProperty.generated.cs` | `src/Types/StringInfoBaseProperty.rs` | Partial | Explicit `StringInfo` property wrapper is ported on top of the new base-property foundation |
 | `DatReaderWriter/Types/BasePropertyDesc.cs` | `src/Types/BasePropertyDesc.rs` | Partial | Property descriptor records now unpack/pack current scalar-bound/default metadata, but broader `MasterProperty` consumers are still pending |
 | `DatReaderWriter/Generated/Enums/RMDataType.generated.cs` | `src/Generated/Enums/RMDataType.rs` | Ported | Explicit render-material data-type enum mirrored from the reference |
-| `DatReaderWriter/Generated/Enums/RenderPassType.generated.cs` | `src/Generated/Enums/RenderPassType.rs` | Partial | Core named render-pass constants used by the current material pipeline are ported; the full long-tail surface still remains |
+| `DatReaderWriter/Generated/Enums/RenderPassType.generated.cs` | `src/Generated/Enums/RenderPassType.rs` | Verified | Full named render-pass constant surface now mirrors the generated reference and is exercised in the enum-surface test |
 | `DatReaderWriter/Generated/Types/MaterialProperty.generated.cs` | `src/Types/MaterialProperty.rs` | Verified | Explicit material-property payload with aligned length fields now roundtrips in focused tests |
 | `DatReaderWriter/Generated/DBObjs/RenderTexture.generated.cs` | `src/DBObjs/RenderTexture.rs` | Verified | Explicit render-texture DBObj now reads texture type and render-surface level refs and is validated against retail DATs |
 | `DatReaderWriter/Generated/DBObjs/RenderMaterial.generated.cs` | `src/DBObjs/RenderMaterial.rs` | Verified | Explicit empty-body render-material DBObj now resolves and is validated against retail DATs |
@@ -369,7 +380,7 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/Enums/EquipmentSet.generated.cs` | `src/Generated/Enums/EquipmentSet.rs` | Ported | Explicit equipment-set enum mirrored from the reference for `SpellTable` spell-set keys |
 | `DatReaderWriter/Generated/Enums/ItemType.generated.cs` | `src/Generated/Enums/ItemType.rs` | Ported | Explicit item-type enum mirrored from the reference for spell targeting metadata |
 | `DatReaderWriter/Generated/Enums/MagicSchool.generated.cs` | `src/Generated/Enums/MagicSchool.rs` | Ported | Explicit magic-school enum mirrored from the reference for spell records |
-| `DatReaderWriter/Generated/Enums/SpellCategory.generated.cs` | `src/Generated/Enums/SpellCategory.rs` | Partial | Explicit spell-category wrapper is in place with the currently used named surface; full long-tail constant coverage still remains |
+| `DatReaderWriter/Generated/Enums/SpellCategory.generated.cs` | `src/Generated/Enums/SpellCategory.rs` | Verified | Full named spell-category constant surface now mirrors the generated reference and is exercised in the enum-surface test |
 | `DatReaderWriter/Generated/Enums/SpellIndex.generated.cs` | `src/Generated/Enums/SpellIndex.rs` | Ported | Explicit spell-index bitflags mirrored from the reference |
 | `DatReaderWriter/Generated/Enums/SpellType.generated.cs` | `src/Generated/Enums/SpellType.rs` | Ported | Explicit meta-spell type enum mirrored from the reference |
 | `DatReaderWriter/Types/PHashTable.cs` | `src/Types/PHashTable.rs` | Verified | Explicit packable hash-table variant now mirrors count/bucket storage without re-sorting entries and is covered by focused spell-table tests |

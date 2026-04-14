@@ -9,9 +9,10 @@ use dat_reader_writer::{
         AnimationHookDir::AnimationHookDir, CullMode::CullMode, EmitterType::EmitterType,
         GfxObjFlags::GfxObjFlags, MotionCommand::MotionCommand, ParentLocation::ParentLocation,
         ParticleType::ParticleType, PartsMask::PartsMask, PixelFormat::PixelFormat,
-        Placement::Placement, SkillId::SkillId, Sound::Sound, StipplingType::StipplingType,
-        SurfaceType::SurfaceType, TerrainTextureType::TerrainTextureType, TextureType::TextureType,
-        VertexType::VertexType,
+        Placement::Placement, RenderPassType::RenderPassType, SkillId::SkillId, Sound::Sound,
+        SpellCategory::SpellCategory, StipplingType::StipplingType, SurfaceType::SurfaceType,
+        TerrainTextureType::TerrainTextureType, TextureType::TextureType, UIStateId::UIStateId,
+        VertexType::VertexType, VitalId::VitalId,
     },
     Lib::IO::{
         DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
@@ -1142,6 +1143,14 @@ fn generated_enum_surfaces_cover_remaining_skill_terrain_and_asset_constants() {
     assert_eq!(VertexType::CSWVertexType, VertexType::from(0x01));
     assert_eq!(CullMode::CounterClockwise, CullMode::from(0x03));
     assert_eq!(CullMode::Clockwise, CullMode::CLOCKWISE);
+    assert_eq!(UIStateId::LockedUI, UIStateId::from(0x10000063));
+    assert_eq!(UIStateId::Dialog_pending_true, UIStateId::from(0x18));
+    assert_eq!(RenderPassType::AL_1DL_7PL_Fog, RenderPassType::from(0x2C));
+    assert_eq!(RenderPassType::AlphaBlend, RenderPassType::from(0x0A));
+    assert_eq!(SpellCategory::PortalSending, SpellCategory::from(0xD6));
+    assert_eq!(SpellCategory::SummoningLowering, SpellCategory::from(0x2B9));
+    assert_eq!(VitalId::MaximumHealth, VitalId::from(0x01));
+    assert_eq!(VitalId::MaximumMana, VitalId::from(0x05));
 }
 
 #[test]
