@@ -442,6 +442,29 @@ fn btree_insert_splits_full_root() {
 }
 
 #[test]
+fn btree_insert_updates_existing_flat_index() {
+    let mut root = DatBTreeNode::new(2048);
+    root.add_file(sample_file(10, 1010, 1));
+    root.add_file(sample_file(30, 1030, 1));
+
+    let allocator = Arc::new(WritableMockBlockAllocator::with_root(root));
+    let tree = DatBTreeReaderWriter::new(allocator);
+    tree.build_flat_index().unwrap();
+
+    let inserted = sample_file(20, 1020, 1);
+    assert!(tree.insert(inserted).unwrap().is_none());
+
+    assert_eq!(inserted, tree.try_get_file(20).unwrap().unwrap());
+    let ids: Vec<u32> = tree
+        .get_files_in_range(1, 40)
+        .unwrap()
+        .into_iter()
+        .map(|file| file.id)
+        .collect();
+    assert_eq!(vec![10, 20, 30], ids);
+}
+
+#[test]
 fn btree_delete_removes_leaf_entry() {
     let mut root = DatBTreeNode::new(2048);
     root.add_file(sample_file(10, 1010, 1));
@@ -495,4 +518,28 @@ fn btree_delete_can_collapse_empty_root_to_child() {
         DatBTreeReaderWriter::MIN_ITEMS * 2,
         tree.all_files().unwrap().len()
     );
+}
+
+#[test]
+fn btree_delete_updates_existing_flat_index() {
+    let mut root = DatBTreeNode::new(2048);
+    root.add_file(sample_file(10, 1010, 1));
+    root.add_file(sample_file(20, 1020, 1));
+    root.add_file(sample_file(30, 1030, 1));
+
+    let allocator = Arc::new(WritableMockBlockAllocator::with_root(root));
+    let tree = DatBTreeReaderWriter::new(allocator);
+    tree.build_flat_index().unwrap();
+
+    let deleted = tree.try_delete(20).unwrap().unwrap();
+    assert_eq!(20, deleted.id);
+    assert!(tree.try_get_file(20).unwrap().is_none());
+
+    let ids: Vec<u32> = tree
+        .get_files_in_range(1, 40)
+        .unwrap()
+        .into_iter()
+        .map(|file| file.id)
+        .collect();
+    assert_eq!(vec![10, 30], ids);
 }

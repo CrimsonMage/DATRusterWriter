@@ -1463,12 +1463,42 @@ fn string_base_helpers_match_expected_equality_and_hash_behavior() {
     let legacy = AC1LegacyString {
         value: "Portal".to_string(),
     };
+    let legacy_packed_u8 =
+        dat_reader_writer::Types::AC1LegacyPStringBase::AC1LegacyPStringBase::<u8>::from("Portal");
     let empty = PStringBase::<u8>::from("");
 
     assert!(packed.equals_string("Portal"));
     assert!(legacy.equals_string("Portal"));
+    assert!(legacy_packed_u8.equals_string("Portal"));
     assert_eq!(packed.ac_string_hash(), legacy.ac_string_hash());
+    assert_eq!(legacy.ac_string_hash(), legacy_packed_u8.ac_string_hash());
     assert_eq!(0, empty.ac_string_hash());
+}
+
+#[test]
+fn ac1_legacy_pstring_base_roundtrips_byte_and_u16_payloads() {
+    use dat_reader_writer::Types::AC1LegacyPStringBase::AC1LegacyPStringBase;
+
+    let byte_value = AC1LegacyPStringBase::<u8>::from("Portal");
+    let wide_value = AC1LegacyPStringBase::<u16>::from("Dereth");
+
+    let mut byte_bytes = vec![0u8; 64];
+    let mut byte_writer = DatBinWriter::new(&mut byte_bytes);
+    assert!(byte_value.pack(&mut byte_writer));
+    let byte_used = byte_writer.offset();
+
+    let mut wide_bytes = vec![0u8; 64];
+    let mut wide_writer = DatBinWriter::new(&mut wide_bytes);
+    assert!(wide_value.pack(&mut wide_writer));
+    let wide_used = wide_writer.offset();
+
+    let mut unpacked_byte = AC1LegacyPStringBase::<u8>::default();
+    let mut unpacked_wide = AC1LegacyPStringBase::<u16>::default();
+    assert!(unpacked_byte.unpack(&mut DatBinReader::new(&byte_bytes[..byte_used])));
+    assert!(unpacked_wide.unpack(&mut DatBinReader::new(&wide_bytes[..wide_used])));
+
+    assert_eq!("Portal", unpacked_byte.value);
+    assert_eq!("Dereth", unpacked_wide.value);
 }
 
 #[test]
@@ -1685,6 +1715,260 @@ fn base_property_roundtrip_reads_string_info_and_scalar_variants() {
 }
 
 #[test]
+fn base_property_roundtrip_reads_remaining_supported_variants() {
+    use std::{collections::BTreeMap, sync::Arc};
+
+    use dat_reader_writer::{
+        Generated::Enums::BasePropertyType::BasePropertyType,
+        Lib::IO::Numerics::{Quaternion, Vector3},
+        Types::{
+            BaseProperty::{BaseProperty, BasePropertyHeader},
+            Frame::Frame,
+            PStringBase::PStringBase,
+            Position::Position,
+        },
+    };
+
+    fn without_top_level_master_property(mut value: BaseProperty) -> BaseProperty {
+        match &mut value {
+            BaseProperty::Bool { header, .. }
+            | BaseProperty::Integer { header, .. }
+            | BaseProperty::LongInteger { header, .. }
+            | BaseProperty::Float { header, .. }
+            | BaseProperty::Vector { header, .. }
+            | BaseProperty::Color { header, .. }
+            | BaseProperty::StringInfo { header, .. }
+            | BaseProperty::String { header, .. }
+            | BaseProperty::Enum { header, .. }
+            | BaseProperty::DataId { header, .. }
+            | BaseProperty::InstanceId { header, .. }
+            | BaseProperty::Bitfield32 { header, .. }
+            | BaseProperty::Bitfield64 { header, .. }
+            | BaseProperty::Array { header, .. }
+            | BaseProperty::Struct { header, .. }
+            | BaseProperty::Waveform { header, .. }
+            | BaseProperty::Position { header, .. }
+            | BaseProperty::TimeStamp { header, .. }
+            | BaseProperty::StringToken { header, .. }
+            | BaseProperty::PropertyName { header, .. }
+            | BaseProperty::TriState { header, .. } => {
+                header.master_property_id = 0;
+                header.should_pack_master_property_id = false;
+            }
+        }
+        value
+    }
+
+    let cases = vec![
+        BaseProperty::LongInteger {
+            header: BasePropertyHeader {
+                master_property_id: 0x20,
+                should_pack_master_property_id: true,
+            },
+            value: 0x1122_3344_5566_7788,
+        },
+        BaseProperty::String {
+            header: BasePropertyHeader {
+                master_property_id: 0x21,
+                should_pack_master_property_id: true,
+            },
+            value: PStringBase::from("Portal UI"),
+        },
+        BaseProperty::Enum {
+            header: BasePropertyHeader {
+                master_property_id: 0x22,
+                should_pack_master_property_id: true,
+            },
+            value: 0xAA55_AA55,
+        },
+        BaseProperty::DataId {
+            header: BasePropertyHeader {
+                master_property_id: 0x23,
+                should_pack_master_property_id: true,
+            },
+            value: 0x0400_0010,
+        },
+        BaseProperty::InstanceId {
+            header: BasePropertyHeader {
+                master_property_id: 0x24,
+                should_pack_master_property_id: true,
+            },
+            value: 0x5000_0010,
+        },
+        BaseProperty::Bitfield32 {
+            header: BasePropertyHeader {
+                master_property_id: 0x25,
+                should_pack_master_property_id: true,
+            },
+            value: 0xF0F0_0F0F,
+        },
+        BaseProperty::Waveform {
+            header: BasePropertyHeader {
+                master_property_id: 0x26,
+                should_pack_master_property_id: true,
+            },
+            value: 17,
+        },
+        BaseProperty::Position {
+            header: BasePropertyHeader {
+                master_property_id: 0x27,
+                should_pack_master_property_id: true,
+            },
+            value: Position {
+                cell_id: 0x1234_5678,
+                frame: Frame {
+                    origin: Vector3::new(1.0, 2.0, 3.0),
+                    orientation: Quaternion::new(0.1, 0.2, 0.3, 0.4),
+                },
+            },
+        },
+        BaseProperty::TimeStamp {
+            header: BasePropertyHeader {
+                master_property_id: 0x28,
+                should_pack_master_property_id: true,
+            },
+            value: 0x0102_0304_0506_0708,
+        },
+        BaseProperty::StringToken {
+            header: BasePropertyHeader {
+                master_property_id: 0x29,
+                should_pack_master_property_id: true,
+            },
+            value: 0x1234_0001,
+        },
+        BaseProperty::PropertyName {
+            header: BasePropertyHeader {
+                master_property_id: 0x2A,
+                should_pack_master_property_id: true,
+            },
+            value: 0x1234_0002,
+        },
+        BaseProperty::TriState {
+            header: BasePropertyHeader {
+                master_property_id: 0x2B,
+                should_pack_master_property_id: true,
+            },
+            value: -1,
+        },
+        BaseProperty::Array {
+            header: BasePropertyHeader {
+                master_property_id: 0x2C,
+                should_pack_master_property_id: true,
+            },
+            value: vec![
+                BaseProperty::Integer {
+                    header: BasePropertyHeader {
+                        master_property_id: 0x10,
+                        should_pack_master_property_id: true,
+                    },
+                    value: 42,
+                },
+                BaseProperty::Bool {
+                    header: BasePropertyHeader {
+                        master_property_id: 0x11,
+                        should_pack_master_property_id: true,
+                    },
+                    value: true,
+                },
+            ],
+        },
+        BaseProperty::Struct {
+            header: BasePropertyHeader {
+                master_property_id: 0x2D,
+                should_pack_master_property_id: true,
+            },
+            value: BTreeMap::from([
+                (
+                    7,
+                    BaseProperty::Integer {
+                        header: BasePropertyHeader {
+                            master_property_id: 0x10,
+                            should_pack_master_property_id: true,
+                        },
+                        value: 99,
+                    },
+                ),
+                (
+                    8,
+                    BaseProperty::String {
+                        header: BasePropertyHeader {
+                            master_property_id: 0x21,
+                            should_pack_master_property_id: true,
+                        },
+                        value: PStringBase::from("Layout"),
+                    },
+                ),
+            ]),
+        },
+    ];
+
+    let base_property_types = Arc::new(BTreeMap::from([
+        (0x10_u32, BasePropertyType::Integer),
+        (0x11_u32, BasePropertyType::Bool),
+        (0x20_u32, BasePropertyType::LongInteger),
+        (0x21_u32, BasePropertyType::String),
+        (0x22_u32, BasePropertyType::Enum),
+        (0x23_u32, BasePropertyType::DataId),
+        (0x24_u32, BasePropertyType::InstanceId),
+        (0x25_u32, BasePropertyType::Bitfield32),
+        (0x26_u32, BasePropertyType::Waveform),
+        (0x27_u32, BasePropertyType::Position),
+        (0x28_u32, BasePropertyType::TimeStamp),
+        (0x29_u32, BasePropertyType::StringToken),
+        (0x2A_u32, BasePropertyType::PropertyName),
+        (0x2B_u32, BasePropertyType::TriState),
+        (0x2C_u32, BasePropertyType::Array),
+        (0x2D_u32, BasePropertyType::Struct),
+    ]));
+
+    for value in cases {
+        let property_type = value.property_type();
+        let mut bytes = vec![0u8; 512];
+        let mut writer = DatBinWriter::new(&mut bytes);
+        assert!(value.pack(&mut writer));
+        let used = writer.offset();
+
+        let start = match &value {
+            BaseProperty::Integer { header, .. }
+            | BaseProperty::Bool { header, .. }
+            | BaseProperty::LongInteger { header, .. }
+            | BaseProperty::Float { header, .. }
+            | BaseProperty::Vector { header, .. }
+            | BaseProperty::Color { header, .. }
+            | BaseProperty::StringInfo { header, .. }
+            | BaseProperty::String { header, .. }
+            | BaseProperty::Enum { header, .. }
+            | BaseProperty::DataId { header, .. }
+            | BaseProperty::InstanceId { header, .. }
+            | BaseProperty::Bitfield32 { header, .. }
+            | BaseProperty::Bitfield64 { header, .. }
+            | BaseProperty::Array { header, .. }
+            | BaseProperty::Struct { header, .. }
+            | BaseProperty::Waveform { header, .. }
+            | BaseProperty::Position { header, .. }
+            | BaseProperty::TimeStamp { header, .. }
+            | BaseProperty::StringToken { header, .. }
+            | BaseProperty::PropertyName { header, .. }
+            | BaseProperty::TriState { header, .. } => {
+                if header.should_pack_master_property_id {
+                    4
+                } else {
+                    0
+                }
+            }
+        };
+
+        let mut reader = DatBinReader::with_base_property_types(
+            &bytes[start..used],
+            Some(base_property_types.clone()),
+        );
+        let unpacked =
+            BaseProperty::unpack_generic_master_property(&mut reader, property_type).unwrap();
+        assert_eq!(without_top_level_master_property(value), unpacked);
+    }
+}
+
+#[test]
 fn base_property_desc_roundtrip_reads_bounds_flags_and_available_properties() {
     use std::collections::BTreeMap;
 
@@ -1759,6 +2043,59 @@ fn base_property_desc_roundtrip_reads_bounds_flags_and_available_properties() {
         BaseProperty::Integer { value, .. } => assert_eq!(100, value),
         other => panic!("unexpected property variant: {other:?}"),
     }
+}
+
+#[test]
+fn base_property_desc_roundtrip_reads_empty_optional_values() {
+    use dat_reader_writer::{
+        Generated::Enums::{
+            BasePropertyType::BasePropertyType, PropertyCachingType::PropertyCachingType,
+            PropertyDatFileType::PropertyDatFileType, PropertyGroupName::PropertyGroupName,
+            PropertyInheritanceType::PropertyInheritanceType,
+            PropertyPropagationType::PropertyPropagationType,
+        },
+        Types::BasePropertyDesc::BasePropertyDesc,
+    };
+
+    let desc = BasePropertyDesc {
+        name: 0x55,
+        property_type: BasePropertyType::String,
+        group: PropertyGroupName::GameUI,
+        provider: 0x10,
+        data: 0x22,
+        prediction_timeout: 0.0,
+        inheritance_type: PropertyInheritanceType::Either,
+        dat_file_type: PropertyDatFileType::SharedData,
+        propagation_type: PropertyPropagationType::NetPredictedSharedVisually,
+        caching_type: PropertyCachingType::Global,
+        required: false,
+        read_only: true,
+        no_checkpoint: false,
+        recorded: true,
+        do_not_replay: false,
+        absolute_time_stamp: true,
+        groupable: false,
+        propagate_to_children: false,
+        ..Default::default()
+    };
+
+    let mut bytes = vec![0u8; 128];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    assert!(desc.pack(&mut writer));
+    let used = writer.offset();
+
+    let mut unpacked = BasePropertyDesc::default();
+    assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
+    assert_eq!(0x55, unpacked.name);
+    assert_eq!(BasePropertyType::String, unpacked.property_type);
+    assert_eq!(PropertyCachingType::Global, unpacked.caching_type);
+    assert!(unpacked.read_only);
+    assert!(unpacked.recorded);
+    assert!(unpacked.absolute_time_stamp);
+    assert!(unpacked.default_value.is_none());
+    assert!(unpacked.max_value.is_none());
+    assert!(unpacked.min_value.is_none());
+    assert!(unpacked.available_properties.is_empty());
 }
 
 #[test]

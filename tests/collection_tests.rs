@@ -6,14 +6,14 @@ use std::{
 
 use dat_reader_writer::{
     CellDatabase::CellDatabase,
-    DBObjs::Palette::Palette,
+    DBObjs::{Iteration::Iteration, MasterProperty::MasterProperty, Palette::Palette},
     DatCollection::DatCollection,
     Generated::Enums::DatFileType::DatFileType,
     Lib::IO::{DatBinWriter::DatBinWriter, DatHeader::DatHeader, IPackable::IPackable},
     LocalDatabase::LocalDatabase,
     Options::{DatAccessType::DatAccessType, DatCollectionOptions::DatCollectionOptions},
     PortalDatabase::PortalDatabase,
-    Types::QualifiedDataId::QualifiedDataId,
+    Types::{DBObj::DBObjBase, QualifiedDataId::QualifiedDataId},
 };
 use uuid::Uuid;
 
@@ -45,9 +45,9 @@ fn write_header_only_dat(path: &PathBuf, dat_type: DatFileType) {
 }
 
 fn build_single_block_dat(dat_type: DatFileType, file_id: u32, payload: &[u8]) -> Vec<u8> {
-    let block_size = 1024usize;
-    let root_offset = 1024usize;
-    let file_offset = 2048usize;
+    let block_size = (payload.len() + 256).max(1024);
+    let root_offset = block_size;
+    let file_offset = root_offset + block_size;
 
     let mut header = DatHeader::new(
         dat_type,
@@ -261,4 +261,156 @@ fn qualified_data_id_can_resolve_through_collection() {
     assert_eq!(1, palette.colors.len());
     assert_eq!(0xAA, palette.colors[0].blue);
     assert_eq!(0xDD, palette.colors[0].alpha);
+}
+
+#[test]
+fn portal_database_exposes_master_property_and_region_helpers() {
+    let dir = unique_temp_dir();
+    let master_path = dir.join("portal_master.dat");
+    let master_property = MasterProperty {
+        base: DBObjBase {
+            id: 0x3900_0001,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+
+    let mut master_bytes = vec![0u8; 1024];
+    let master_used = {
+        let mut master_writer = DatBinWriter::new(&mut master_bytes);
+        assert!(master_property.pack(&mut master_writer));
+        master_writer.offset()
+    };
+
+    fs::write(
+        &master_path,
+        build_single_block_dat(
+            DatFileType::Portal,
+            0x3900_0001,
+            &master_bytes[..master_used],
+        ),
+    )
+    .unwrap();
+    let master_portal = PortalDatabase::from_path(
+        master_path.to_string_lossy().to_string(),
+        DatAccessType::Read,
+    )
+    .unwrap();
+
+    assert!(master_portal.master_property().unwrap().is_some());
+}
+
+#[test]
+fn dat_collection_can_write_portal_types_and_read_them_back() {
+    let dir = unique_temp_dir();
+
+    let collection =
+        DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::ReadWrite)
+            .unwrap();
+
+    collection
+        .portal
+        .inner
+        .block_allocator
+        .init_new(DatFileType::Portal, 0, 1024, 4)
+        .unwrap();
+
+    let palette = Palette {
+        base: DBObjBase {
+            id: 0x0400_0010,
+            ..Default::default()
+        },
+        colors: vec![dat_reader_writer::Types::ColorARGB::ColorARGB {
+            blue: 0x11,
+            green: 0x22,
+            red: 0x33,
+            alpha: 0x44,
+        }],
+    };
+
+    assert!(collection.try_write_file(&palette).unwrap());
+
+    let read_palette = collection.try_get::<Palette>(0x0400_0010).unwrap().unwrap();
+    assert_eq!(1, read_palette.colors.len());
+    assert_eq!(0x11, read_palette.colors[0].blue);
+    assert_eq!(0x44, read_palette.colors[0].alpha);
+}
+
+#[test]
+fn dat_collection_rejects_iteration_cross_dat_access() {
+    let dir = unique_temp_dir();
+    write_header_only_dat(&dir.join("client_portal.dat"), DatFileType::Portal);
+    write_header_only_dat(&dir.join("client_cell_1.dat"), DatFileType::Cell);
+    write_header_only_dat(&dir.join("client_local_English.dat"), DatFileType::Local);
+    write_header_only_dat(&dir.join("client_highres.dat"), DatFileType::Portal);
+
+    let collection =
+        DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::ReadWrite)
+            .unwrap();
+
+    assert!(collection.try_get::<Iteration>(0xFFFF0001).is_err());
+    assert!(collection.get_cached::<Iteration>(0xFFFF0001).is_err());
+    assert!(collection.get_all_ids_of_type::<Iteration>().unwrap().is_empty());
+    assert!(collection.try_write_file(&Iteration::default()).is_err());
+    assert!(collection.try_write_compressed(&Iteration::default()).is_err());
+}
+
+#[test]
+fn dat_collection_cached_reads_hold_until_clear_cache() {
+    let dir = unique_temp_dir();
+
+    let mut collection =
+        DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::ReadWrite)
+            .unwrap();
+
+    collection
+        .portal
+        .inner
+        .block_allocator
+        .init_new(DatFileType::Portal, 0, 1024, 4)
+        .unwrap();
+
+    let first_palette = Palette {
+        base: DBObjBase {
+            id: 0x0400_0020,
+            ..Default::default()
+        },
+        colors: vec![dat_reader_writer::Types::ColorARGB::ColorARGB {
+            blue: 0x01,
+            green: 0x02,
+            red: 0x03,
+            alpha: 0x04,
+        }],
+    };
+
+    let second_palette = Palette {
+        base: DBObjBase {
+            id: 0x0400_0020,
+            ..Default::default()
+        },
+        colors: vec![dat_reader_writer::Types::ColorARGB::ColorARGB {
+            blue: 0xAA,
+            green: 0xBB,
+            red: 0xCC,
+            alpha: 0xDD,
+        }],
+    };
+
+    assert!(collection.try_write_file(&first_palette).unwrap());
+
+    let cached_first = collection.get_cached::<Palette>(0x0400_0020).unwrap().unwrap();
+    assert_eq!(0x01, cached_first.colors[0].blue);
+    assert_eq!(0x04, cached_first.colors[0].alpha);
+
+    assert!(collection.try_write_file(&second_palette).unwrap());
+
+    let still_cached = collection.get_cached::<Palette>(0x0400_0020).unwrap().unwrap();
+    assert_eq!(0x01, still_cached.colors[0].blue);
+    assert_eq!(0x04, still_cached.colors[0].alpha);
+
+    collection.clear_cache();
+
+    let refreshed = collection.get_cached::<Palette>(0x0400_0020).unwrap().unwrap();
+    assert_eq!(0xAA, refreshed.colors[0].blue);
+    assert_eq!(0xDD, refreshed.colors[0].alpha);
 }

@@ -1,6 +1,6 @@
 use crate::{
     Generated::Enums::{DBObjType::DBObjType, DatFileType::DatFileType},
-    Lib::Attributes::DBObjTypeAttribute::DBObjTypeAttribute,
+    Lib::{Attributes::DBObjTypeAttribute::DBObjTypeAttribute, IO::IDBObj::IDBObj},
 };
 
 const PORTED_ATTRIBUTES: &[&DBObjTypeAttribute] = &[
@@ -15,7 +15,9 @@ const PORTED_ATTRIBUTES: &[&DBObjTypeAttribute] = &[
     &crate::DBObjs::MotionTable::MOTION_TABLE_ATTR,
     &crate::DBObjs::Wave::WAVE_ATTR,
     &crate::DBObjs::CharGen::CHAR_GEN_ATTR,
+    &crate::DBObjs::Clothing::CLOTHING_ATTR,
     &crate::DBObjs::PalSet::PAL_SET_ATTR,
+    &crate::DBObjs::PaletteSet::PALETTE_SET_ATTR,
     &crate::DBObjs::ClothingTable::CLOTHING_TABLE_ATTR,
     &crate::DBObjs::Scene::SCENE_ATTR,
     &crate::DBObjs::Region::REGION_ATTR,
@@ -23,6 +25,7 @@ const PORTED_ATTRIBUTES: &[&DBObjTypeAttribute] = &[
     &crate::DBObjs::CombatTable::COMBAT_TABLE_ATTR,
     &crate::DBObjs::LanguageString::LANGUAGE_STRING_ATTR,
     &crate::DBObjs::ParticleEmitter::PARTICLE_EMITTER_ATTR,
+    &crate::DBObjs::ParticleEmitterInfo::PARTICLE_EMITTER_INFO_ATTR,
     &crate::DBObjs::PhysicsScript::PHYSICS_SCRIPT_ATTR,
     &crate::DBObjs::PhysicsScriptTable::PHYSICS_SCRIPT_TABLE_ATTR,
     &crate::DBObjs::StringTable::STRING_TABLE_ATTR,
@@ -86,6 +89,44 @@ fn mask_matches(attr: &DBObjTypeAttribute, id: u32) -> bool {
 
 pub fn all_ported_attributes() -> &'static [&'static DBObjTypeAttribute] {
     PORTED_ATTRIBUTES
+}
+
+pub fn all_masked_attributes() -> Vec<&'static DBObjTypeAttribute> {
+    PORTED_ATTRIBUTES
+        .iter()
+        .copied()
+        .filter(|attr| attr.has_mask())
+        .collect()
+}
+
+pub fn all_exact_id_attributes() -> Vec<&'static DBObjTypeAttribute> {
+    PORTED_ATTRIBUTES
+        .iter()
+        .copied()
+        .filter(|attr| attr.is_singular())
+        .collect()
+}
+
+pub fn all_range_attributes() -> Vec<&'static DBObjTypeAttribute> {
+    PORTED_ATTRIBUTES
+        .iter()
+        .copied()
+        .filter(|attr| attr.has_range_data() && !attr.is_singular())
+        .collect()
+}
+
+pub fn db_obj_type_from_type<T>() -> DBObjType
+where
+    T: IDBObj,
+{
+    T::db_obj_type_attr().db_obj_type
+}
+
+pub fn mask_from_type<T>() -> u32
+where
+    T: IDBObj,
+{
+    T::db_obj_type_attr().mask_id
 }
 
 pub fn type_from_id(dat_type: DatFileType, id: u32) -> Option<&'static DBObjTypeAttribute> {

@@ -1,16 +1,14 @@
 use crate::{
     Generated::Enums::{SkillId::SkillId, UIStateId::UIStateId},
-    Lib::IO::{
-        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
-        IUnpackable::IUnpackable,
+    Lib::{
+        HashTableHelpers::{BUCKET_SIZES, HashKeyable},
+        IO::{
+            DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+            IUnpackable::IUnpackable,
+        },
     },
     Types::QualifiedDataId::QualifiedDataId,
 };
-
-const BUCKET_SIZES: [u32; 23] = [
-    11, 23, 47, 89, 191, 383, 761, 1531, 3067, 6143, 12281, 24571, 49139, 98299, 196597, 393209,
-    786431, 1572853, 3145721, 6291449, 12582893, 25165813, 50331599,
-];
 
 pub trait HashTableItem: Sized {
     fn read_item(reader: &mut DatBinReader<'_>) -> Self;
@@ -99,7 +97,7 @@ impl HashTableKey for String {
         <Self as HashTableItem>::write_item(self, writer);
     }
     fn hash_key(&self) -> u64 {
-        self.encode_utf16().map(u64::from).sum()
+        <Self as HashKeyable>::hash_key(self)
     }
 }
 

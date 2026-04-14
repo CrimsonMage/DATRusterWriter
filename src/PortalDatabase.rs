@@ -1,9 +1,12 @@
 use std::io;
 
 use crate::{
+    DBObjs::{MasterProperty::MasterProperty, Region::Region},
     DatDatabase::DatDatabase,
     Generated::Enums::DatFileType::DatFileType,
-    Lib::IO::{DatBTree::DatBTreeFile::DatBTreeFile, IDBObj::IDBObj},
+    Lib::IO::{
+        DatBTree::DatBTreeFile::DatBTreeFile, IDBObj::IDBObj, IPackable::IPackable,
+    },
     Options::{DatAccessType::DatAccessType, DatDatabaseOptions::DatDatabaseOptions},
 };
 
@@ -49,6 +52,35 @@ impl PortalDatabase {
         T: IDBObj + Default,
     {
         self.inner.try_get::<T>(file_id)
+    }
+
+    pub fn get_cached<T>(&self, file_id: u32) -> io::Result<Option<T>>
+    where
+        T: IDBObj + Default + Clone + Send + 'static,
+    {
+        self.inner.get_cached::<T>(file_id)
+    }
+
+    pub fn master_property(&self) -> io::Result<Option<MasterProperty>> {
+        self.try_get::<MasterProperty>(0x3900_0001)
+    }
+
+    pub fn region(&self) -> io::Result<Option<Region>> {
+        self.try_get::<Region>(0x1300_0000)
+    }
+
+    pub fn try_write_file<T>(&self, value: &T) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable,
+    {
+        self.inner.try_write_file(value)
+    }
+
+    pub fn try_write_compressed<T>(&self, value: &T) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable,
+    {
+        self.inner.try_write_compressed(value)
     }
 
     pub fn get_all_ids_of_type<T>(&self) -> io::Result<Vec<u32>>

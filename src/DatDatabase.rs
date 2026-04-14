@@ -1,6 +1,14 @@
-use std::{collections::BTreeMap, io, io::Read, sync::Arc};
+use std::{
+    any::Any,
+    collections::BTreeMap,
+    io,
+    io::{Read, Write},
+    sync::{Arc, Mutex},
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use flate2::read::ZlibDecoder;
+use flate2::{write::ZlibEncoder, Compression};
 
 use crate::{
     DBObjs::MasterProperty::MasterProperty,
@@ -19,8 +27,10 @@ use crate::{
                 DatBTreeReaderWriter::DatBTreeReaderWriter,
             },
             DatBinReader::DatBinReader,
+            DatBinWriter::DatBinWriter,
             DatHeader::DatHeader,
             IDBObj::IDBObj,
+            IPackable::IPackable,
         },
     },
     Options::{
@@ -33,6 +43,7 @@ pub struct DatDatabase {
     pub block_allocator: Arc<dyn IDatBlockAllocator>,
     pub tree: DatBTreeReaderWriter,
     pub options: DatDatabaseOptions,
+    file_cache: Mutex<BTreeMap<u32, Box<dyn Any + Send>>>,
 }
 
 impl DatDatabase {
@@ -50,10 +61,12 @@ impl DatDatabase {
             block_allocator,
             tree,
             options,
+            file_cache: Mutex::new(BTreeMap::new()),
         })
     }
 
     pub fn clear_cache(&mut self) {
+        self.file_cache.lock().unwrap().clear();
         self.tree.clear_cache();
         if self.options.index_caching_strategy == IndexCachingStrategy::Upfront {
             let _ = self.tree.build_flat_index();
@@ -134,6 +147,48 @@ impl DatDatabase {
         self.try_get::<T>(file_id)
     }
 
+    pub fn get_cached<T>(&self, file_id: u32) -> io::Result<Option<T>>
+    where
+        T: IDBObj + Default + Clone + Send + 'static,
+    {
+        let base_property_types =
+            if self.header().r#type == DatFileType::Portal && file_id != 0x39000001 {
+                self.base_property_types()?
+            } else {
+                None
+            };
+        self.get_cached_with_base_property_types(file_id, base_property_types)
+    }
+
+    pub fn get_cached_with_base_property_types<T>(
+        &self,
+        file_id: u32,
+        base_property_types: Option<Arc<BTreeMap<u32, BasePropertyType>>>,
+    ) -> io::Result<Option<T>>
+    where
+        T: IDBObj + Default + Clone + Send + 'static,
+    {
+        if let Some(cached) = self
+            .file_cache
+            .lock()
+            .unwrap()
+            .get(&file_id)
+            .and_then(|value| value.downcast_ref::<T>())
+        {
+            return Ok(Some(cached.clone()));
+        }
+
+        let value: Option<T> =
+            self.try_get_with_base_property_types(file_id, base_property_types)?;
+        if let Some(value) = &value {
+            self.file_cache
+                .lock()
+                .unwrap()
+                .insert(file_id, Box::new(value.clone()));
+        }
+        Ok(value)
+    }
+
     pub fn base_property_types(&self) -> io::Result<Option<Arc<BTreeMap<u32, BasePropertyType>>>> {
         if self.header().r#type != DatFileType::Portal {
             return Ok(None);
@@ -156,6 +211,66 @@ impl DatDatabase {
 
     pub fn has_file(&self, file_id: u32) -> io::Result<bool> {
         self.tree.has_file(file_id)
+    }
+
+    pub fn try_write_file<T>(&self, value: &T) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable,
+    {
+        let mut buffer = vec![0u8; 1024 * 1024 * 5];
+        let bytes_to_write = {
+            let mut writer = DatBinWriter::new(&mut buffer);
+            writer.write_item(value);
+            writer.offset()
+        };
+
+        self.try_write_bytes_core(value.id(), &buffer, bytes_to_write, false, |entry| {
+            if entry.iteration == 0 {
+                entry.iteration = 1;
+            }
+        })
+    }
+
+    pub fn try_write_compressed<T>(&self, value: &T) -> io::Result<bool>
+    where
+        T: IDBObj + IPackable,
+    {
+        let mut buffer = vec![0u8; 1024 * 1024 * 5];
+        let bytes_to_write = {
+            let mut writer = DatBinWriter::new(&mut buffer);
+            writer.write_item(value);
+            writer.offset()
+        };
+
+        self.try_write_bytes_core(value.id(), &buffer, bytes_to_write, true, |entry| {
+            if entry.iteration == 0 {
+                entry.iteration = 1;
+            }
+        })
+    }
+
+    pub fn try_write_file_bytes(
+        &self,
+        id: u32,
+        buffer: &[u8],
+        bytes_to_write: usize,
+        iteration: i32,
+    ) -> io::Result<bool> {
+        self.try_write_bytes_core(id, buffer, bytes_to_write, false, |entry| {
+            entry.iteration = iteration;
+        })
+    }
+
+    pub fn try_write_compressed_bytes(
+        &self,
+        id: u32,
+        buffer: &[u8],
+        bytes_to_write: usize,
+        iteration: i32,
+    ) -> io::Result<bool> {
+        self.try_write_bytes_core(id, buffer, bytes_to_write, true, |entry| {
+            entry.iteration = iteration;
+        })
     }
 
     pub fn get_all_ids_of_type<T>(&self) -> io::Result<Vec<u32>>
@@ -189,6 +304,66 @@ impl DatDatabase {
             .collect())
     }
 
+    fn try_write_bytes_core<F>(
+        &self,
+        id: u32,
+        buffer: &[u8],
+        bytes_to_write: usize,
+        compress: bool,
+        configure_entry: F,
+    ) -> io::Result<bool>
+    where
+        F: FnOnce(&mut DatBTreeFile),
+    {
+        if !self.block_allocator.can_write() {
+            return Err(io::Error::new(
+                io::ErrorKind::Unsupported,
+                "block allocator was opened as read only",
+            ));
+        }
+
+        let existing_file = self.tree.try_get_file(id)?;
+        let mut starting_block = existing_file.map(|file| file.offset).unwrap_or_default();
+        let mut flags = existing_file.map(|file| file.flags).unwrap_or_default();
+        let version = existing_file.map(|file| file.version).unwrap_or(2);
+        let existing_iteration = existing_file.map(|file| file.iteration).unwrap_or_default();
+
+        let write_data = if compress {
+            if let Some(compressed) = Self::attempt_to_compress(&buffer[..bytes_to_write])? {
+                flags |= DatBTreeFileFlags::IsCompressed;
+                compressed
+            } else {
+                flags.remove(DatBTreeFileFlags::IsCompressed);
+                buffer[..bytes_to_write].to_vec()
+            }
+        } else {
+            flags.remove(DatBTreeFileFlags::IsCompressed);
+            buffer[..bytes_to_write].to_vec()
+        };
+
+        starting_block =
+            self.block_allocator
+                .write_block(&write_data, write_data.len(), starting_block)?;
+
+        let raw_date = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs() as u32;
+
+        let mut entry = DatBTreeFile {
+            flags,
+            version,
+            id,
+            offset: starting_block,
+            size: write_data.len() as u32,
+            raw_date,
+            iteration: existing_iteration,
+        };
+        configure_entry(&mut entry);
+        let _ = self.tree.insert(entry)?;
+        Ok(true)
+    }
+
     fn decompress(data: &[u8]) -> io::Result<Vec<u8>> {
         if data.len() < 4 {
             return Ok(data.to_vec());
@@ -199,5 +374,24 @@ impl DatDatabase {
         let mut output = Vec::with_capacity(uncompressed_size);
         decoder.read_to_end(&mut output)?;
         Ok(output)
+    }
+
+    fn attempt_to_compress(data: &[u8]) -> io::Result<Option<Vec<u8>>> {
+        if data.len() < 16 {
+            return Ok(None);
+        }
+
+        let mut encoder = ZlibEncoder::new(Vec::new(), Compression::best());
+        encoder.write_all(data)?;
+        let compressed = encoder.finish()?;
+
+        if compressed.len() + 4 >= data.len() {
+            return Ok(None);
+        }
+
+        let mut output = Vec::with_capacity(compressed.len() + 4);
+        output.extend_from_slice(&(data.len() as u32).to_le_bytes());
+        output.extend_from_slice(&compressed);
+        Ok(Some(output))
     }
 }

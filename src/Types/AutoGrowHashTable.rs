@@ -1,17 +1,15 @@
 use std::{any::TypeId, collections::BTreeMap};
 
 use crate::{
-    Lib::IO::{
-        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
-        IUnpackable::IUnpackable,
+    Lib::{
+        HashTableHelpers::{BUCKET_SIZES, get_bucket_size_index},
+        IO::{
+            DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
+            IUnpackable::IUnpackable,
+        },
     },
     Types::PStringBase::PStringBase,
 };
-
-const BUCKET_SIZES: [u32; 23] = [
-    11, 23, 47, 89, 191, 383, 761, 1531, 3067, 6143, 12281, 24571, 49139, 98299, 196597, 393209,
-    786431, 1572853, 3145721, 6291449, 12582893, 25165813, 50331599,
-];
 
 pub trait GenericHashValue: Sized {
     fn read_value(reader: &mut DatBinReader<'_>) -> Self;
@@ -39,22 +37,6 @@ impl GenericHashValue for PStringBase<u8> {
     fn write_value(&self, writer: &mut DatBinWriter<'_>) {
         writer.write_item(self);
     }
-}
-
-fn get_bucket_size_index(count: usize, auto_grow: bool) -> u8 {
-    if count == 0 {
-        return 1;
-    }
-
-    let target = if auto_grow {
-        count.saturating_mul(2)
-    } else {
-        count
-    };
-    BUCKET_SIZES
-        .iter()
-        .position(|bucket_size| *bucket_size as usize >= target)
-        .unwrap_or(BUCKET_SIZES.len() - 1) as u8
 }
 
 pub trait GenericHashKey: GenericHashValue + Copy + Ord + 'static {

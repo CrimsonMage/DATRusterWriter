@@ -66,6 +66,7 @@ use dat_reader_writer::{
         Contract::Contract,
         CreateBlockingParticleHook::CreateBlockingParticleHook,
         CreateParticleHook::CreateParticleHook,
+        DBObj::DBObjBase,
         DataIdBaseProperty::DataIdBaseProperty,
         DefaultScriptHook::DefaultScriptHook,
         DefaultScriptPartHook::DefaultScriptPartHook,
@@ -355,6 +356,13 @@ fn db_obj_attribute_cache_resolves_ported_range_and_singular_types() {
 #[test]
 fn db_obj_attribute_cache_tracks_current_ported_dbobjs() {
     let attrs = DBObjAttributeCache::all_ported_attributes();
+    assert!(attrs.iter().any(|attr| attr.rust_type_name == "Clothing"));
+    assert!(attrs.iter().any(|attr| attr.rust_type_name == "PaletteSet"));
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.rust_type_name == "ParticleEmitterInfo")
+    );
     assert!(
         attrs
             .iter()
@@ -519,6 +527,35 @@ fn db_obj_attribute_cache_tracks_current_ported_dbobjs() {
 }
 
 #[test]
+fn db_obj_attribute_cache_exposes_exact_mask_and_range_groups() {
+    let exact = DBObjAttributeCache::all_exact_id_attributes();
+    let masked = DBObjAttributeCache::all_masked_attributes();
+    let ranges = DBObjAttributeCache::all_range_attributes();
+
+    assert!(exact.iter().any(|attr| attr.db_obj_type == DBObjType::Iteration));
+    assert!(exact.iter().any(|attr| attr.db_obj_type == DBObjType::CharGen));
+    assert!(masked.iter().any(|attr| attr.db_obj_type == DBObjType::Palette));
+    assert!(masked.iter().any(|attr| attr.db_obj_type == DBObjType::Animation));
+    assert!(ranges.iter().any(|attr| attr.db_obj_type == DBObjType::StringTable));
+    assert!(ranges.iter().any(|attr| attr.db_obj_type == DBObjType::LayoutDesc));
+    assert!(ranges.iter().any(|attr| attr.db_obj_type == DBObjType::MasterProperty));
+}
+
+#[test]
+fn db_obj_attribute_cache_maps_types_to_dbobj_types_and_masks() {
+    assert_eq!(
+        DBObjType::Palette,
+        DBObjAttributeCache::db_obj_type_from_type::<Palette>()
+    );
+    assert_eq!(
+        DBObjType::StringTable,
+        DBObjAttributeCache::db_obj_type_from_type::<StringTable>()
+    );
+    assert_eq!(0x0400_0000, DBObjAttributeCache::mask_from_type::<Palette>());
+    assert_eq!(0x0000_0000, DBObjAttributeCache::mask_from_type::<StringTable>());
+}
+
+#[test]
 fn object_factory_creates_boxed_dbobjs_from_type_and_id() {
     let from_type = dat_reader_writer::Lib::IO::ObjectFactory::create_boxed(DBObjType::Iteration)
         .expect("factory should create Iteration");
@@ -561,6 +598,37 @@ fn object_factory_creates_boxed_dbobjs_from_type_and_id() {
     .expect("factory should resolve LandBlock");
     assert_eq!(DBObjType::LandBlock, from_cell_id.db_obj_type());
     assert!(from_cell_id.as_any().is::<LandBlock>());
+}
+
+#[test]
+fn dbobj_base_pack_unpack_matches_header_flag_behavior() {
+    use dat_reader_writer::Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags;
+
+    let flags = DBObjHeaderFlags::from_bits_retain(
+        DBObjHeaderFlags::HasId.bits() | DBObjHeaderFlags::HasDataCategory.bits(),
+    );
+    let value = DBObjBase {
+        id: 0x1234_5678,
+        data_category: 0x90AB_CDEF,
+        header_flags: flags,
+    };
+
+    let mut bytes = vec![0u8; 16];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    assert!(value.pack(&mut writer));
+    let used = writer.offset();
+
+    let mut unpacked = DBObjBase::with_header_flags(flags);
+    assert!(unpacked.unpack(&mut DatBinReader::new(&bytes[..used])));
+    assert_eq!(0x1234_5678, unpacked.id);
+    assert_eq!(0x90AB_CDEF, unpacked.data_category);
+    assert_eq!(flags, unpacked.header_flags);
+
+    let none = DBObjBase::with_header_flags(DBObjHeaderFlags::None);
+    let mut none_bytes = vec![0u8; 8];
+    let mut none_writer = DatBinWriter::new(&mut none_bytes);
+    assert!(none.pack(&mut none_writer));
+    assert_eq!(0, none_writer.offset());
 }
 
 #[test]
@@ -1526,6 +1594,139 @@ fn dat_database_can_read_action_map_and_master_property() {
         BaseProperty::Integer { value, .. } => assert_eq!(42, *value),
         other => panic!("unexpected default property variant: {other:?}"),
     }
+}
+
+#[test]
+fn dat_database_can_write_master_property_and_read_it_back() {
+    use dat_reader_writer::Generated::Enums::{
+        BasePropertyType::BasePropertyType, PatchFlags::PatchFlags,
+        PropertyCachingType::PropertyCachingType, PropertyDatFileType::PropertyDatFileType,
+        PropertyGroupName::PropertyGroupName, PropertyInheritanceType::PropertyInheritanceType,
+        PropertyPropagationType::PropertyPropagationType,
+    };
+
+    let path = unique_temp_file();
+    let db = DatDatabase::new(DatDatabaseOptions {
+        file_path: path.to_string_lossy().to_string(),
+        access_type: DatAccessType::ReadWrite,
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+    db.block_allocator
+        .init_new(DatFileType::Portal, 0, 1024, 4)
+        .unwrap();
+
+    let mut mapper_strings = AutoGrowHashTable::<u32, PStringBase<u8>>::default();
+    mapper_strings.insert(1, PStringBase::from("test"));
+
+    let master_property = MasterProperty {
+        base: DBObjBase {
+            id: 0x3900_0001,
+            ..Default::default()
+        },
+        enum_mapper: EnumMapperData {
+            base_enum_map: 0x1234_5678,
+            unknown: 0x1234_5678,
+            id_to_string_map: mapper_strings,
+        },
+        properties: std::collections::BTreeMap::from([(
+            1,
+            BasePropertyDesc {
+                name: 1,
+                property_type: BasePropertyType::Integer,
+                group: PropertyGroupName::from(2),
+                provider: 3,
+                data: 0x1234_5678,
+                patch_flags: PatchFlags::default(),
+                default_value: Some(BaseProperty::Integer {
+                    header: BasePropertyHeader::default(),
+                    value: 77,
+                }),
+                max_value: Some(BaseProperty::Integer {
+                    header: BasePropertyHeader::default(),
+                    value: 99,
+                }),
+                min_value: Some(BaseProperty::Integer {
+                    header: BasePropertyHeader::default(),
+                    value: -5,
+                }),
+                prediction_timeout: 1.5,
+                inheritance_type: PropertyInheritanceType::from(1),
+                dat_file_type: PropertyDatFileType::from(1),
+                propagation_type: PropertyPropagationType::from(1),
+                caching_type: PropertyCachingType::from(1),
+                ..Default::default()
+            },
+        )]),
+    };
+
+    assert!(db.try_write_file(&master_property).unwrap());
+    let read_master = db.try_get::<MasterProperty>(0x3900_0001).unwrap().unwrap();
+    assert_eq!(0x3900_0001, read_master.base.id);
+    assert_eq!(0x1234_5678, read_master.enum_mapper.base_enum_map);
+    assert_eq!(
+        "test",
+        read_master
+            .enum_mapper
+            .id_to_string_map
+            .get(&1)
+            .unwrap()
+            .value
+    );
+    assert_eq!(1, read_master.properties.len());
+    assert_eq!(0x1234_5678, read_master.properties.get(&1).unwrap().data);
+
+    drop(db);
+
+    let reopened = DatDatabase::new(DatDatabaseOptions {
+        file_path: path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+    let read_reopened = reopened.try_get::<MasterProperty>(0x3900_0001).unwrap().unwrap();
+    assert_eq!(BasePropertyType::Integer, read_reopened.properties.get(&1).unwrap().property_type);
+    match read_reopened
+        .properties
+        .get(&1)
+        .unwrap()
+        .default_value
+        .as_ref()
+        .unwrap()
+    {
+        BaseProperty::Integer { value, .. } => assert_eq!(77, *value),
+        other => panic!("unexpected reopened default property variant: {other:?}"),
+    }
+}
+
+#[test]
+fn dat_database_can_write_and_read_compressed_file_bytes() {
+    let path = unique_temp_file();
+    let db = DatDatabase::new(DatDatabaseOptions {
+        file_path: path.to_string_lossy().to_string(),
+        access_type: DatAccessType::ReadWrite,
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+    db.block_allocator
+        .init_new(DatFileType::Portal, 0, 1024, 4)
+        .unwrap();
+
+    let payload = b"PortalPortalPortalPortalPortalPortalPortalPortalPortalPortal".repeat(32);
+    assert!(db
+        .try_write_compressed_bytes(0x0400_0010, &payload, payload.len(), 2)
+        .unwrap());
+
+    let entry = db.try_get_file_entry(0x0400_0010).unwrap().unwrap();
+    assert!(entry.flags.contains(
+        dat_reader_writer::Lib::IO::DatBTree::DatBTreeFileFlags::DatBTreeFileFlags::IsCompressed
+    ));
+    assert_eq!(2, entry.iteration);
+
+    let compressed = db.try_get_file_bytes(0x0400_0010, false).unwrap().unwrap();
+    assert_eq!(payload.len() as u32, u32::from_le_bytes(compressed[0..4].try_into().unwrap()));
+
+    let decompressed = db.try_get_file_bytes(0x0400_0010, true).unwrap().unwrap();
+    assert_eq!(payload, decompressed);
 }
 
 #[test]
@@ -2759,6 +2960,39 @@ fn hash_table_roundtrip_reads_string_and_primitive_entries() {
     assert!(unpacked_flags.unpack(&mut DatBinReader::new(&flag_bytes[..flag_used])));
     assert_eq!(Some(&true), unpacked_flags.get(&7));
     assert_eq!(Some(&false), unpacked_flags.get(&9));
+}
+
+#[test]
+fn hash_table_string_keys_pack_in_reference_hash_bucket_order() {
+    use dat_reader_writer::Lib::HashTableHelpers::{BUCKET_SIZES, HashKeyable};
+
+    let mut table = HashTable::<String, u32>::default();
+    table.bucket_size_index = 1;
+    table.insert("portal".to_string(), 1);
+    table.insert("alpha".to_string(), 2);
+    table.insert("zeta".to_string(), 3);
+
+    let mut bytes = vec![0u8; 256];
+    let mut writer = DatBinWriter::new(&mut bytes);
+    assert!(table.pack(&mut writer));
+    let used = writer.offset();
+
+    let mut reader = DatBinReader::new(&bytes[..used]);
+    let bucket_size_index = reader.read_byte();
+    let count = reader.read_compressed_uint() as usize;
+    assert_eq!(1, bucket_size_index);
+    assert_eq!(3, count);
+
+    let mut packed_keys = Vec::new();
+    for _ in 0..count {
+        packed_keys.push(reader.read_string16_l());
+        let _ = reader.read_u32();
+    }
+
+    let bucket_size = BUCKET_SIZES[table.bucket_size_index as usize] as u64;
+    let mut expected_keys: Vec<_> = table.entries.keys().cloned().collect();
+    expected_keys.sort_by_key(|key| key.hash_key() % bucket_size);
+    assert_eq!(expected_keys, packed_keys);
 }
 
 #[test]
