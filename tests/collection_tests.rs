@@ -205,6 +205,11 @@ fn dat_collection_can_read_typed_asset_from_high_res_fallback() {
     let palette = collection.try_get::<Palette>(0x04000010).unwrap().unwrap();
     assert_eq!(1, palette.colors.len());
     assert_eq!(4, palette.colors[0].alpha);
+    assert_eq!(
+        Some(DatFileType::Portal),
+        collection.header_for(DatFileType::Portal).map(|header| header.r#type)
+    );
+    assert_eq!(DatFileType::Portal, collection.type_to_dat_file_type::<Palette>());
 }
 
 #[test]
@@ -561,4 +566,32 @@ fn dat_collection_async_writes_follow_template_and_read_back() {
         .unwrap();
     assert_eq!(0x21, read_palette.colors[0].blue);
     assert_eq!(0x87, read_palette.colors[0].alpha);
+}
+
+#[test]
+fn dat_collection_file_entry_and_byte_reads_follow_portal_and_high_res_sources() {
+    let dir = unique_temp_dir();
+    write_header_only_dat(&dir.join("client_portal.dat"), DatFileType::Portal);
+    write_header_only_dat(&dir.join("client_cell_1.dat"), DatFileType::Cell);
+    write_header_only_dat(&dir.join("client_local_English.dat"), DatFileType::Local);
+
+    let payload = b"CollectionHighResPayloadCollectionHighResPayload".repeat(16);
+    let high_res_bytes = build_single_block_dat(DatFileType::Portal, 0x0500_0070, &payload);
+    fs::write(dir.join("client_highres.dat"), high_res_bytes).unwrap();
+
+    let collection =
+        DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::Read)
+            .unwrap();
+
+    let entry = collection
+        .try_get_file_entry(DatFileType::Portal, 0x0500_0070)
+        .unwrap()
+        .unwrap();
+    assert_eq!(0x0500_0070, entry.id);
+
+    let bytes = collection
+        .try_get_file_bytes(DatFileType::Portal, 0x0500_0070, true)
+        .unwrap()
+        .unwrap();
+    assert_eq!(payload, bytes);
 }

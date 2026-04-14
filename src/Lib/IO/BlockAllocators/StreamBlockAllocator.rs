@@ -1,6 +1,8 @@
 use std::{
     fs::{File, OpenOptions},
+    future::Future,
     io::{self, Read, Seek, SeekFrom, Write},
+    pin::Pin,
     sync::{Arc, Mutex},
 };
 
@@ -277,6 +279,60 @@ impl IDatBlockAllocator for StreamBlockAllocator {
         Ok(result_start)
     }
 
+    fn write_block_async<'a>(
+        &'a self,
+        buffer: &'a [u8],
+        num_bytes: usize,
+        starting_block: i32,
+    ) -> Pin<Box<dyn Future<Output = io::Result<i32>> + Send + 'a>> {
+        Box::pin(async move {
+            if !self.can_write {
+                return Err(Self::unsupported_write());
+            }
+
+            let mut state = self.state.lock().unwrap();
+            let mut next_block_buffer = [0u8; 4];
+            let mut current_block = starting_block;
+            let mut buffer_index = 0usize;
+
+            if current_block <= 0 {
+                current_block = Self::reserve_block_locked(&mut state)?;
+            }
+            let result_start = current_block;
+
+            while buffer_index < num_bytes {
+                let size = ((state.header.block_size - 4) as usize).min(num_bytes - buffer_index);
+                state.file.seek(SeekFrom::Start((current_block + 4) as u64))?;
+                state
+                    .file
+                    .write_all(&buffer[buffer_index..buffer_index + size])?;
+                buffer_index += size;
+
+                let old_offset = current_block;
+                if buffer_index < num_bytes {
+                    state.file.seek(SeekFrom::Start(current_block as u64))?;
+                    state.file.read_exact(&mut next_block_buffer)?;
+                    let next_block = i32::from_le_bytes(next_block_buffer);
+                    current_block = if next_block <= 0 {
+                        Self::reserve_block_locked(&mut state)?
+                    } else {
+                        next_block
+                    };
+                } else {
+                    current_block = 0;
+                }
+
+                next_block_buffer.copy_from_slice(&current_block.to_le_bytes());
+                state.file.seek(SeekFrom::Start(old_offset as u64))?;
+                state.file.write_all(&next_block_buffer)?;
+            }
+
+            state.file.flush()?;
+            Self::write_header_locked(&mut state)?;
+            Ok(result_start)
+        })
+    }
+
     fn read_bytes(
         &self,
         buffer: &mut [u8],
@@ -316,6 +372,37 @@ impl IDatBlockAllocator for StreamBlockAllocator {
         }
 
         Ok(())
+    }
+
+    fn read_block_async<'a>(
+        &'a self,
+        buffer: &'a mut [u8],
+        starting_block: usize,
+    ) -> Pin<Box<dyn Future<Output = io::Result<()>> + Send + 'a>> {
+        Box::pin(async move {
+            let mut state = self.state.lock().unwrap();
+            let mut next_block_buffer = [0u8; 4];
+            let mut current_block = starting_block as i32;
+            let mut total_read = 0usize;
+
+            while current_block != 0 && total_read < buffer.len() {
+                let bytes_to_read =
+                    ((state.header.block_size - 4) as usize).min(buffer.len() - total_read);
+                state.file.seek(SeekFrom::Start((current_block + 4) as u64))?;
+                state
+                    .file
+                    .read_exact(&mut buffer[total_read..total_read + bytes_to_read])?;
+                total_read += bytes_to_read;
+                if total_read >= buffer.len() {
+                    return Ok(());
+                }
+                state.file.seek(SeekFrom::Start(current_block as u64))?;
+                state.file.read_exact(&mut next_block_buffer)?;
+                current_block = i32::from_le_bytes(next_block_buffer);
+            }
+
+            Ok(())
+        })
     }
 
     fn try_get_block_offsets(&self, starting_block: i32) -> io::Result<Option<Vec<i32>>> {

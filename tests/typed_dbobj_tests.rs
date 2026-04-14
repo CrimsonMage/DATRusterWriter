@@ -1851,6 +1851,44 @@ fn dat_database_can_write_with_template_metadata() {
 }
 
 #[test]
+fn dat_database_async_file_byte_paths_match_sync_behavior() {
+    let path = unique_temp_file();
+    let db = DatDatabase::new(DatDatabaseOptions {
+        file_path: path.to_string_lossy().to_string(),
+        access_type: DatAccessType::ReadWrite,
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+    db.block_allocator
+        .init_new(DatFileType::Portal, 0, 1024, 4)
+        .unwrap();
+
+    let payload = b"AsyncPortalPayloadAsyncPortalPayload".repeat(24);
+    assert!(block_on(db.try_write_compressed_bytes_with_template_async(
+        0x0500_0099,
+        &payload,
+        payload.len(),
+        dat_reader_writer::Lib::IO::DatBTree::DatBTreeFile::DatBTreeFile {
+            version: 3,
+            iteration: 4,
+            ..Default::default()
+        },
+    ))
+    .unwrap());
+
+    let entry = db.try_get_file_entry(0x0500_0099).unwrap().unwrap();
+    assert_eq!(3, entry.version);
+    assert_eq!(4, entry.iteration);
+
+    let sync_bytes = db.try_get_file_bytes(0x0500_0099, true).unwrap().unwrap();
+    let async_bytes = block_on(db.try_get_file_bytes_async(0x0500_0099, true))
+        .unwrap()
+        .unwrap();
+    assert_eq!(sync_bytes, async_bytes);
+    assert_eq!(payload, async_bytes);
+}
+
+#[test]
 fn dat_collection_can_read_db_properties_and_layout_desc() {
     let mut master_property = MasterProperty::default();
     master_property.properties.insert(

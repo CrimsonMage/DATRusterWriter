@@ -7,7 +7,9 @@ use std::{
 use dat_reader_writer::{
     Generated::Enums::DatFileType::DatFileType,
     Lib::IO::BlockAllocators::{
-        IDatBlockAllocator::IDatBlockAllocator, StreamBlockAllocator::StreamBlockAllocator,
+        IDatBlockAllocator::IDatBlockAllocator,
+        MemoryMappedBlockAllocator::MemoryMappedBlockAllocator,
+        StreamBlockAllocator::StreamBlockAllocator,
     },
     Options::{
         DatAccessType::DatAccessType, DatDatabaseOptions::DatDatabaseOptions,
@@ -30,6 +32,15 @@ fn read_write_options(path: &PathBuf) -> DatDatabaseOptions {
         index_caching_strategy: IndexCachingStrategy::OnDemand,
         file_caching_strategy: FileCachingStrategy::OnDemand,
         access_type: DatAccessType::ReadWrite,
+    }
+}
+
+fn read_only_options(path: &PathBuf) -> DatDatabaseOptions {
+    DatDatabaseOptions {
+        file_path: path.to_string_lossy().to_string(),
+        index_caching_strategy: IndexCachingStrategy::OnDemand,
+        file_caching_strategy: FileCachingStrategy::OnDemand,
+        access_type: DatAccessType::Read,
     }
 }
 
@@ -137,6 +148,35 @@ fn stream_allocator_async_wrappers_roundtrip_blocks() {
     let mut read_back = vec![0u8; payload.len()];
     block_on(allocator.read_block_async(&mut read_back, start as usize)).unwrap();
     assert_eq!(payload, read_back);
+
+    let _ = fs::remove_file(path);
+}
+
+#[test]
+fn memory_mapped_allocator_reads_existing_blocks_sync_and_async() {
+    let path = temp_dat_path("mmap_read");
+    let stream_allocator = StreamBlockAllocator::new(&read_write_options(&path)).unwrap();
+    stream_allocator
+        .init_new(DatFileType::Portal, 0, 64, 2)
+        .unwrap();
+
+    let payload: Vec<u8> = (0..90).map(|value| (value % 251) as u8).collect();
+    let start = stream_allocator
+        .write_block(&payload, payload.len(), 0)
+        .unwrap();
+    drop(stream_allocator);
+
+    let allocator = MemoryMappedBlockAllocator::new(&read_only_options(&path)).unwrap();
+    assert!(!allocator.can_write());
+    assert!(allocator.has_header_data());
+
+    let mut sync_read = vec![0u8; payload.len()];
+    allocator.read_block(&mut sync_read, start as usize).unwrap();
+    assert_eq!(payload, sync_read);
+
+    let mut async_read = vec![0u8; payload.len()];
+    block_on(allocator.read_block_async(&mut async_read, start as usize)).unwrap();
+    assert_eq!(payload, async_read);
 
     let _ = fs::remove_file(path);
 }

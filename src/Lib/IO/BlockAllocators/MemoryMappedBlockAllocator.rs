@@ -1,4 +1,4 @@
-use std::{fs::File, io, sync::Arc};
+use std::{fs::File, future::Future, io, pin::Pin, sync::Arc};
 
 use memmap2::Mmap;
 
@@ -102,6 +102,15 @@ impl IDatBlockAllocator for MemoryMappedBlockAllocator {
         Err(Self::write_unsupported())
     }
 
+    fn write_block_async<'a>(
+        &'a self,
+        _buffer: &'a [u8],
+        _num_bytes: usize,
+        _starting_block: i32,
+    ) -> Pin<Box<dyn Future<Output = io::Result<i32>> + Send + 'a>> {
+        Box::pin(async move { Err(Self::write_unsupported()) })
+    }
+
     fn read_bytes(
         &self,
         buffer: &mut [u8],
@@ -143,6 +152,35 @@ impl IDatBlockAllocator for MemoryMappedBlockAllocator {
         }
 
         Ok(())
+    }
+
+    fn read_block_async<'a>(
+        &'a self,
+        buffer: &'a mut [u8],
+        starting_block: usize,
+    ) -> Pin<Box<dyn Future<Output = io::Result<()>> + Send + 'a>> {
+        Box::pin(async move {
+            let block_size = self.header.block_size as usize;
+            let block_data_size = block_size.saturating_sub(4);
+            let mut current_block = starting_block;
+            let mut total_read = 0_usize;
+
+            while current_block != 0 && total_read < buffer.len() {
+                let bytes_to_read = block_data_size.min(buffer.len() - total_read);
+                self.read_bytes(buffer, total_read, current_block + 4, bytes_to_read)?;
+                total_read += bytes_to_read;
+
+                if total_read >= buffer.len() {
+                    return Ok(());
+                }
+
+                let mut next_block_bytes = [0_u8; 4];
+                self.read_bytes(&mut next_block_bytes, 0, current_block, 4)?;
+                current_block = i32::from_le_bytes(next_block_bytes).max(0) as usize;
+            }
+
+            Ok(())
+        })
     }
 
     fn try_get_block_offsets(&self, starting_block: i32) -> io::Result<Option<Vec<i32>>> {
