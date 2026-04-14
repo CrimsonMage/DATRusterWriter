@@ -41,8 +41,13 @@ use dat_reader_writer::{
     Types::{
         AC1LegacyPStringBase::AC1LegacyPStringBase,
         ActionMapValue::ActionMapValue,
+        AnimationHook::AnimationHook,
+        AnimationDoneHook::AnimationDoneHook,
+        AttackCone::AttackCone,
+        AttackHook::AttackHook,
         AutoGrowHashTable::AutoGrowHashTable,
         BSPTrees::{CellBSPNode, CellBSPTree},
+        BannedPatterns::BannedPatterns,
         BaseProperty::{BaseProperty, BasePropertyHeader},
         BasePropertyDesc::BasePropertyDesc,
         Bitfield32BaseProperty::Bitfield32BaseProperty,
@@ -62,6 +67,7 @@ use dat_reader_writer::{
         ElementDesc::ElementDesc,
         EnumBaseProperty::EnumBaseProperty,
         EnumMapperData::EnumMapperData,
+        EtherealHook::EtherealHook,
         FloatBaseProperty::FloatBaseProperty,
         FontCharDesc::FontCharDesc,
         Frame::Frame,
@@ -69,15 +75,28 @@ use dat_reader_writer::{
         InputsConflictsValue::InputsConflictsValue,
         InstanceIdBaseProperty::InstanceIdBaseProperty,
         IntegerBaseProperty::IntegerBaseProperty,
+        LM_UVRotate::LM_UVRotate,
+        LM_UVScale::LM_UVScale,
+        LM_UVTransform::LM_UVTransform,
+        LM_UVTranslate::LM_UVTranslate,
+        LayerModifier::LayerModifier,
+        LayerStage::LayerStage,
+        MaterialLayer::MaterialLayer,
         MaterialProperty::MaterialProperty,
         NameFilterLanguageData::NameFilterLanguageData,
         ObfuscatedPStringBase::ObfuscatedPStringBase,
         ObjHierarchyNode::ObjHierarchyNode,
         PHashTable::PHashTable,
         PStringBase::PStringBase,
+        PackedQualifiedDataId::PackedQualifiedDataId,
+        PortalPoly::PortalPoly,
         Position::Position,
         QualifiedControl::QualifiedControl,
         QualifiedDataId::QualifiedDataId,
+        ReplaceObjectHook::ReplaceObjectHook,
+        ShaderResourceEntry::ShaderResourceEntry,
+        SoundHook::SoundHook,
+        SoundTableHook::SoundTableHook,
         SpellBase::SpellBase,
         SpellComponentBase::SpellComponentBase,
         SpellSet::SpellSet,
@@ -85,10 +104,13 @@ use dat_reader_writer::{
         Stab::Stab,
         StateDesc::StateDesc,
         StringTableString::StringTableString,
+        SubPalette::SubPalette,
         TabooTableEntry::TabooTableEntry,
         TerrainInfo::TerrainInfo,
+        TextureMapChange::TextureMapChange,
         UserBindingData::UserBindingData,
         VectorBaseProperty::VectorBaseProperty,
+        Waveform::Waveform,
     },
 };
 use uuid::Uuid;
@@ -2710,5 +2732,299 @@ fn explicit_base_property_wrappers_roundtrip_current_scalar_variants() {
             value: 0xAA55_AA55,
             ..
         }
+    ));
+}
+
+#[test]
+fn generated_misc_type_surfaces_roundtrip_cleanly() {
+    let waveform = Waveform { raw_data: 0x7B };
+    let portal_poly = PortalPoly {
+        portal_index: 12,
+        polygon_id: 34,
+    };
+    let material_layer = MaterialLayer {
+        options: 1,
+        true_flags: 2,
+        false_flags: 3,
+        render_pass:
+            dat_reader_writer::Generated::Enums::RenderPassType::RenderPassType::AlphaBlend,
+    };
+    let layer_stage = LayerStage {
+        sampler_name: PStringBase::from("Diffuse"),
+        texture: 0x0500_0010,
+        special_texture: 9,
+        address_mode_u: 1,
+        address_mode_v: 2,
+        min_filter_mode: 3,
+        mag_filter_mode: 4,
+        mip_filter_mode: 5,
+        ff_color_op: 6,
+        ff_color_arg1: 7,
+        ff_color_arg2: 8,
+        ff_alpha_op: 9,
+        ff_alpha_arg1: 10,
+        ff_alpha_arg2: 11,
+        ff_tex_coord_index: 12,
+        ff_use_projection: 13,
+    };
+    let layer_modifier = LayerModifier;
+    let uv_translate = LM_UVTranslate {
+        type_discriminator: 1,
+        offset_u: 1.5,
+        offset_v: 2.5,
+    };
+    let uv_rotate = LM_UVRotate {
+        type_discriminator: 2,
+        center_u: 0.25,
+        center_v: 0.75,
+        angle: 3.5,
+    };
+    let uv_scale = LM_UVScale {
+        type_discriminator: 3,
+        scale_u: 4.5,
+        scale_v: 5.5,
+    };
+    let uv_transform = LM_UVTransform {
+        type_discriminator: 4,
+    };
+
+    let mut waveform_bytes = vec![0u8; 64];
+    let mut waveform_writer = DatBinWriter::new(&mut waveform_bytes);
+    assert!(waveform.pack(&mut waveform_writer));
+
+    let mut portal_poly_bytes = vec![0u8; 8];
+    let mut portal_poly_writer = DatBinWriter::new(&mut portal_poly_bytes);
+    assert!(portal_poly.pack(&mut portal_poly_writer));
+
+    let mut material_layer_bytes = vec![0u8; 32];
+    let mut material_layer_writer = DatBinWriter::new(&mut material_layer_bytes);
+    assert!(material_layer.pack(&mut material_layer_writer));
+
+    let mut layer_stage_bytes = vec![0u8; 128];
+    let mut layer_stage_writer = DatBinWriter::new(&mut layer_stage_bytes);
+    assert!(layer_stage.pack(&mut layer_stage_writer));
+    let layer_stage_used = layer_stage_writer.offset();
+
+    let mut layer_modifier_bytes = vec![0u8; 1];
+    let mut layer_modifier_writer = DatBinWriter::new(&mut layer_modifier_bytes);
+    assert!(layer_modifier.pack(&mut layer_modifier_writer));
+
+    let mut uv_translate_bytes = vec![0u8; 16];
+    let mut uv_translate_writer = DatBinWriter::new(&mut uv_translate_bytes);
+    assert!(uv_translate.pack(&mut uv_translate_writer));
+
+    let mut uv_rotate_bytes = vec![0u8; 16];
+    let mut uv_rotate_writer = DatBinWriter::new(&mut uv_rotate_bytes);
+    assert!(uv_rotate.pack(&mut uv_rotate_writer));
+
+    let mut uv_scale_bytes = vec![0u8; 16];
+    let mut uv_scale_writer = DatBinWriter::new(&mut uv_scale_bytes);
+    assert!(uv_scale.pack(&mut uv_scale_writer));
+
+    let mut uv_transform_bytes = vec![0u8; 8];
+    let mut uv_transform_writer = DatBinWriter::new(&mut uv_transform_bytes);
+    assert!(uv_transform.pack(&mut uv_transform_writer));
+
+    let mut unpacked_waveform = Waveform::default();
+    let mut unpacked_portal_poly = PortalPoly::default();
+    let mut unpacked_material_layer = MaterialLayer::default();
+    let mut unpacked_layer_stage = LayerStage::default();
+    let mut unpacked_layer_modifier = LayerModifier;
+    let mut unpacked_uv_translate = LM_UVTranslate::default();
+    let mut unpacked_uv_rotate = LM_UVRotate::default();
+    let mut unpacked_uv_scale = LM_UVScale::default();
+    let mut unpacked_uv_transform = LM_UVTransform::default();
+
+    assert!(unpacked_waveform.unpack(&mut DatBinReader::new(&waveform_bytes[..1])));
+    assert!(unpacked_portal_poly.unpack(&mut DatBinReader::new(&portal_poly_bytes[..4])));
+    assert!(unpacked_material_layer.unpack(&mut DatBinReader::new(&material_layer_bytes[..16])));
+    assert!(unpacked_layer_stage.unpack(&mut DatBinReader::new(
+        &layer_stage_bytes[..layer_stage_used]
+    )));
+    assert!(unpacked_layer_modifier.unpack(&mut DatBinReader::new(&[])));
+    assert!(unpacked_uv_translate.unpack(&mut DatBinReader::new(&uv_translate_bytes[..9])));
+    assert!(unpacked_uv_rotate.unpack(&mut DatBinReader::new(&uv_rotate_bytes[..13])));
+    assert!(unpacked_uv_scale.unpack(&mut DatBinReader::new(&uv_scale_bytes[..9])));
+    assert!(unpacked_uv_transform.unpack(&mut DatBinReader::new(&uv_transform_bytes[..1])));
+
+    assert_eq!(0x7B, unpacked_waveform.raw_data);
+    assert_eq!(12, unpacked_portal_poly.portal_index);
+    assert_eq!(34, unpacked_portal_poly.polygon_id);
+    assert_eq!(material_layer, unpacked_material_layer);
+    assert_eq!("Diffuse", unpacked_layer_stage.sampler_name.value);
+    assert_eq!(0x0500_0010, unpacked_layer_stage.texture);
+    assert_eq!(1.5, unpacked_uv_translate.offset_u);
+    assert_eq!(2.5, unpacked_uv_translate.offset_v);
+    assert_eq!(3.5, unpacked_uv_rotate.angle);
+    assert_eq!(4.5, unpacked_uv_scale.scale_u);
+    assert_eq!(4, unpacked_uv_transform.type_discriminator);
+}
+
+#[test]
+fn generated_split_type_surfaces_roundtrip_cleanly() {
+    let mut banned_patterns = BannedPatterns::default();
+    banned_patterns.patterns.insert(1, PStringBase::from("bad"));
+    banned_patterns
+        .patterns
+        .insert(2, PStringBase::from("worse"));
+
+    let shader_resource = ShaderResourceEntry {
+        start_offset: 10,
+        resource_id: 20,
+        resource_data: 30,
+    };
+
+    let sub_palette = SubPalette {
+        sub_id: PackedQualifiedDataId::new(0x0400_0010),
+        offset: 4,
+        num_colors: 5,
+    };
+
+    let texture_map_change = TextureMapChange {
+        part_index: 7,
+        old_texture: PackedQualifiedDataId::new(0x0500_0010),
+        new_texture: PackedQualifiedDataId::new(0x0500_0011),
+    };
+
+    let mut banned_bytes = vec![0u8; 128];
+    let mut banned_writer = DatBinWriter::new(&mut banned_bytes);
+    assert!(banned_patterns.pack(&mut banned_writer));
+    let banned_used = banned_writer.offset();
+
+    let mut shader_bytes = vec![0u8; 32];
+    let mut shader_writer = DatBinWriter::new(&mut shader_bytes);
+    assert!(shader_resource.pack(&mut shader_writer));
+
+    let mut sub_palette_bytes = vec![0u8; 32];
+    let mut sub_palette_writer = DatBinWriter::new(&mut sub_palette_bytes);
+    assert!(sub_palette.pack(&mut sub_palette_writer));
+
+    let mut texture_change_bytes = vec![0u8; 32];
+    let mut texture_change_writer = DatBinWriter::new(&mut texture_change_bytes);
+    assert!(texture_map_change.pack(&mut texture_change_writer));
+
+    let mut unpacked_banned = BannedPatterns::default();
+    let mut unpacked_shader = ShaderResourceEntry::default();
+    let mut unpacked_sub_palette = SubPalette::default();
+    let mut unpacked_texture_change = TextureMapChange::default();
+
+    assert!(unpacked_banned.unpack(&mut DatBinReader::new(&banned_bytes[..banned_used])));
+    assert!(unpacked_shader.unpack(&mut DatBinReader::new(&shader_bytes[..12])));
+    assert!(unpacked_sub_palette.unpack(&mut DatBinReader::new(&sub_palette_bytes[..6])));
+    assert!(unpacked_texture_change.unpack(&mut DatBinReader::new(&texture_change_bytes[..9])));
+
+    assert_eq!("bad", unpacked_banned.patterns.get(&1).unwrap().value);
+    assert_eq!("worse", unpacked_banned.patterns.get(&2).unwrap().value);
+    assert_eq!(shader_resource, unpacked_shader);
+    assert_eq!(0x0400_0010, unpacked_sub_palette.sub_id.data_id);
+    assert_eq!(4, unpacked_sub_palette.offset);
+    assert_eq!(5, unpacked_sub_palette.num_colors);
+    assert_eq!(7, unpacked_texture_change.part_index);
+    assert_eq!(0x0500_0010, unpacked_texture_change.old_texture.data_id);
+    assert_eq!(0x0500_0011, unpacked_texture_change.new_texture.data_id);
+}
+
+#[test]
+fn generated_hook_wrappers_roundtrip_first_batch() {
+    use dat_reader_writer::Generated::Enums::{AnimationHookDir::AnimationHookDir, Sound::Sound};
+
+    let sound_hook = SoundHook {
+        direction: AnimationHookDir::FORWARD,
+        id: QualifiedDataId::new(0x0A00_0010),
+    };
+    let sound_table_hook = SoundTableHook {
+        direction: AnimationHookDir::BACKWARD,
+        sound_type: Sound::ATTACK1,
+    };
+    let attack_hook = AttackHook {
+        direction: AnimationHookDir::BOTH,
+        attack_cone: AttackCone {
+            part_index: 3,
+            left_x: 1.0,
+            left_y: 2.0,
+            right_x: 3.0,
+            right_y: 4.0,
+            radius: 5.0,
+            height: 6.0,
+        },
+    };
+    let animation_done_hook = AnimationDoneHook {
+        direction: AnimationHookDir::FORWARD,
+    };
+    let replace_object_hook = ReplaceObjectHook {
+        direction: AnimationHookDir::FORWARD,
+        part_index: 5,
+        part_id: PackedQualifiedDataId::new(0x0100_0020),
+    };
+    let ethereal_hook = EtherealHook {
+        direction: AnimationHookDir::BACKWARD,
+        ethereal: true,
+    };
+
+    let mut sound_bytes = vec![0u8; 32];
+    let mut sound_writer = DatBinWriter::new(&mut sound_bytes);
+    assert!(sound_hook.pack(&mut sound_writer));
+    let sound_used = sound_writer.offset();
+
+    let mut sound_table_bytes = vec![0u8; 32];
+    let mut sound_table_writer = DatBinWriter::new(&mut sound_table_bytes);
+    assert!(sound_table_hook.pack(&mut sound_table_writer));
+    let sound_table_used = sound_table_writer.offset();
+
+    let mut attack_bytes = vec![0u8; 64];
+    let mut attack_writer = DatBinWriter::new(&mut attack_bytes);
+    assert!(attack_hook.pack(&mut attack_writer));
+    let attack_used = attack_writer.offset();
+
+    let mut done_bytes = vec![0u8; 16];
+    let mut done_writer = DatBinWriter::new(&mut done_bytes);
+    assert!(animation_done_hook.pack(&mut done_writer));
+    let done_used = done_writer.offset();
+
+    let mut replace_bytes = vec![0u8; 32];
+    let mut replace_writer = DatBinWriter::new(&mut replace_bytes);
+    assert!(replace_object_hook.pack(&mut replace_writer));
+    let replace_used = replace_writer.offset();
+
+    let mut ethereal_bytes = vec![0u8; 16];
+    let mut ethereal_writer = DatBinWriter::new(&mut ethereal_bytes);
+    assert!(ethereal_hook.pack(&mut ethereal_writer));
+    let ethereal_used = ethereal_writer.offset();
+
+    let mut unpacked_sound = SoundHook::default();
+    let mut unpacked_sound_table = SoundTableHook::default();
+    let mut unpacked_attack = AttackHook::default();
+    let mut unpacked_done = AnimationDoneHook::default();
+    let mut unpacked_replace = ReplaceObjectHook::default();
+    let mut unpacked_ethereal = EtherealHook::default();
+
+    assert!(unpacked_sound.unpack(&mut DatBinReader::new(&sound_bytes[..sound_used])));
+    assert!(unpacked_sound_table.unpack(&mut DatBinReader::new(
+        &sound_table_bytes[..sound_table_used]
+    )));
+    assert!(unpacked_attack.unpack(&mut DatBinReader::new(&attack_bytes[..attack_used])));
+    assert!(unpacked_done.unpack(&mut DatBinReader::new(&done_bytes[..done_used])));
+    assert!(unpacked_replace.unpack(&mut DatBinReader::new(&replace_bytes[..replace_used])));
+    assert!(unpacked_ethereal.unpack(&mut DatBinReader::new(&ethereal_bytes[..ethereal_used])));
+
+    assert_eq!(0x0A00_0010, unpacked_sound.id.data_id);
+    assert_eq!(Sound::ATTACK1, unpacked_sound_table.sound_type);
+    assert_eq!(3, unpacked_attack.attack_cone.part_index);
+    assert_eq!(5, unpacked_replace.part_index);
+    assert_eq!(0x0100_0020, unpacked_replace.part_id.data_id);
+    assert!(unpacked_ethereal.ethereal);
+
+    let mut enum_sound = AnimationHook::default();
+    assert!(enum_sound.unpack(&mut DatBinReader::new(&sound_bytes[..sound_used])));
+    assert!(matches!(
+        enum_sound,
+        AnimationHook::Sound { id, .. } if id.data_id == 0x0A00_0010
+    ));
+
+    let mut enum_replace = AnimationHook::default();
+    assert!(enum_replace.unpack(&mut DatBinReader::new(&replace_bytes[..replace_used])));
+    assert!(matches!(
+        enum_replace,
+        AnimationHook::ReplaceObject { part_index, .. } if part_index == 5
     ));
 }
