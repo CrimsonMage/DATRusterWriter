@@ -1,20 +1,23 @@
 use dat_reader_writer::{
     DBObjs::{
         ActionMap::ActionMap, Animation::Animation, BadDataTable::BadDataTable, CharGen::CharGen,
-        ChatPoseTable::ChatPoseTable, ClothingTable::ClothingTable, CombatTable::CombatTable,
-        ContractTable::ContractTable, EnvCell::EnvCell, Environment::Environment,
-        ExperienceTable::ExperienceTable, Font::Font, GfxObj::GfxObj,
+        ChatPoseTable::ChatPoseTable, Clothing::Clothing, ClothingTable::ClothingTable,
+        CombatTable::CombatTable, ContractTable::ContractTable, DBProperties::DBProperties,
+        DualEnumIDMap::DualEnumIDMap, EnumIDMap::EnumIDMap, EnvCell::EnvCell,
+        Environment::Environment, ExperienceTable::ExperienceTable, Font::Font, GfxObj::GfxObj,
         GfxObjDegradeInfo::GfxObjDegradeInfo, Iteration::Iteration, LandBlock::LandBlock,
-        LandBlockInfo::LandBlockInfo, LanguageInfo::LanguageInfo, MasterInputMap::MasterInputMap,
-        MasterProperty::MasterProperty, MaterialInstance::MaterialInstance,
-        MaterialModifier::MaterialModifier, MotionTable::MotionTable,
-        NameFilterTable::NameFilterTable, ObjectHierarchy::ObjectHierarchy, Palette::Palette,
-        ParticleEmitter::ParticleEmitter, PhysicsScript::PhysicsScript,
-        PhysicsScriptTable::PhysicsScriptTable, QualityFilter::QualityFilter, Region::Region,
-        RenderMaterial::RenderMaterial, RenderSurface::RenderSurface, RenderTexture::RenderTexture,
-        Scene::Scene, Setup::Setup, SkillTable::SkillTable, SoundTable::SoundTable,
-        SpellComponentTable::SpellComponentTable, SpellTable::SpellTable, Surface::Surface,
-        SurfaceTexture::SurfaceTexture, TabooTable::TabooTable, VitalTable::VitalTable, Wave::Wave,
+        LandBlockInfo::LandBlockInfo, LanguageInfo::LanguageInfo, LayoutDesc::LayoutDesc,
+        MasterInputMap::MasterInputMap, MasterProperty::MasterProperty,
+        MaterialInstance::MaterialInstance, MaterialModifier::MaterialModifier,
+        MotionTable::MotionTable, NameFilterTable::NameFilterTable,
+        ObjectHierarchy::ObjectHierarchy, Palette::Palette, PaletteSet::PaletteSet,
+        ParticleEmitter::ParticleEmitter, ParticleEmitterInfo::ParticleEmitterInfo,
+        PhysicsScript::PhysicsScript, PhysicsScriptTable::PhysicsScriptTable,
+        QualityFilter::QualityFilter, Region::Region, RenderMaterial::RenderMaterial,
+        RenderSurface::RenderSurface, RenderTexture::RenderTexture, Scene::Scene, Setup::Setup,
+        SkillTable::SkillTable, SoundTable::SoundTable, SpellComponentTable::SpellComponentTable,
+        SpellTable::SpellTable, Surface::Surface, SurfaceTexture::SurfaceTexture,
+        TabooTable::TabooTable, VitalTable::VitalTable, Wave::Wave,
     },
     DatCollection::DatCollection,
     Options::DatAccessType::DatAccessType,
@@ -95,17 +98,22 @@ fn validates_ported_types_against_real_dats() {
     );
 
     validate_sample::<Palette>(&collection, 5);
+    validate_sample::<PaletteSet>(&collection, 2);
     validate_sample::<SurfaceTexture>(&collection, 5);
     validate_sample::<RenderSurface>(&collection, 5);
     validate_sample::<RenderTexture>(&collection, 3);
     validate_sample::<RenderMaterial>(&collection, 3);
     validate_sample::<MaterialModifier>(&collection, 3);
     validate_sample::<MaterialInstance>(&collection, 3);
+    validate_sample::<EnumIDMap>(&collection, 1);
+    validate_sample::<DualEnumIDMap>(&collection, 1);
     validate_sample::<ActionMap>(&collection, 1);
+    validate_sample::<DBProperties>(&collection, 1);
     validate_sample::<Environment>(&collection, 1);
     validate_sample::<LandBlockInfo>(&collection, 1);
     validate_sample::<LandBlock>(&collection, 1);
     validate_sample::<EnvCell>(&collection, 1);
+    validate_sample::<LayoutDesc>(&collection, 1);
     validate_sample::<MasterInputMap>(&collection, 1);
     validate_sample::<MasterProperty>(&collection, 1);
     validate_sample::<GfxObjDegradeInfo>(&collection, 3);
@@ -118,10 +126,12 @@ fn validates_ported_types_against_real_dats() {
     validate_sample::<GfxObj>(&collection, 5);
     validate_sample::<Wave>(&collection, 3);
     validate_sample::<ParticleEmitter>(&collection, 3);
+    validate_sample::<ParticleEmitterInfo>(&collection, 2);
     validate_sample::<PhysicsScript>(&collection, 5);
     validate_sample::<SoundTable>(&collection, 3);
     validate_sample::<PhysicsScriptTable>(&collection, 3);
     validate_sample::<ClothingTable>(&collection, 3);
+    validate_sample::<Clothing>(&collection, 2);
     validate_sample::<CombatTable>(&collection, 1);
     validate_sample::<BadDataTable>(&collection, 1);
     validate_sample::<ContractTable>(&collection, 1);

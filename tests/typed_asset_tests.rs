@@ -1568,15 +1568,25 @@ fn base_property_roundtrip_reads_string_info_and_scalar_variants() {
         let start = match &value {
             BaseProperty::Integer { header, .. }
             | BaseProperty::Bool { header, .. }
+            | BaseProperty::LongInteger { header, .. }
             | BaseProperty::Float { header, .. }
             | BaseProperty::Vector { header, .. }
             | BaseProperty::Color { header, .. }
             | BaseProperty::StringInfo { header, .. }
+            | BaseProperty::String { header, .. }
             | BaseProperty::Enum { header, .. }
             | BaseProperty::DataId { header, .. }
             | BaseProperty::InstanceId { header, .. }
             | BaseProperty::Bitfield32 { header, .. }
-            | BaseProperty::Bitfield64 { header, .. } => {
+            | BaseProperty::Bitfield64 { header, .. }
+            | BaseProperty::Array { header, .. }
+            | BaseProperty::Struct { header, .. }
+            | BaseProperty::Waveform { header, .. }
+            | BaseProperty::Position { header, .. }
+            | BaseProperty::TimeStamp { header, .. }
+            | BaseProperty::StringToken { header, .. }
+            | BaseProperty::PropertyName { header, .. }
+            | BaseProperty::TriState { header, .. } => {
                 if header.should_pack_master_property_id {
                     4
                 } else {

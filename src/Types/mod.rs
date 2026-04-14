@@ -68,6 +68,8 @@ pub mod DBObj;
 pub mod DayGroup;
 #[path = "DeviceKeyMapEntry.rs"]
 pub mod DeviceKeyMapEntry;
+#[path = "ElementDesc.rs"]
+pub mod ElementDesc;
 #[path = "EnumMapperData.rs"]
 pub mod EnumMapperData;
 #[path = "EyeStripCG.rs"]
@@ -216,6 +218,8 @@ pub mod Sphere;
 pub mod Stab;
 #[path = "StartingArea.rs"]
 pub mod StartingArea;
+#[path = "StateDesc.rs"]
+pub mod StateDesc;
 #[path = "StringInfo.rs"]
 pub mod StringInfo;
 #[path = "StringInfoBaseProperty.rs"]

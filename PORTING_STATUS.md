@@ -155,7 +155,7 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/Types/AnimationHook.generated.cs` and hook variants | `src/Types/AnimationHook.rs` | Partial | Read-side hook family collapsed into one Rust enum; unknown hook payloads are not preserved |
 | `DatReaderWriter/Generated/Types/PhysicsScriptData.generated.cs` | `src/Types/PhysicsScriptData.rs` | Ported | Physics script timing + hook record |
 | `DatReaderWriter/DatDatabase.cs` | `src/DatDatabase.rs` | Partial | Raw file entry lookup, byte/decompression read support, typed `try_get<T>()`, typed id enumeration including masked and special-routed cell DBObjs, and allocator selection for both read-only and read-write access |
-| `DatReaderWriter/DatCollection.cs` | `src/DatCollection.rs` | Partial | Typed `try_get<T>()`, portal/high-res fallback, and typed id enumeration now ported for read use |
+| `DatReaderWriter/DatCollection.cs` | `src/DatCollection.rs` | Partial | Typed `try_get<T>()`, portal/high-res fallback, typed id enumeration, and portal-backed master-property resolution for local property-driven reads are now ported for read use |
 | `DatReaderWriter/CellDatabase.cs` | `src/CellDatabase.rs` | Verified | Read-first concrete wrapper with header validation and typed read delegation |
 | `DatReaderWriter/PortalDatabase.cs` | `src/PortalDatabase.rs` | Verified | Read-first concrete wrapper with header validation and typed read delegation |
 | `DatReaderWriter/LocalDatabase.cs` | `src/LocalDatabase.rs` | Verified | Read-first concrete wrapper with header validation and typed read delegation |
@@ -172,12 +172,15 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/DBObjs/GfxObj.generated.cs` | `src/DBObjs/GfxObj.rs` | Verified | Mesh, surface, physics BSP, drawing BSP, and degrade-id read path covered by Rust asset tests |
 | `DatReaderWriter/Generated/DBObjs/Wave.generated.cs` | `src/DBObjs/Wave.rs` | Verified | Audio sample container ported |
 | DatReaderWriter/Generated/DBObjs/CharGen.generated.cs | src/DBObjs/CharGen.rs | Verified | Character-generation root now reads starting areas and heritage-group hash tables |
-| DatReaderWriter/Generated/DBObjs/PalSet.generated.cs | src/DBObjs/PalSet.rs | Ported | Palette-set DBObj ported for CharGen references |
+| DatReaderWriter/Generated/DBObjs/PalSet.generated.cs | src/DBObjs/PalSet.rs | Ported | Typed palette-set DBObj ported for CharGen references |
+| DatReaderWriter/Generated/DBObjs/PaletteSet.generated.cs | src/DBObjs/PaletteSet.rs | Verified | Explicit generated `PaletteSet` surface now mirrors the raw `u32` palette-id list layout and is covered by focused and retail-DAT validation |
 | DatReaderWriter/Generated/DBObjs/ClothingTable.generated.cs | src/DBObjs/ClothingTable.rs | Verified | Full clothing base-effect and sub-palette tables now read as typed hash maps and are covered by Rust asset tests |
+| DatReaderWriter/Generated/DBObjs/Clothing.generated.cs | src/DBObjs/Clothing.rs | Verified | Explicit generated `Clothing` surface now mirrors the raw `u32`-keyed dictionary layout and is covered by focused and retail-DAT validation |
 | DatReaderWriter/Generated/DBObjs/CombatTable.generated.cs | src/DBObjs/CombatTable.rs | Verified | Full combat maneuver list now reads as typed data and is covered by Rust asset tests |
 | DatReaderWriter/Generated/DBObjs/StringTable.generated.cs | src/DBObjs/StringTable.rs | Verified | Local string-table DBObj now reads language plus hashed string entries and is covered by typed DBObj tests |
 | DatReaderWriter/Generated/DBObjs/LanguageString.generated.cs | src/DBObjs/LanguageString.rs | Verified | Portal-language string DBObj now reads packed byte strings and is covered by typed DBObj tests |
 | DatReaderWriter/Generated/DBObjs/ParticleEmitter.generated.cs | src/DBObjs/ParticleEmitter.rs | Ported | Core particle emitter data ported for script references |
+| DatReaderWriter/Generated/DBObjs/ParticleEmitterInfo.generated.cs | src/DBObjs/ParticleEmitterInfo.rs | Verified | Explicit generated `ParticleEmitterInfo` surface now mirrors the emitter payload and is covered by focused and retail-DAT validation |
 | `DatReaderWriter/DBObjs/LandBlock.cs` | `src/DBObjs/LandBlock.rs` | Verified | Cell land-block DBObj now reads packed terrain and height grids and is covered by focused tests plus retail DAT validation |
 | `DatReaderWriter/Generated/DBObjs/PhysicsScript.generated.cs` | `src/DBObjs/PhysicsScript.rs` | Verified | Physics script list + hook decoding ported |
 | `DatReaderWriter/Generated/DBObjs/SoundTable.generated.cs` | `src/DBObjs/SoundTable.rs` | Verified | Explicit read-side sound table port with hash and named sound maps |
@@ -245,7 +248,8 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 - Replaced the stream allocator placeholder with a concrete file-backed synchronous implementation and verified it with temp-file tests for header/version writes, chained block IO, and in-place block rewrites.
 - Reworked DBObjAttributeCache so current Rust DBObj ports resolve through a shared attribute list instead of a large hand-maintained Portal match, and added typed tests for singular/range resolution.
 - Added the string-resource read path with PStringBase, StringTableString, StringTableData, LanguageString, and StringTable, including local DAT typed reads for hashed string entries.
-- Added the explicit enum-mapper family support with concrete `AutoGrowHashTable` / `IntrusiveHashTable` containers, `EnumMapperData`, `EnumMapper`, `EnumIDMap`, and `DualEnumIDMap`.
+- Added the explicit enum-mapper family support with concrete `AutoGrowHashTable` / explicit map containers, `EnumMapperData`, `EnumMapper`, `EnumIDMap`, and `DualEnumIDMap`, and corrected the retail-matching `ReadString16LByte`/`WriteString16LByte` contract to use compressed-length single-byte strings instead of the earlier guessed UTF-16 path.
+- Added the remaining generated DBObj file surfaces `PaletteSet`, `Clothing`, and `ParticleEmitterInfo`, and verified them against both focused roundtrip tests and the external retail DAT validation path.
 - Added the explicit material/render asset slice with `RenderTexture`, `RenderMaterial`, `MaterialModifier`, `MaterialInstance`, `MaterialProperty`, and their immediate enum dependencies.
 - Added the explicit degrade/filter/spell-component slice with `GfxObjDegradeInfo`, `QualityFilter`, `SpellComponentTable`, `GfxObjInfo`, `SpellComponentBase`, `ObfuscatedPStringBase`, and `ComponentType`.
 - Added the explicit bad-data/contract/taboo slice with `BadDataTable`, `ContractTable`, `TabooTable`, `Contract`, `TabooTableEntry`, and the `AC1LegacyPStringBase` compatibility layer.
@@ -329,7 +333,7 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/Enums/PropertyPropagationType.generated.cs` | `src/Generated/Enums/PropertyPropagationType.rs` | Ported | Property descriptor propagation enum |
 | external retail DAT validation | `tests/real_dat_validation_tests.rs` | Verified | Live validation continues to pass against retail DATs in `C:\Turbine\Asheron's call\` via `DAT_READER_WRITER_REAL_DAT_DIR`, without hardcoding the path into the crate |
 | tracker recovery | `PORTING_STATUS.md` | Verified | Main tracker restored from the last good snapshot and updated with post-snapshot work |
-| `DatReaderWriter/Types/BaseProperty.cs` | `src/Types/BaseProperty.rs` | Partial | Typed scalar/string-info property dispatch is ported, but full `MasterProperty`-driven generic unpack and array/struct variants remain pending |
+| `DatReaderWriter/Types/BaseProperty.cs` | `src/Types/BaseProperty.rs` | Partial | `MasterProperty`-driven generic unpack is now ported for current read paths, including array/struct and several raw property variants, but the full long-tail property surface still remains |
 | `DatReaderWriter/Generated/Types/StringInfoBaseProperty.generated.cs` | `src/Types/StringInfoBaseProperty.rs` | Partial | Explicit `StringInfo` property wrapper is ported on top of the new base-property foundation |
 | `DatReaderWriter/Types/BasePropertyDesc.cs` | `src/Types/BasePropertyDesc.rs` | Partial | Property descriptor records now unpack/pack current scalar-bound/default metadata, but broader `MasterProperty` consumers are still pending |
 | `DatReaderWriter/Generated/Enums/RMDataType.generated.cs` | `src/Generated/Enums/RMDataType.rs` | Ported | Explicit render-material data-type enum mirrored from the reference |
@@ -390,11 +394,15 @@ See `PORTING_RULES.md` for the tracking contract used during this port.
 | `DatReaderWriter/Generated/DBObjs/Environment.generated.cs` | `src/DBObjs/Environment.rs` | Verified | Explicit environment DBObj now reads keyed cell structures and is covered by focused tests plus retail DAT validation |
 | `DatReaderWriter/Generated/DBObjs/LandBlockInfo.generated.cs` | `src/DBObjs/LandBlockInfo.rs` | Verified | Explicit land-block-info DBObj now reads object, building, and restriction tables and is covered by focused tests plus retail DAT validation |
 | `DatReaderWriter/Generated/DBObjs/EnvCell.generated.cs` | `src/DBObjs/EnvCell.rs` | Verified | Explicit environment-cell DBObj now reads surfaces, portals, visibility, static objects, and restriction refs and is covered by focused tests plus retail DAT validation |
+| `DatReaderWriter/Generated/Enums/IncorporationFlags.generated.cs` | `src/Generated/Enums/IncorporationFlags.rs` | Ported | Explicit UI incorporation-flag bitfield mirrored for layout element/state reads |
+| `DatReaderWriter/Types/StateDesc.cs` | `src/Types/StateDesc.rs` | Verified | Explicit layout state payload now reads base properties and media lists through master-property resolution and is covered by focused tests |
+| `DatReaderWriter/Generated/Types/ElementDesc.generated.cs` | `src/Types/ElementDesc.rs` | Verified | Explicit recursive UI element payload now reads incorporation-gated geometry, state maps, and child elements and is covered by focused tests |
+| `DatReaderWriter/Generated/DBObjs/LayoutDesc.generated.cs` | `src/DBObjs/LayoutDesc.rs` | Verified | Explicit local layout DBObj now reads width, height, and hashed element trees and is validated against retail DATs |
+| `DatReaderWriter/DBObjs/DBProperties.cs` | `src/DBObjs/DBProperties.rs` | Verified | Explicit portal DB-properties DBObj now reads master-property-typed property maps and is validated against retail DATs |
 
 ## Updated Remaining Major Areas
 
-- Remaining base-property variants and the broader `MasterProperty`/property-description pipeline required for full UI/property-driven local resource types
-- `DBProperties` and any readers that require full `BaseProperty::UnpackGeneric` database-backed master-property resolution
+- Remaining base-property variants and the broader `MasterProperty`/property-description pipeline beyond the current `DBProperties` and `LayoutDesc` read paths
 - Remaining generated DBObjs outside the current asset, gameplay, CharGen, string, language, first material/render, degrade/filter/spell-component, and bad-data/contract/taboo subsets
 - Remaining generated Types outside the currently ported dependency tree
 - `DBObjAttributeCache` coverage beyond the currently ported Rust DBObj set, including broader Local and Cell coverage

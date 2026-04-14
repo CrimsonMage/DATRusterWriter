@@ -1,8 +1,9 @@
-use std::any::Any;
+use std::{any::Any, collections::BTreeMap};
 
 use crate::{
     Generated::Enums::{
         DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, DatFileType::DatFileType,
+        NumberingType::NumberingType,
     },
     Lib::{
         Attributes::DBObjTypeAttribute::DBObjTypeAttribute,
@@ -11,11 +12,7 @@ use crate::{
             IPackable::IPackable, IUnpackable::IUnpackable,
         },
     },
-    Types::{
-        DBObj::{DBObj, DBObjBase},
-        IntrusiveHashTable::IntrusiveHashTable,
-        PStringBase::PStringBase,
-    },
+    Types::DBObj::{DBObj, DBObjBase},
 };
 
 pub const ENUM_ID_MAP_ATTR: DBObjTypeAttribute = DBObjTypeAttribute {
@@ -31,10 +28,14 @@ pub const ENUM_ID_MAP_ATTR: DBObjTypeAttribute = DBObjTypeAttribute {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct EnumIDMap {
     pub base: DBObjBase,
-    pub client_enum_to_id: IntrusiveHashTable<u32, u32>,
-    pub client_enum_to_name: IntrusiveHashTable<u32, PStringBase<u8>>,
-    pub server_enum_to_id: IntrusiveHashTable<u32, u32>,
-    pub server_enum_to_name: IntrusiveHashTable<u32, PStringBase<u8>>,
+    pub client_id_numbering_type: NumberingType,
+    pub client_enum_to_id: BTreeMap<u32, u32>,
+    pub client_name_numbering_type: NumberingType,
+    pub client_enum_to_name: BTreeMap<u32, String>,
+    pub server_id_numbering_type: NumberingType,
+    pub server_enum_to_id: BTreeMap<u32, u32>,
+    pub server_name_numbering_type: NumberingType,
+    pub server_enum_to_name: BTreeMap<u32, String>,
 }
 
 impl DBObj for EnumIDMap {
@@ -61,10 +62,39 @@ impl DBObj for EnumIDMap {
 impl IUnpackable for EnumIDMap {
     fn unpack(&mut self, reader: &mut DatBinReader<'_>) -> bool {
         let _ = self.base.unpack_with_flags(reader, DBObjHeaderFlags::HasId);
-        self.client_enum_to_id = reader.read_item::<IntrusiveHashTable<u32, u32>>();
-        self.client_enum_to_name = reader.read_item::<IntrusiveHashTable<u32, PStringBase<u8>>>();
-        self.server_enum_to_id = reader.read_item::<IntrusiveHashTable<u32, u32>>();
-        self.server_enum_to_name = reader.read_item::<IntrusiveHashTable<u32, PStringBase<u8>>>();
+
+        self.client_id_numbering_type = NumberingType::from(reader.read_byte());
+        let client_id_count = reader.read_compressed_uint() as usize;
+        self.client_enum_to_id.clear();
+        for _ in 0..client_id_count {
+            self.client_enum_to_id
+                .insert(reader.read_u32(), reader.read_u32());
+        }
+
+        self.client_name_numbering_type = NumberingType::from(reader.read_byte());
+        let client_name_count = reader.read_compressed_uint() as usize;
+        self.client_enum_to_name.clear();
+        for _ in 0..client_name_count {
+            self.client_enum_to_name
+                .insert(reader.read_u32(), reader.read_string16_l_byte());
+        }
+
+        self.server_id_numbering_type = NumberingType::from(reader.read_byte());
+        let server_id_count = reader.read_compressed_uint() as usize;
+        self.server_enum_to_id.clear();
+        for _ in 0..server_id_count {
+            self.server_enum_to_id
+                .insert(reader.read_u32(), reader.read_u32());
+        }
+
+        self.server_name_numbering_type = NumberingType::from(reader.read_byte());
+        let server_name_count = reader.read_compressed_uint() as usize;
+        self.server_enum_to_name.clear();
+        for _ in 0..server_name_count {
+            self.server_enum_to_name
+                .insert(reader.read_u32(), reader.read_string16_l_byte());
+        }
+
         true
     }
 }
@@ -72,10 +102,35 @@ impl IUnpackable for EnumIDMap {
 impl IPackable for EnumIDMap {
     fn pack(&self, writer: &mut DatBinWriter<'_>) -> bool {
         let _ = self.base.pack_with_flags(writer, DBObjHeaderFlags::HasId);
-        writer.write_item(&self.client_enum_to_id);
-        writer.write_item(&self.client_enum_to_name);
-        writer.write_item(&self.server_enum_to_id);
-        writer.write_item(&self.server_enum_to_name);
+
+        writer.write_byte(self.client_id_numbering_type.into());
+        writer.write_compressed_uint(self.client_enum_to_id.len() as u32);
+        for (key, value) in &self.client_enum_to_id {
+            writer.write_u32(*key);
+            writer.write_u32(*value);
+        }
+
+        writer.write_byte(self.client_name_numbering_type.into());
+        writer.write_compressed_uint(self.client_enum_to_name.len() as u32);
+        for (key, value) in &self.client_enum_to_name {
+            writer.write_u32(*key);
+            writer.write_string16_l_byte(value);
+        }
+
+        writer.write_byte(self.server_id_numbering_type.into());
+        writer.write_compressed_uint(self.server_enum_to_id.len() as u32);
+        for (key, value) in &self.server_enum_to_id {
+            writer.write_u32(*key);
+            writer.write_u32(*value);
+        }
+
+        writer.write_byte(self.server_name_numbering_type.into());
+        writer.write_compressed_uint(self.server_enum_to_name.len() as u32);
+        for (key, value) in &self.server_enum_to_name {
+            writer.write_u32(*key);
+            writer.write_string16_l_byte(value);
+        }
+
         true
     }
 }

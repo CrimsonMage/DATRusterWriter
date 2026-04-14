@@ -190,7 +190,10 @@ impl DatCollection {
                     self.high_res.try_get::<T>(file_id)
                 }
             }
-            DatFileType::Local => self.local.try_get::<T>(file_id),
+            DatFileType::Local => self.local.inner.try_get_with_base_property_types(
+                file_id,
+                self.portal.inner.base_property_types()?,
+            ),
             DatFileType::Undefined => {
                 let portal = self.portal.try_get::<T>(file_id)?;
                 if portal.is_some() {
@@ -200,7 +203,10 @@ impl DatCollection {
                 if high_res.is_some() {
                     return Ok(high_res);
                 }
-                let local = self.local.try_get::<T>(file_id)?;
+                let local = self.local.inner.try_get_with_base_property_types(
+                    file_id,
+                    self.portal.inner.base_property_types()?,
+                )?;
                 if local.is_some() {
                     return Ok(local);
                 }

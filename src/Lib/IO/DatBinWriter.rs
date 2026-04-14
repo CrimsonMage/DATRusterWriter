@@ -1,5 +1,6 @@
 use std::any::TypeId;
 
+use encoding_rs::WINDOWS_1252;
 use uuid::Uuid;
 
 use crate::Lib::IO::{
@@ -148,6 +149,12 @@ impl<'a> DatBinWriter<'a> {
 
     pub fn write_guid(&mut self, value: Uuid) {
         self.write_bytes(value.as_bytes(), 16);
+    }
+
+    pub fn write_string16_l_byte(&mut self, value: &str) {
+        let (encoded, _, _) = WINDOWS_1252.encode(value);
+        self.write_compressed_uint(encoded.len() as u32);
+        self.write_bytes(encoded.as_ref(), encoded.len());
     }
 
     pub fn write_generic<T>(&mut self, value: T)

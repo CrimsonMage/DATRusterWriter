@@ -8,35 +8,39 @@ use std::{
 use dat_reader_writer::{
     DBObjs::{
         ActionMap::ActionMap, BadDataTable::BadDataTable, ChatPoseTable::ChatPoseTable,
-        ContractTable::ContractTable, DualEnumIDMap::DualEnumIDMap, EnumIDMap::EnumIDMap,
-        EnumMapper::EnumMapper, EnvCell::EnvCell, Environment::Environment, Font::Font,
+        Clothing::Clothing, ContractTable::ContractTable, DBProperties::DBProperties,
+        DualEnumIDMap::DualEnumIDMap, EnumIDMap::EnumIDMap, EnumMapper::EnumMapper,
+        EnvCell::EnvCell, Environment::Environment, Font::Font,
         GfxObjDegradeInfo::GfxObjDegradeInfo, Iteration::Iteration, LandBlock::LandBlock,
         LandBlockInfo::LandBlockInfo, LanguageInfo::LanguageInfo, LanguageString::LanguageString,
-        MasterInputMap::MasterInputMap, MasterProperty::MasterProperty,
+        LayoutDesc::LayoutDesc, MasterInputMap::MasterInputMap, MasterProperty::MasterProperty,
         MaterialInstance::MaterialInstance, MaterialModifier::MaterialModifier,
         NameFilterTable::NameFilterTable, ObjectHierarchy::ObjectHierarchy, Palette::Palette,
+        PaletteSet::PaletteSet, ParticleEmitterInfo::ParticleEmitterInfo,
         QualityFilter::QualityFilter, RenderMaterial::RenderMaterial, RenderTexture::RenderTexture,
         SpellComponentTable::SpellComponentTable, SpellTable::SpellTable, StringTable::StringTable,
         TabooTable::TabooTable,
     },
+    DatCollection::DatCollection,
     DatDatabase::DatDatabase,
     Generated::Enums::{
         DBObjType::DBObjType, DatFileType::DatFileType, EnvCellFlags::EnvCellFlags,
-        EquipmentSet::EquipmentSet, ItemType::ItemType, MagicSchool::MagicSchool,
-        PlayScript::PlayScript, PortalFlags::PortalFlags, SpellCategory::SpellCategory,
-        SpellIndex::SpellIndex, SpellType::SpellType, ToggleType::ToggleType,
+        EquipmentSet::EquipmentSet, IncorporationFlags::IncorporationFlags, ItemType::ItemType,
+        MagicSchool::MagicSchool, NumberingType::NumberingType, PlayScript::PlayScript,
+        PortalFlags::PortalFlags, SpellCategory::SpellCategory, SpellIndex::SpellIndex,
+        SpellType::SpellType, ToggleType::ToggleType, UIStateId::UIStateId,
     },
     Lib::{
         DBObjAttributeCache,
         IO::{DatBinWriter::DatBinWriter, DatHeader::DatHeader, IPackable::IPackable},
     },
-    Options::DatDatabaseOptions::DatDatabaseOptions,
+    Options::{DatAccessType::DatAccessType, DatDatabaseOptions::DatDatabaseOptions},
     Types::{
         AC1LegacyPStringBase::AC1LegacyPStringBase,
         ActionMapValue::ActionMapValue,
         AutoGrowHashTable::AutoGrowHashTable,
         BSPTrees::{CellBSPNode, CellBSPTree},
-        BaseProperty::BaseProperty,
+        BaseProperty::{BaseProperty, BasePropertyHeader},
         BasePropertyDesc::BasePropertyDesc,
         BuildingInfo::BuildingInfo,
         BuildingPortal::BuildingPortal,
@@ -46,12 +50,12 @@ use dat_reader_writer::{
         ChatEmoteData::ChatEmoteData,
         Contract::Contract,
         DeviceKeyMapEntry::DeviceKeyMapEntry,
+        ElementDesc::ElementDesc,
         EnumMapperData::EnumMapperData,
         FontCharDesc::FontCharDesc,
         Frame::Frame,
         HashTable::HashTable,
         InputsConflictsValue::InputsConflictsValue,
-        IntrusiveHashTable::IntrusiveHashTable,
         MaterialProperty::MaterialProperty,
         NameFilterLanguageData::NameFilterLanguageData,
         ObfuscatedPStringBase::ObfuscatedPStringBase,
@@ -66,6 +70,7 @@ use dat_reader_writer::{
         SpellSet::SpellSet,
         SpellSetTiers::SpellSetTiers,
         Stab::Stab,
+        StateDesc::StateDesc,
         StringTableString::StringTableString,
         TabooTableEntry::TabooTableEntry,
         TerrainInfo::TerrainInfo,
@@ -75,6 +80,17 @@ use dat_reader_writer::{
 use uuid::Uuid;
 
 static UNIQUE_TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
+
+fn unique_temp_dir() -> PathBuf {
+    let stamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let counter = UNIQUE_TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let dir = std::env::temp_dir().join(format!("dat_reader_writer_typed_{stamp}_{counter}"));
+    fs::create_dir_all(&dir).unwrap();
+    dir
+}
 
 fn unique_temp_file() -> PathBuf {
     let stamp = SystemTime::now()
@@ -127,6 +143,60 @@ fn build_single_block_dat(dat_file_type: DatFileType, file_id: u32, payload: &[u
     bytes
 }
 
+fn build_multi_block_dat(dat_file_type: DatFileType, entries: &[(u32, Vec<u8>)]) -> Vec<u8> {
+    let block_size = 1024usize;
+    let root_offset = 1024usize;
+    let first_file_offset = 2048usize;
+
+    let mut header = DatHeader::new(
+        dat_file_type,
+        0,
+        block_size as i32,
+        Some("test".to_string()),
+        1,
+        1,
+        Uuid::nil(),
+        1,
+    );
+    header.root_block = root_offset as i32;
+    let total_len =
+        (root_offset + 4 + node_bytes_len()).max(first_file_offset + (entries.len() * block_size));
+    header.file_size = total_len as i32;
+
+    let mut root_node =
+        dat_reader_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::new(root_offset as i32);
+    root_node.file_count = entries.len();
+    for (index, (file_id, payload)) in entries.iter().enumerate() {
+        root_node.files[index] = dat_reader_writer::Lib::IO::DatBTree::DatBTreeFile::DatBTreeFile {
+            version: 2,
+            id: *file_id,
+            offset: (first_file_offset + (index * block_size)) as i32,
+            size: payload.len() as u32,
+            iteration: 1,
+            ..Default::default()
+        };
+    }
+
+    let mut bytes = vec![0u8; total_len];
+    assert!(header.pack(&mut DatBinWriter::new(&mut bytes[..DatHeader::SIZE])));
+
+    let mut node_bytes =
+        vec![0u8; dat_reader_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::SIZE];
+    assert!(root_node.pack(&mut DatBinWriter::new(&mut node_bytes)));
+    bytes[root_offset + 4..root_offset + 4 + node_bytes.len()].copy_from_slice(&node_bytes);
+
+    for (index, (_, payload)) in entries.iter().enumerate() {
+        let file_offset = first_file_offset + (index * block_size);
+        bytes[file_offset + 4..file_offset + 4 + payload.len()].copy_from_slice(payload);
+    }
+
+    bytes
+}
+
+fn node_bytes_len() -> usize {
+    dat_reader_writer::Lib::IO::DatBTree::DatBTreeNode::DatBTreeNode::SIZE
+}
+
 #[test]
 fn db_obj_attribute_cache_resolves_iteration() {
     let attr = DBObjAttributeCache::type_from_id(DatFileType::Portal, 0xFFFF0001).unwrap();
@@ -170,10 +240,12 @@ fn db_obj_attribute_cache_resolves_ported_range_and_singular_types() {
         DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E000007).unwrap();
     let contract_table =
         DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x0E00001D).unwrap();
+    let db_properties = DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x78000010).unwrap();
     let environment = DBObjAttributeCache::type_from_id(DatFileType::Cell, 0x0D000123).unwrap();
     let land_block_info = DBObjAttributeCache::type_from_id(DatFileType::Cell, 0x0001FFFE).unwrap();
     let land_block = DBObjAttributeCache::type_from_id(DatFileType::Cell, 0x0001FFFF).unwrap();
     let env_cell = DBObjAttributeCache::type_from_id(DatFileType::Cell, 0x00010123).unwrap();
+    let layout_desc = DBObjAttributeCache::type_from_id(DatFileType::Local, 0x21000010).unwrap();
     let master_input_map =
         DBObjAttributeCache::type_from_id(DatFileType::Portal, 0x14000010).unwrap();
     let master_property =
@@ -211,10 +283,12 @@ fn db_obj_attribute_cache_resolves_ported_range_and_singular_types() {
     assert_eq!(DBObjType::BadDataTable, bad_data_table.db_obj_type);
     assert_eq!(DBObjType::ChatPoseTable, chat_pose_table.db_obj_type);
     assert_eq!(DBObjType::ContractTable, contract_table.db_obj_type);
+    assert_eq!(DBObjType::DBProperties, db_properties.db_obj_type);
     assert_eq!(DBObjType::Environment, environment.db_obj_type);
     assert_eq!(DBObjType::LandBlockInfo, land_block_info.db_obj_type);
     assert_eq!(DBObjType::LandBlock, land_block.db_obj_type);
     assert_eq!(DBObjType::EnvCell, env_cell.db_obj_type);
+    assert_eq!(DBObjType::LayoutDesc, layout_desc.db_obj_type);
     assert_eq!(DBObjType::MasterInputMap, master_input_map.db_obj_type);
     assert_eq!(DBObjType::MasterProperty, master_property.db_obj_type);
     assert_eq!(DBObjType::ObjectHierarchy, object_hierarchy.db_obj_type);
@@ -338,6 +412,11 @@ fn db_obj_attribute_cache_tracks_current_ported_dbobjs() {
     assert!(
         attrs
             .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::DBProperties)
+    );
+    assert!(
+        attrs
+            .iter()
             .any(|attr| attr.db_obj_type == DBObjType::EnvCell)
     );
     assert!(
@@ -354,6 +433,11 @@ fn db_obj_attribute_cache_tracks_current_ported_dbobjs() {
         attrs
             .iter()
             .any(|attr| attr.db_obj_type == DBObjType::LandBlockInfo)
+    );
+    assert!(
+        attrs
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::LayoutDesc)
     );
     assert!(
         attrs
@@ -806,26 +890,30 @@ fn dat_database_can_read_enum_mapper_family() {
     assert!(enum_mapper.pack(&mut writer));
     let mapper_used = writer.offset();
 
-    let mut client_name_map = IntrusiveHashTable::<u32, PStringBase<u8>>::default();
-    client_name_map.insert(2, PStringBase::from("client"));
-    let mut server_name_map = IntrusiveHashTable::<u32, PStringBase<u8>>::default();
-    server_name_map.insert(3, PStringBase::from("server"));
-    let mut client_id_map = IntrusiveHashTable::<u32, u32>::default();
-    client_id_map.insert(4, 0x05000010);
-    let mut server_id_map = IntrusiveHashTable::<u32, u32>::default();
-    server_id_map.insert(5, 0x05000020);
+    let client_name_map = std::collections::BTreeMap::from([(2, String::from("client"))]);
+    let server_name_map = std::collections::BTreeMap::from([(3, String::from("server"))]);
+    let client_id_map = std::collections::BTreeMap::from([(4, 0x05000010)]);
+    let server_id_map = std::collections::BTreeMap::from([(5, 0x05000020)]);
 
     let enum_id_map = EnumIDMap {
+        client_id_numbering_type: NumberingType::NORMAL,
         client_enum_to_id: client_id_map.clone(),
+        client_name_numbering_type: NumberingType::NORMAL,
         client_enum_to_name: client_name_map.clone(),
+        server_id_numbering_type: NumberingType::NORMAL,
         server_enum_to_id: server_id_map.clone(),
+        server_name_numbering_type: NumberingType::NORMAL,
         server_enum_to_name: server_name_map.clone(),
         ..Default::default()
     };
     let dual_enum_id_map = DualEnumIDMap {
+        client_id_numbering_type: NumberingType::NORMAL,
         client_enum_to_id: client_id_map,
+        client_name_numbering_type: NumberingType::NORMAL,
         client_enum_to_name: client_name_map,
+        server_id_numbering_type: NumberingType::NORMAL,
         server_enum_to_id: server_id_map,
+        server_name_numbering_type: NumberingType::NORMAL,
         server_enum_to_name: server_name_map,
         ..Default::default()
     };
@@ -900,10 +988,7 @@ fn dat_database_can_read_enum_mapper_family() {
         .unwrap()
         .unwrap();
     assert_eq!(Some(&0x05000010), read_enum_id.client_enum_to_id.get(&4));
-    assert_eq!(
-        "client",
-        read_enum_id.client_enum_to_name.get(&2).unwrap().value
-    );
+    assert_eq!("client", read_enum_id.client_enum_to_name.get(&2).unwrap());
 
     let read_dual_enum_id = dual_enum_id_db
         .try_get::<DualEnumIDMap>(0x27000010)
@@ -915,7 +1000,7 @@ fn dat_database_can_read_enum_mapper_family() {
     );
     assert_eq!(
         "server",
-        read_dual_enum_id.server_enum_to_name.get(&3).unwrap().value
+        read_dual_enum_id.server_enum_to_name.get(&3).unwrap()
     );
 }
 
@@ -1242,6 +1327,232 @@ fn dat_database_can_read_action_map_and_master_property() {
     match read_property.default_value.as_ref().unwrap() {
         BaseProperty::Integer { value, .. } => assert_eq!(42, *value),
         other => panic!("unexpected default property variant: {other:?}"),
+    }
+}
+
+#[test]
+fn dat_collection_can_read_db_properties_and_layout_desc() {
+    let mut master_property = MasterProperty::default();
+    master_property.properties.insert(
+        0x10,
+        BasePropertyDesc {
+            property_type:
+                dat_reader_writer::Generated::Enums::BasePropertyType::BasePropertyType::Integer,
+            ..Default::default()
+        },
+    );
+    master_property.properties.insert(
+        0x11,
+        BasePropertyDesc {
+            property_type:
+                dat_reader_writer::Generated::Enums::BasePropertyType::BasePropertyType::Struct,
+            ..Default::default()
+        },
+    );
+    master_property.properties.insert(
+        0x12,
+        BasePropertyDesc {
+            property_type:
+                dat_reader_writer::Generated::Enums::BasePropertyType::BasePropertyType::Array,
+            ..Default::default()
+        },
+    );
+
+    let db_properties = DBProperties {
+        properties: std::collections::BTreeMap::from([
+            (
+                1,
+                BaseProperty::Integer {
+                    header: BasePropertyHeader {
+                        master_property_id: 0x10,
+                        should_pack_master_property_id: true,
+                    },
+                    value: 42,
+                },
+            ),
+            (
+                2,
+                BaseProperty::Struct {
+                    header: BasePropertyHeader {
+                        master_property_id: 0x11,
+                        should_pack_master_property_id: true,
+                    },
+                    value: std::collections::BTreeMap::from([(
+                        7,
+                        BaseProperty::Integer {
+                            header: BasePropertyHeader {
+                                master_property_id: 0x10,
+                                should_pack_master_property_id: true,
+                            },
+                            value: 99,
+                        },
+                    )]),
+                },
+            ),
+        ]),
+        ..Default::default()
+    };
+
+    let state_desc = StateDesc {
+        state_id: 1,
+        pass_to_children: true,
+        incorporation_flags: IncorporationFlags::X
+            | IncorporationFlags::Y
+            | IncorporationFlags::Width
+            | IncorporationFlags::Height
+            | IncorporationFlags::ZLevel,
+        properties: std::collections::BTreeMap::from([(
+            3,
+            BaseProperty::Array {
+                header: BasePropertyHeader {
+                    master_property_id: 0x12,
+                    should_pack_master_property_id: true,
+                },
+                value: vec![
+                    BaseProperty::Integer {
+                        header: BasePropertyHeader {
+                            master_property_id: 0x10,
+                            should_pack_master_property_id: true,
+                        },
+                        value: 5,
+                    },
+                    BaseProperty::Integer {
+                        header: BasePropertyHeader {
+                            master_property_id: 0x10,
+                            should_pack_master_property_id: true,
+                        },
+                        value: 6,
+                    },
+                ],
+            },
+        )]),
+        ..Default::default()
+    };
+
+    let mut elements = HashTable::<u32, ElementDesc>::default();
+    elements.insert(
+        9,
+        ElementDesc {
+            state_desc: state_desc.clone(),
+            read_order: 2,
+            element_id: 9,
+            element_type: 3,
+            base_element: 0,
+            base_layout_id: 0,
+            default_state: UIStateId::NORMAL,
+            x: 10,
+            y: 20,
+            width: 300,
+            height: 120,
+            z_level: 7,
+            left_edge: 1,
+            top_edge: 2,
+            right_edge: 3,
+            bottom_edge: 4,
+            states: std::collections::BTreeMap::from([(UIStateId::NORMAL, state_desc)]),
+            ..Default::default()
+        },
+    );
+    let layout_desc = LayoutDesc {
+        width: 640,
+        height: 480,
+        elements,
+        ..Default::default()
+    };
+
+    let mut master_payload = vec![0u8; 2048];
+    let mut writer = DatBinWriter::new(&mut master_payload);
+    assert!(master_property.pack(&mut writer));
+    let master_used = writer.offset();
+
+    let mut db_properties_payload = vec![0u8; 2048];
+    let mut writer = DatBinWriter::new(&mut db_properties_payload);
+    assert!(db_properties.pack(&mut writer));
+    let db_properties_used = writer.offset();
+
+    let mut layout_payload = vec![0u8; 4096];
+    let mut writer = DatBinWriter::new(&mut layout_payload);
+    assert!(layout_desc.pack(&mut writer));
+    let layout_used = writer.offset();
+
+    let dir = unique_temp_dir();
+    fs::write(
+        dir.join("client_portal.dat"),
+        build_multi_block_dat(
+            DatFileType::Portal,
+            &[
+                (0x39000001, master_payload[..master_used].to_vec()),
+                (
+                    0x78000010,
+                    db_properties_payload[..db_properties_used].to_vec(),
+                ),
+            ],
+        ),
+    )
+    .unwrap();
+    fs::write(
+        dir.join("client_local_English.dat"),
+        build_multi_block_dat(
+            DatFileType::Local,
+            &[(0x21000010, layout_payload[..layout_used].to_vec())],
+        ),
+    )
+    .unwrap();
+    fs::write(
+        dir.join("client_cell_1.dat"),
+        build_multi_block_dat(DatFileType::Cell, &[]),
+    )
+    .unwrap();
+    fs::write(
+        dir.join("client_highres.dat"),
+        build_multi_block_dat(DatFileType::Portal, &[]),
+    )
+    .unwrap();
+
+    let collection =
+        DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::Read)
+            .unwrap();
+
+    let read_db_properties = collection
+        .try_get::<DBProperties>(0x78000010)
+        .unwrap()
+        .unwrap();
+    match read_db_properties.properties.get(&1).unwrap() {
+        BaseProperty::Integer { value, .. } => assert_eq!(42, *value),
+        other => panic!("unexpected DBProperties property: {other:?}"),
+    }
+    match read_db_properties.properties.get(&2).unwrap() {
+        BaseProperty::Struct { value, .. } => match value.get(&7).unwrap() {
+            BaseProperty::Integer { value, .. } => assert_eq!(99, *value),
+            other => panic!("unexpected nested DBProperties property: {other:?}"),
+        },
+        other => panic!("unexpected DBProperties struct property: {other:?}"),
+    }
+
+    let read_layout = collection
+        .try_get::<LayoutDesc>(0x21000010)
+        .unwrap()
+        .unwrap();
+    assert_eq!(640, read_layout.width);
+    assert_eq!(480, read_layout.height);
+    let read_element = read_layout.elements.get(&9).unwrap();
+    assert_eq!(10, read_element.x);
+    assert_eq!(20, read_element.y);
+    assert_eq!(300, read_element.width);
+    assert_eq!(120, read_element.height);
+    match read_element.state_desc.properties.get(&3).unwrap() {
+        BaseProperty::Array { value, .. } => {
+            assert_eq!(2, value.len());
+            match &value[0] {
+                BaseProperty::Integer { value, .. } => assert_eq!(5, *value),
+                other => panic!("unexpected layout array value: {other:?}"),
+            }
+            match &value[1] {
+                BaseProperty::Integer { value, .. } => assert_eq!(6, *value),
+                other => panic!("unexpected layout array value: {other:?}"),
+            }
+        }
+        other => panic!("unexpected layout property: {other:?}"),
     }
 }
 
@@ -2034,4 +2345,188 @@ fn dat_database_can_read_master_input_map() {
     let mapping = &read_input_map.input_maps.get(&1).unwrap().mappings[0];
     assert_eq!(0x41, mapping.key.key);
     assert_eq!(3, mapping.activation);
+}
+
+#[test]
+fn dat_database_can_read_palette_set_clothing_and_particle_emitter_info() {
+    use dat_reader_writer::Generated::Enums::{
+        EmitterType::EmitterType, ParticleType::ParticleType,
+    };
+
+    let palette_set = PaletteSet {
+        palettes: vec![0x04000010, 0x04000011],
+        ..Default::default()
+    };
+
+    let clothing = Clothing {
+        clothing_base_effects: std::collections::BTreeMap::from([(
+            0x01000010,
+            dat_reader_writer::Types::ClothingBaseEffect::ClothingBaseEffect {
+                clo_object_effects: vec![
+                    dat_reader_writer::Types::CloObjectEffect::CloObjectEffect {
+                        index: 1,
+                        model_id: QualifiedDataId::new(0x01000020),
+                        clo_texture_effects: vec![],
+                    },
+                ],
+            },
+        )]),
+        clothing_sub_pal_effects: std::collections::BTreeMap::from([(
+            5,
+            dat_reader_writer::Types::CloSubPalEffect::CloSubPalEffect {
+                icon: QualifiedDataId::new(0x0D000002),
+                clo_sub_palettes: vec![dat_reader_writer::Types::CloSubPalette::CloSubPalette {
+                    palette_set: QualifiedDataId::new(0x0F000010),
+                    ranges: vec![
+                        dat_reader_writer::Types::CloSubPaletteRange::CloSubPaletteRange {
+                            offset: 3,
+                            num_colors: 4,
+                        },
+                    ],
+                }],
+            },
+        )]),
+        ..Default::default()
+    };
+
+    let emitter_info = ParticleEmitterInfo {
+        unknown: 7,
+        emitter_type: EmitterType::BirthratePerSec,
+        particle_type: ParticleType::Still,
+        gfx_obj_id: QualifiedDataId::new(0x01000030),
+        hw_gfx_obj_id: QualifiedDataId::new(0x01000031),
+        birthrate: 0.25,
+        max_particles: 10,
+        initial_particles: 2,
+        total_particles: 20,
+        total_seconds: 4.5,
+        lifespan: 1.25,
+        lifespan_rand: 0.5,
+        offset_dir: dat_reader_writer::Lib::IO::Numerics::Vector3::new(1.0, 2.0, 3.0),
+        min_offset: 0.1,
+        max_offset: 0.2,
+        a: dat_reader_writer::Lib::IO::Numerics::Vector3::new(4.0, 5.0, 6.0),
+        min_a: 0.3,
+        max_a: 0.4,
+        b: dat_reader_writer::Lib::IO::Numerics::Vector3::new(7.0, 8.0, 9.0),
+        min_b: 0.5,
+        max_b: 0.6,
+        c: dat_reader_writer::Lib::IO::Numerics::Vector3::new(10.0, 11.0, 12.0),
+        min_c: 0.7,
+        max_c: 0.8,
+        start_scale: 1.1,
+        final_scale: 1.2,
+        scale_rand: 0.9,
+        start_trans: 0.95,
+        final_trans: 0.15,
+        trans_rand: 0.05,
+        is_parent_local: true,
+        ..Default::default()
+    };
+
+    let mut palette_payload = vec![0u8; 128];
+    let mut writer = DatBinWriter::new(&mut palette_payload);
+    assert!(palette_set.pack(&mut writer));
+    let palette_used = writer.offset();
+
+    let mut clothing_payload = vec![0u8; 512];
+    let mut writer = DatBinWriter::new(&mut clothing_payload);
+    assert!(clothing.pack(&mut writer));
+    let clothing_used = writer.offset();
+
+    let mut emitter_payload = vec![0u8; 512];
+    let mut writer = DatBinWriter::new(&mut emitter_payload);
+    assert!(emitter_info.pack(&mut writer));
+    let emitter_used = writer.offset();
+
+    let palette_path = unique_temp_file();
+    let clothing_path = unique_temp_file();
+    let emitter_path = unique_temp_file();
+
+    fs::write(
+        &palette_path,
+        build_single_block_dat(
+            DatFileType::Portal,
+            0x0F000010,
+            &palette_payload[..palette_used],
+        ),
+    )
+    .unwrap();
+    fs::write(
+        &clothing_path,
+        build_single_block_dat(
+            DatFileType::Portal,
+            0x10000010,
+            &clothing_payload[..clothing_used],
+        ),
+    )
+    .unwrap();
+    fs::write(
+        &emitter_path,
+        build_single_block_dat(
+            DatFileType::Portal,
+            0x32000010,
+            &emitter_payload[..emitter_used],
+        ),
+    )
+    .unwrap();
+
+    let palette_db = DatDatabase::new(DatDatabaseOptions {
+        file_path: palette_path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+    let clothing_db = DatDatabase::new(DatDatabaseOptions {
+        file_path: clothing_path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+    let emitter_db = DatDatabase::new(DatDatabaseOptions {
+        file_path: emitter_path.to_string_lossy().to_string(),
+        ..DatDatabaseOptions::default()
+    })
+    .unwrap();
+
+    let read_palette_set = palette_db
+        .try_get::<PaletteSet>(0x0F000010)
+        .unwrap()
+        .unwrap();
+    assert_eq!(vec![0x04000010, 0x04000011], read_palette_set.palettes);
+
+    let read_clothing = clothing_db
+        .try_get::<Clothing>(0x10000010)
+        .unwrap()
+        .unwrap();
+    assert_eq!(1, read_clothing.clothing_base_effects.len());
+    assert_eq!(1, read_clothing.clothing_sub_pal_effects.len());
+    assert_eq!(
+        0x01000020,
+        read_clothing
+            .clothing_base_effects
+            .get(&0x01000010)
+            .unwrap()
+            .clo_object_effects[0]
+            .model_id
+            .data_id
+    );
+    assert_eq!(
+        0x0F000010,
+        read_clothing
+            .clothing_sub_pal_effects
+            .get(&5)
+            .unwrap()
+            .clo_sub_palettes[0]
+            .palette_set
+            .data_id
+    );
+
+    let read_emitter = emitter_db
+        .try_get::<ParticleEmitterInfo>(0x32000010)
+        .unwrap()
+        .unwrap();
+    assert_eq!(7, read_emitter.unknown);
+    assert_eq!(EmitterType::BirthratePerSec, read_emitter.emitter_type);
+    assert_eq!(ParticleType::Still, read_emitter.particle_type);
+    assert_eq!(0x01000030, read_emitter.gfx_obj_id.data_id);
+    assert!(read_emitter.is_parent_local);
 }

@@ -1,9 +1,11 @@
-use std::{io, io::Read, sync::Arc};
+use std::{collections::BTreeMap, io, io::Read, sync::Arc};
 
 use flate2::read::ZlibDecoder;
 
 use crate::{
+    DBObjs::MasterProperty::MasterProperty,
     Generated::Enums::DBObjType::DBObjType,
+    Generated::Enums::{BasePropertyType::BasePropertyType, DatFileType::DatFileType},
     Lib::{
         DBObjAttributeCache,
         IO::{
@@ -94,11 +96,31 @@ impl DatDatabase {
     where
         T: IDBObj + Default,
     {
+        let base_property_types =
+            if self.header().r#type == DatFileType::Portal && file_id != 0x39000001 {
+                self.base_property_types()?
+            } else {
+                None
+            };
+        self.try_get_with_base_property_types(file_id, base_property_types)
+    }
+
+    pub fn try_get_with_base_property_types<T>(
+        &self,
+        file_id: u32,
+        base_property_types: Option<Arc<BTreeMap<u32, BasePropertyType>>>,
+    ) -> io::Result<Option<T>>
+    where
+        T: IDBObj + Default,
+    {
         let Some(bytes) = self.try_get_file_bytes(file_id, true)? else {
             return Ok(None);
         };
         let mut value = T::default();
-        if !value.unpack(&mut DatBinReader::new(&bytes)) {
+        if !value.unpack(&mut DatBinReader::with_base_property_types(
+            &bytes,
+            base_property_types,
+        )) {
             return Ok(None);
         }
         value.set_id(file_id);
@@ -110,6 +132,26 @@ impl DatDatabase {
         T: IDBObj + Default,
     {
         self.try_get::<T>(file_id)
+    }
+
+    pub fn base_property_types(&self) -> io::Result<Option<Arc<BTreeMap<u32, BasePropertyType>>>> {
+        if self.header().r#type != DatFileType::Portal {
+            return Ok(None);
+        }
+
+        let Some(master_property) =
+            self.try_get_with_base_property_types::<MasterProperty>(0x39000001, None)?
+        else {
+            return Ok(None);
+        };
+
+        Ok(Some(Arc::new(
+            master_property
+                .properties
+                .into_iter()
+                .map(|(key, property)| (key, property.property_type))
+                .collect(),
+        )))
     }
 
     pub fn has_file(&self, file_id: u32) -> io::Result<bool> {

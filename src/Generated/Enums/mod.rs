@@ -38,6 +38,8 @@ pub mod EnvCellFlags;
 pub mod EquipmentSet;
 #[path = "GfxObjFlags.rs"]
 pub mod GfxObjFlags;
+#[path = "IncorporationFlags.rs"]
+pub mod IncorporationFlags;
 #[path = "ItemType.rs"]
 pub mod ItemType;
 #[path = "MagicSchool.rs"]
@@ -50,6 +52,8 @@ pub mod MotionCommand;
 pub mod MotionDataFlags;
 #[path = "MotionStance.rs"]
 pub mod MotionStance;
+#[path = "NumberingType.rs"]
+pub mod NumberingType;
 #[path = "ParentLocation.rs"]
 pub mod ParentLocation;
 #[path = "ParticleType.rs"]

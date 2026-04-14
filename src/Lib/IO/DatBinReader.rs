@@ -1,20 +1,40 @@
-use std::any::TypeId;
+use std::{any::TypeId, collections::BTreeMap, sync::Arc};
 
+use encoding_rs::WINDOWS_1252;
 use uuid::Uuid;
 
-use crate::Lib::IO::{
-    IUnpackable::IUnpackable,
-    Numerics::{Plane, Quaternion, Vector3},
+use crate::{
+    Generated::Enums::BasePropertyType::BasePropertyType,
+    Lib::IO::{
+        IUnpackable::IUnpackable,
+        Numerics::{Plane, Quaternion, Vector3},
+    },
 };
 
 pub struct DatBinReader<'a> {
     data: &'a [u8],
     offset: usize,
+    base_property_types: Option<Arc<BTreeMap<u32, BasePropertyType>>>,
 }
 
 impl<'a> DatBinReader<'a> {
     pub fn new(data: &'a [u8]) -> Self {
-        Self { data, offset: 0 }
+        Self {
+            data,
+            offset: 0,
+            base_property_types: None,
+        }
+    }
+
+    pub fn with_base_property_types(
+        data: &'a [u8],
+        base_property_types: Option<Arc<BTreeMap<u32, BasePropertyType>>>,
+    ) -> Self {
+        Self {
+            data,
+            offset: 0,
+            base_property_types,
+        }
     }
 
     pub fn offset(&self) -> usize {
@@ -167,6 +187,13 @@ impl<'a> DatBinReader<'a> {
         Uuid::from_bytes(self.read_array())
     }
 
+    pub fn read_string16_l_byte(&mut self) -> String {
+        let length = self.read_compressed_uint() as usize;
+        let bytes = self.read_bytes_internal(length);
+        let (decoded, _, _) = WINDOWS_1252.decode(bytes);
+        decoded.into_owned()
+    }
+
     pub fn read_generic<T>(&mut self) -> T
     where
         T: Copy + 'static,
@@ -196,6 +223,12 @@ impl<'a> DatBinReader<'a> {
         match_copy!(Uuid, self.read_guid());
 
         panic!("Type is not supported by read_generic yet")
+    }
+
+    pub fn base_property_type(&self, property_id: u32) -> Option<BasePropertyType> {
+        self.base_property_types
+            .as_ref()
+            .and_then(|types| types.get(&property_id).copied())
     }
 
     fn read_bytes_internal(&mut self, count: usize) -> &'a [u8] {
