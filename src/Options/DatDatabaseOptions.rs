@@ -8,6 +8,7 @@ pub struct DatDatabaseOptions {
     pub file_path: String,
     pub index_caching_strategy: IndexCachingStrategy,
     pub file_caching_strategy: FileCachingStrategy,
+    pub typed_object_cache_budget_bytes: usize,
     pub access_type: DatAccessType,
 }
 
@@ -17,6 +18,7 @@ impl Default for DatDatabaseOptions {
             file_path: "client_portal.dat".to_string(),
             index_caching_strategy: IndexCachingStrategy::OnDemand,
             file_caching_strategy: FileCachingStrategy::OnDemand,
+            typed_object_cache_budget_bytes: 8 * 1024 * 1024,
             access_type: DatAccessType::Read,
         }
     }

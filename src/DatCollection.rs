@@ -1,4 +1,4 @@
-use std::{any::TypeId, io};
+use std::{any::TypeId, io, sync::Arc};
 
 use crate::{
     CellDatabase::CellDatabase,
@@ -27,6 +27,7 @@ impl DatCollection {
             access_type: options.access_type,
             index_caching_strategy: options.cell_index_caching_strategy(),
             file_caching_strategy: options.cell_file_caching_strategy(),
+            typed_object_cache_budget_bytes: options.cell_typed_object_cache_budget_bytes(),
         })?;
 
         let portal = PortalDatabase::new(crate::Options::DatDatabaseOptions::DatDatabaseOptions {
@@ -34,6 +35,7 @@ impl DatCollection {
             access_type: options.access_type,
             index_caching_strategy: options.portal_index_caching_strategy(),
             file_caching_strategy: options.portal_file_caching_strategy(),
+            typed_object_cache_budget_bytes: options.portal_typed_object_cache_budget_bytes(),
         })?;
 
         let local = LocalDatabase::new(crate::Options::DatDatabaseOptions::DatDatabaseOptions {
@@ -41,6 +43,7 @@ impl DatCollection {
             access_type: options.access_type,
             index_caching_strategy: options.local_index_caching_strategy(),
             file_caching_strategy: options.local_file_caching_strategy(),
+            typed_object_cache_budget_bytes: options.local_typed_object_cache_budget_bytes(),
         })?;
 
         let high_res =
@@ -49,6 +52,7 @@ impl DatCollection {
                 access_type: options.access_type,
                 index_caching_strategy: options.high_res_index_caching_strategy(),
                 file_caching_strategy: options.high_res_file_caching_strategy(),
+                typed_object_cache_budget_bytes: options.high_res_typed_object_cache_budget_bytes(),
             })?;
 
         Ok(Self {
@@ -327,6 +331,53 @@ impl DatCollection {
                     return Ok(local);
                 }
                 self.cell.get_cached::<T>(file_id)
+            }
+        }
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn get_cached_shared<T>(&self, file_id: u32) -> io::Result<Option<Arc<T>>>
+    where
+        T: IDBObj + Default + Send + Sync + 'static,
+    {
+        if TypeId::of::<T>() == TypeId::of::<crate::DBObjs::Iteration::Iteration>() {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "Iteration is not a valid type to read from a dat collection; use a specific database instead",
+            ));
+        }
+
+        match self.type_to_dat_file_type::<T>() {
+            DatFileType::Cell => self.cell.inner.get_cached_shared::<T>(file_id),
+            DatFileType::Portal => {
+                let portal = self.portal.inner.get_cached_shared::<T>(file_id)?;
+                if portal.is_some() {
+                    Ok(portal)
+                } else {
+                    self.high_res.inner.get_cached_shared::<T>(file_id)
+                }
+            }
+            DatFileType::Local => self.local.inner.get_cached_shared_with_base_property_types(
+                file_id,
+                self.portal.inner.base_property_types()?,
+            ),
+            DatFileType::Undefined => {
+                let portal = self.portal.inner.get_cached_shared::<T>(file_id)?;
+                if portal.is_some() {
+                    return Ok(portal);
+                }
+                let high_res = self.high_res.inner.get_cached_shared::<T>(file_id)?;
+                if high_res.is_some() {
+                    return Ok(high_res);
+                }
+                let local = self.local.inner.get_cached_shared_with_base_property_types(
+                    file_id,
+                    self.portal.inner.base_property_types()?,
+                )?;
+                if local.is_some() {
+                    return Ok(local);
+                }
+                self.cell.inner.get_cached_shared::<T>(file_id)
             }
         }
     }

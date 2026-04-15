@@ -1,4 +1,5 @@
 use std::io;
+use std::sync::Arc;
 
 use crate::{
     DBObjs::{
@@ -77,6 +78,14 @@ impl ClientDatStore {
         T: IDBObj + Default + Clone + Send + 'static,
     {
         self.collection.get_cached_async::<T>(file_id).await
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn load_cached_shared<T>(&self, file_id: u32) -> io::Result<Option<Arc<T>>>
+    where
+        T: IDBObj + Default + Send + Sync + 'static,
+    {
+        self.collection.get_cached_shared::<T>(file_id)
     }
 
     pub fn load_ids<T>(&self) -> io::Result<Vec<u32>>

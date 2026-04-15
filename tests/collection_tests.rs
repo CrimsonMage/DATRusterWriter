@@ -368,10 +368,10 @@ fn dat_collection_rejects_iteration_cross_dat_access() {
 }
 
 #[test]
-fn dat_collection_cached_reads_hold_until_clear_cache() {
+fn dat_collection_cached_reads_refresh_after_writes_invalidate_cache() {
     let dir = unique_temp_dir();
 
-    let mut collection =
+    let collection =
         DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::ReadWrite)
             .unwrap();
 
@@ -416,15 +416,37 @@ fn dat_collection_cached_reads_hold_until_clear_cache() {
 
     assert!(collection.try_write_file(&second_palette).unwrap());
 
-    let still_cached = collection.get_cached::<Palette>(0x0400_0020).unwrap().unwrap();
-    assert_eq!(0x01, still_cached.colors[0].blue);
-    assert_eq!(0x04, still_cached.colors[0].alpha);
-
-    collection.clear_cache();
-
     let refreshed = collection.get_cached::<Palette>(0x0400_0020).unwrap().unwrap();
     assert_eq!(0xAA, refreshed.colors[0].blue);
     assert_eq!(0xDD, refreshed.colors[0].alpha);
+}
+
+#[test]
+fn dat_collection_cached_reads_follow_high_res_fallback() {
+    let dir = unique_temp_dir();
+    write_header_only_dat(&dir.join("client_portal.dat"), DatFileType::Portal);
+    write_header_only_dat(&dir.join("client_cell_1.dat"), DatFileType::Cell);
+    write_header_only_dat(&dir.join("client_local_English.dat"), DatFileType::Local);
+
+    let mut palette_payload = [0u8; 12];
+    let mut writer = DatBinWriter::new(&mut palette_payload);
+    writer.write_u32(0x0400_0099);
+    writer.write_i32(1);
+    writer.write_u32(0x10203040);
+
+    fs::write(
+        dir.join("client_highres.dat"),
+        build_single_block_dat(DatFileType::Portal, 0x0400_0099, &palette_payload),
+    )
+    .unwrap();
+
+    let collection =
+        DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::Read)
+            .unwrap();
+
+    let palette = collection.get_cached::<Palette>(0x0400_0099).unwrap().unwrap();
+    assert_eq!(0x10, palette.colors[0].alpha);
+    assert_eq!(0x40, palette.colors[0].blue);
 }
 
 #[test]

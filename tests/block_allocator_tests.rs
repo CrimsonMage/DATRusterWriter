@@ -32,6 +32,7 @@ fn read_write_options(path: &PathBuf) -> DatDatabaseOptions {
         file_path: path.to_string_lossy().to_string(),
         index_caching_strategy: IndexCachingStrategy::OnDemand,
         file_caching_strategy: FileCachingStrategy::OnDemand,
+        typed_object_cache_budget_bytes: 8 * 1024 * 1024,
         access_type: DatAccessType::ReadWrite,
     }
 }
@@ -41,6 +42,7 @@ fn read_only_options(path: &PathBuf) -> DatDatabaseOptions {
         file_path: path.to_string_lossy().to_string(),
         index_caching_strategy: IndexCachingStrategy::OnDemand,
         file_caching_strategy: FileCachingStrategy::OnDemand,
+        typed_object_cache_budget_bytes: 8 * 1024 * 1024,
         access_type: DatAccessType::Read,
     }
 }

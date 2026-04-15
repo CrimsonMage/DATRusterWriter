@@ -15,6 +15,7 @@ pub struct DatCollectionOptions {
     pub high_res_dat_file_name: String,
     pub index_caching_strategy: IndexCachingStrategy,
     pub file_caching_strategy: FileCachingStrategy,
+    pub typed_object_cache_budget_bytes: usize,
     portal_path: Option<String>,
     cell_path: Option<String>,
     local_path: Option<String>,
@@ -27,6 +28,10 @@ pub struct DatCollectionOptions {
     cell_file_caching_strategy: Option<FileCachingStrategy>,
     local_file_caching_strategy: Option<FileCachingStrategy>,
     high_res_file_caching_strategy: Option<FileCachingStrategy>,
+    portal_typed_object_cache_budget_bytes: Option<usize>,
+    cell_typed_object_cache_budget_bytes: Option<usize>,
+    local_typed_object_cache_budget_bytes: Option<usize>,
+    high_res_typed_object_cache_budget_bytes: Option<usize>,
 }
 
 impl DatCollectionOptions {
@@ -102,6 +107,42 @@ impl DatCollectionOptions {
         self.high_res_file_caching_strategy = Some(value);
     }
 
+    pub fn portal_typed_object_cache_budget_bytes(&self) -> usize {
+        self.portal_typed_object_cache_budget_bytes
+            .unwrap_or(self.typed_object_cache_budget_bytes)
+    }
+
+    pub fn set_portal_typed_object_cache_budget_bytes(&mut self, value: usize) {
+        self.portal_typed_object_cache_budget_bytes = Some(value);
+    }
+
+    pub fn cell_typed_object_cache_budget_bytes(&self) -> usize {
+        self.cell_typed_object_cache_budget_bytes
+            .unwrap_or(self.typed_object_cache_budget_bytes)
+    }
+
+    pub fn set_cell_typed_object_cache_budget_bytes(&mut self, value: usize) {
+        self.cell_typed_object_cache_budget_bytes = Some(value);
+    }
+
+    pub fn local_typed_object_cache_budget_bytes(&self) -> usize {
+        self.local_typed_object_cache_budget_bytes
+            .unwrap_or(self.typed_object_cache_budget_bytes)
+    }
+
+    pub fn set_local_typed_object_cache_budget_bytes(&mut self, value: usize) {
+        self.local_typed_object_cache_budget_bytes = Some(value);
+    }
+
+    pub fn high_res_typed_object_cache_budget_bytes(&self) -> usize {
+        self.high_res_typed_object_cache_budget_bytes
+            .unwrap_or(self.typed_object_cache_budget_bytes)
+    }
+
+    pub fn set_high_res_typed_object_cache_budget_bytes(&mut self, value: usize) {
+        self.high_res_typed_object_cache_budget_bytes = Some(value);
+    }
+
     pub fn portal_dat_path(&self) -> String {
         self.portal_path.clone().unwrap_or_else(|| {
             PathBuf::from(&self.dat_directory)
@@ -166,6 +207,7 @@ impl Default for DatCollectionOptions {
             high_res_dat_file_name: "client_highres.dat".to_string(),
             index_caching_strategy: IndexCachingStrategy::OnDemand,
             file_caching_strategy: FileCachingStrategy::OnDemand,
+            typed_object_cache_budget_bytes: 8 * 1024 * 1024,
             portal_path: None,
             cell_path: None,
             local_path: None,
@@ -178,6 +220,10 @@ impl Default for DatCollectionOptions {
             cell_file_caching_strategy: None,
             local_file_caching_strategy: None,
             high_res_file_caching_strategy: None,
+            portal_typed_object_cache_budget_bytes: None,
+            cell_typed_object_cache_budget_bytes: None,
+            local_typed_object_cache_budget_bytes: None,
+            high_res_typed_object_cache_budget_bytes: None,
         }
     }
 }
