@@ -3043,17 +3043,12 @@ fn dat_database_can_read_master_input_map() {
         },
     );
 
-    let mut meta_keys =
-        dat_ruster_writer::Types::HashTable::HashTable::<
-            dat_ruster_writer::Types::ControlSpecification::ControlSpecification,
-            u32,
-        >::default();
-    meta_keys.insert(
+    let meta_keys = vec![(
         dat_ruster_writer::Types::ControlSpecification::ControlSpecification {
             raw_key: 0x002A_0000,
         },
         0x02,
-    );
+    )];
 
     let master_input_map = MasterInputMap {
         name: PStringBase::from("default"),
@@ -3091,10 +3086,8 @@ fn dat_database_can_read_master_input_map() {
     assert_eq!(DeviceType::KEYBOARD, read_input_map.devices[0].device_type);
     assert_eq!(1, read_input_map.input_maps.len());
     assert_eq!(1, read_input_map.meta_keys.len());
-    let shift_key = dat_ruster_writer::Types::ControlSpecification::ControlSpecification {
-        raw_key: 0x002A_0000,
-    };
-    assert_eq!(Some(&0x02), read_input_map.meta_keys.get(&shift_key));
+    assert_eq!(0x002A_0000, read_input_map.meta_keys[0].0.raw_key);
+    assert_eq!(0x02, read_input_map.meta_keys[0].1);
     let binding = &read_input_map.input_maps.get(&1).unwrap().bindings[0];
     assert_eq!(0x001E_0000, binding.control.key.raw_key);
     assert_eq!(0x02, binding.control.meta_mode);
