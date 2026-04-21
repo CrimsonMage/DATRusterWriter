@@ -3,17 +3,15 @@ use std::sync::Arc;
 
 use crate::{
     DBObjs::{
-        Animation::Animation, EnvCell::EnvCell, Font::Font, GfxObj::GfxObj,
+        Animation::Animation, EnumIDMap::EnumIDMap, EnvCell::EnvCell, Font::Font, GfxObj::GfxObj,
         LandBlock::LandBlock, LandBlockInfo::LandBlockInfo, LayoutDesc::LayoutDesc,
-        MasterProperty::MasterProperty, MotionTable::MotionTable, Palette::Palette,
-        Region::Region, RenderTexture::RenderTexture, Setup::Setup, StringTable::StringTable,
+        MasterProperty::MasterProperty, MotionTable::MotionTable, Palette::Palette, Region::Region,
+        RenderTexture::RenderTexture, Setup::Setup, StringTable::StringTable,
     },
     DatCollection::DatCollection,
     Generated::Enums::DatFileType::DatFileType,
     Lib::IO::{DatBTree::DatBTreeFile::DatBTreeFile, DatHeader::DatHeader, IDBObj::IDBObj},
-    Options::{
-        DatAccessType::DatAccessType, DatCollectionOptions::DatCollectionOptions,
-    },
+    Options::{DatAccessType::DatAccessType, DatCollectionOptions::DatCollectionOptions},
 };
 
 pub struct ClientDatStore {
@@ -117,6 +115,22 @@ impl ClientDatStore {
         self.collection.portal.master_property()
     }
 
+    pub fn resolve_did_by_enum(&self, enum_id: u32, enum_group: u32) -> io::Result<Option<u32>> {
+        let Some(master_property) = self.master_property()? else {
+            return Ok(None);
+        };
+        let Some(group_map) = self.load_enum_map(master_property.enum_mapper.base_enum_map)? else {
+            return Ok(None);
+        };
+        let Some(group_map_id) = enum_map_lookup(&group_map, enum_group) else {
+            return Ok(None);
+        };
+        let Some(enum_map) = self.load_enum_map(group_map_id)? else {
+            return Ok(None);
+        };
+        Ok(enum_map_lookup(&enum_map, enum_id))
+    }
+
     pub fn region(&self) -> io::Result<Option<Region>> {
         self.collection.portal.region()
     }
@@ -168,4 +182,28 @@ impl ClientDatStore {
     pub fn motion_table(&self, file_id: u32) -> io::Result<Option<MotionTable>> {
         self.load::<MotionTable>(file_id)
     }
+
+    fn load_enum_map(&self, map_id: u32) -> io::Result<Option<EnumIDMap>> {
+        for candidate in enum_map_candidates(map_id) {
+            if let Some(map) = self.load_cached::<EnumIDMap>(candidate)? {
+                return Ok(Some(map));
+            }
+        }
+        Ok(None)
+    }
+}
+
+fn enum_map_candidates(map_id: u32) -> [u32; 2] {
+    if (map_id & 0xFF00_0000) == 0 {
+        [map_id, map_id | 0x2500_0000]
+    } else {
+        [map_id, map_id]
+    }
+}
+
+fn enum_map_lookup(map: &EnumIDMap, value: u32) -> Option<u32> {
+    map.client_enum_to_id
+        .get(&value)
+        .copied()
+        .or_else(|| map.server_enum_to_id.get(&value).copied())
 }

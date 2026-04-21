@@ -54,7 +54,13 @@ where
 fn validates_ported_types_against_real_dats() {
     let collection = DatCollection::from_directory(real_dat_dir(), DatAccessType::Read).unwrap();
 
-    assert!(collection.portal.try_get::<Iteration>(0xFFFF0001).unwrap().is_some());
+    assert!(
+        collection
+            .portal
+            .try_get::<Iteration>(0xFFFF0001)
+            .unwrap()
+            .is_some()
+    );
     assert!(collection.try_get::<CharGen>(0x0E000002).unwrap().is_some());
     assert!(
         collection

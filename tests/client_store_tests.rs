@@ -5,11 +5,11 @@ use std::{
 };
 
 use dat_ruster_writer::{
-    databases::ClientDatStore,
     DBObjs::Palette::Palette,
     Generated::Enums::DatFileType::DatFileType,
     Lib::IO::{DatBinWriter::DatBinWriter, DatHeader::DatHeader, IPackable::IPackable},
     Options::DatAccessType::DatAccessType,
+    databases::ClientDatStore,
 };
 use uuid::Uuid;
 
@@ -100,8 +100,8 @@ fn client_dat_store_loads_typed_assets_through_one_api() {
     )
     .unwrap();
 
-    let store = ClientDatStore::open(dir.to_string_lossy().to_string(), DatAccessType::Read)
-        .unwrap();
+    let store =
+        ClientDatStore::open(dir.to_string_lossy().to_string(), DatAccessType::Read).unwrap();
 
     let palette = store.load::<Palette>(0x0400_0044).unwrap().unwrap();
     assert_eq!(1, palette.colors.len());
@@ -133,8 +133,8 @@ fn client_dat_store_convenience_methods_use_the_same_underlying_collection() {
     .unwrap();
     write_header_only_dat(&dir.join("client_highres.dat"), DatFileType::Portal);
 
-    let store = ClientDatStore::open(dir.to_string_lossy().to_string(), DatAccessType::Read)
-        .unwrap();
+    let store =
+        ClientDatStore::open(dir.to_string_lossy().to_string(), DatAccessType::Read).unwrap();
 
     let palette = store.palette(0x0400_0077).unwrap().unwrap();
     assert_eq!(1, palette.colors.len());

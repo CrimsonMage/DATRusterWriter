@@ -207,9 +207,14 @@ fn dat_collection_can_read_typed_asset_from_high_res_fallback() {
     assert_eq!(4, palette.colors[0].alpha);
     assert_eq!(
         Some(DatFileType::Portal),
-        collection.header_for(DatFileType::Portal).map(|header| header.r#type)
+        collection
+            .header_for(DatFileType::Portal)
+            .map(|header| header.r#type)
     );
-    assert_eq!(DatFileType::Portal, collection.type_to_dat_file_type::<Palette>());
+    assert_eq!(
+        DatFileType::Portal,
+        collection.type_to_dat_file_type::<Palette>()
+    );
 }
 
 #[test]
@@ -362,9 +367,18 @@ fn dat_collection_rejects_iteration_cross_dat_access() {
 
     assert!(collection.try_get::<Iteration>(0xFFFF0001).is_err());
     assert!(collection.get_cached::<Iteration>(0xFFFF0001).is_err());
-    assert!(collection.get_all_ids_of_type::<Iteration>().unwrap().is_empty());
+    assert!(
+        collection
+            .get_all_ids_of_type::<Iteration>()
+            .unwrap()
+            .is_empty()
+    );
     assert!(collection.try_write_file(&Iteration::default()).is_err());
-    assert!(collection.try_write_compressed(&Iteration::default()).is_err());
+    assert!(
+        collection
+            .try_write_compressed(&Iteration::default())
+            .is_err()
+    );
 }
 
 #[test]
@@ -410,13 +424,19 @@ fn dat_collection_cached_reads_refresh_after_writes_invalidate_cache() {
 
     assert!(collection.try_write_file(&first_palette).unwrap());
 
-    let cached_first = collection.get_cached::<Palette>(0x0400_0020).unwrap().unwrap();
+    let cached_first = collection
+        .get_cached::<Palette>(0x0400_0020)
+        .unwrap()
+        .unwrap();
     assert_eq!(0x01, cached_first.colors[0].blue);
     assert_eq!(0x04, cached_first.colors[0].alpha);
 
     assert!(collection.try_write_file(&second_palette).unwrap());
 
-    let refreshed = collection.get_cached::<Palette>(0x0400_0020).unwrap().unwrap();
+    let refreshed = collection
+        .get_cached::<Palette>(0x0400_0020)
+        .unwrap()
+        .unwrap();
     assert_eq!(0xAA, refreshed.colors[0].blue);
     assert_eq!(0xDD, refreshed.colors[0].alpha);
 }
@@ -444,7 +464,10 @@ fn dat_collection_cached_reads_follow_high_res_fallback() {
         DatCollection::from_directory(dir.to_string_lossy().to_string(), DatAccessType::Read)
             .unwrap();
 
-    let palette = collection.get_cached::<Palette>(0x0400_0099).unwrap().unwrap();
+    let palette = collection
+        .get_cached::<Palette>(0x0400_0099)
+        .unwrap()
+        .unwrap();
     assert_eq!(0x10, palette.colors[0].alpha);
     assert_eq!(0x40, palette.colors[0].blue);
 }
@@ -521,9 +544,11 @@ fn dat_collection_can_write_with_template_metadata() {
         ..Default::default()
     };
 
-    assert!(collection
-        .try_write_file_with_template(&palette, template)
-        .unwrap());
+    assert!(
+        collection
+            .try_write_file_with_template(&palette, template)
+            .unwrap()
+    );
 
     let entry = collection
         .portal
@@ -533,7 +558,10 @@ fn dat_collection_can_write_with_template_metadata() {
     assert_eq!(6, entry.version);
     assert_eq!(8, entry.iteration);
 
-    let read_palette = collection.get_cached::<Palette>(0x0400_0030).unwrap().unwrap();
+    let read_palette = collection
+        .get_cached::<Palette>(0x0400_0030)
+        .unwrap()
+        .unwrap();
     assert_eq!(0x10, read_palette.colors[0].blue);
     assert_eq!(0x40, read_palette.colors[0].alpha);
 }

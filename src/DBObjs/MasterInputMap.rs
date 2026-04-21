@@ -16,6 +16,7 @@ use crate::{
         ControlSpecification::ControlSpecification,
         DBObj::{DBObj, DBObjBase},
         DeviceKeyMapEntry::DeviceKeyMapEntry,
+        HashTable::HashTable,
         PStringBase::PStringBase,
     },
 };
@@ -36,7 +37,7 @@ pub struct MasterInputMap {
     pub name: PStringBase<u8>,
     pub guid_map: uuid::Uuid,
     pub devices: Vec<DeviceKeyMapEntry>,
-    pub meta_keys: Vec<ControlSpecification>,
+    pub meta_keys: HashTable<ControlSpecification, u32>,
     pub input_maps: BTreeMap<u32, CInputMap>,
 }
 
@@ -74,13 +75,7 @@ impl IUnpackable for MasterInputMap {
             self.devices.push(reader.read_item::<DeviceKeyMapEntry>());
         }
 
-        let meta_key_count = reader.read_u32() as usize;
-        self.meta_keys.clear();
-        self.meta_keys.reserve(meta_key_count);
-        for _ in 0..meta_key_count {
-            self.meta_keys
-                .push(reader.read_item::<ControlSpecification>());
-        }
+        self.meta_keys = reader.read_item::<HashTable<ControlSpecification, u32>>();
 
         let input_map_count = reader.read_u32() as usize;
         self.input_maps.clear();
@@ -102,10 +97,7 @@ impl IPackable for MasterInputMap {
         for item in &self.devices {
             writer.write_item(item);
         }
-        writer.write_u32(self.meta_keys.len() as u32);
-        for item in &self.meta_keys {
-            writer.write_item(item);
-        }
+        writer.write_item(&self.meta_keys);
         writer.write_u32(self.input_maps.len() as u32);
         for (key, value) in &self.input_maps {
             writer.write_u32(*key);

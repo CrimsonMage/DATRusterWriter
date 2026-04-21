@@ -4,9 +4,7 @@ use crate::{
     DBObjs::{MasterProperty::MasterProperty, Region::Region},
     DatDatabase::DatDatabase,
     Generated::Enums::DatFileType::DatFileType,
-    Lib::IO::{
-        DatBTree::DatBTreeFile::DatBTreeFile, IDBObj::IDBObj, IPackable::IPackable,
-    },
+    Lib::IO::{DatBTree::DatBTreeFile::DatBTreeFile, IDBObj::IDBObj, IPackable::IPackable},
     Options::{DatAccessType::DatAccessType, DatDatabaseOptions::DatDatabaseOptions},
 };
 
@@ -143,7 +141,8 @@ impl PortalDatabase {
     where
         T: IDBObj + IPackable,
     {
-        self.inner.try_write_compressed_with_template(value, template)
+        self.inner
+            .try_write_compressed_with_template(value, template)
     }
 
     pub async fn try_write_compressed_with_template_async<T>(

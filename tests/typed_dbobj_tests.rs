@@ -1,8 +1,8 @@
 use std::{
     fs,
     path::PathBuf,
-    sync::atomic::{AtomicU64, Ordering},
     sync::Arc,
+    sync::atomic::{AtomicU64, Ordering},
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -567,13 +567,41 @@ fn db_obj_attribute_cache_exposes_exact_mask_and_range_groups() {
     let masked = DBObjAttributeCache::all_masked_attributes();
     let ranges = DBObjAttributeCache::all_range_attributes();
 
-    assert!(exact.iter().any(|attr| attr.db_obj_type == DBObjType::Iteration));
-    assert!(exact.iter().any(|attr| attr.db_obj_type == DBObjType::CharGen));
-    assert!(masked.iter().any(|attr| attr.db_obj_type == DBObjType::Palette));
-    assert!(masked.iter().any(|attr| attr.db_obj_type == DBObjType::Animation));
-    assert!(ranges.iter().any(|attr| attr.db_obj_type == DBObjType::StringTable));
-    assert!(ranges.iter().any(|attr| attr.db_obj_type == DBObjType::LayoutDesc));
-    assert!(ranges.iter().any(|attr| attr.db_obj_type == DBObjType::MasterProperty));
+    assert!(
+        exact
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::Iteration)
+    );
+    assert!(
+        exact
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::CharGen)
+    );
+    assert!(
+        masked
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::Palette)
+    );
+    assert!(
+        masked
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::Animation)
+    );
+    assert!(
+        ranges
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::StringTable)
+    );
+    assert!(
+        ranges
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::LayoutDesc)
+    );
+    assert!(
+        ranges
+            .iter()
+            .any(|attr| attr.db_obj_type == DBObjType::MasterProperty)
+    );
 }
 
 #[test]
@@ -586,8 +614,14 @@ fn db_obj_attribute_cache_maps_types_to_dbobj_types_and_masks() {
         DBObjType::StringTable,
         DBObjAttributeCache::db_obj_type_from_type::<StringTable>()
     );
-    assert_eq!(0x0400_0000, DBObjAttributeCache::mask_from_type::<Palette>());
-    assert_eq!(0x0000_0000, DBObjAttributeCache::mask_from_type::<StringTable>());
+    assert_eq!(
+        0x0400_0000,
+        DBObjAttributeCache::mask_from_type::<Palette>()
+    );
+    assert_eq!(
+        0x0000_0000,
+        DBObjAttributeCache::mask_from_type::<StringTable>()
+    );
 }
 
 #[test]
@@ -671,9 +705,9 @@ fn foundational_enum_and_flag_surfaces_are_stable() {
     use dat_ruster_writer::{
         Generated::Enums::{
             AnimationHookDir::AnimationHookDir, AnimationHookType::AnimationHookType,
-            DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType,
-            GfxObjFlags::GfxObjFlags, MotionCommand::MotionCommand, PartsMask::PartsMask,
-            PixelFormat::PixelFormat, SurfaceType::SurfaceType, TextureType::TextureType,
+            DBObjHeaderFlags::DBObjHeaderFlags, DBObjType::DBObjType, GfxObjFlags::GfxObjFlags,
+            MotionCommand::MotionCommand, PartsMask::PartsMask, PixelFormat::PixelFormat,
+            SurfaceType::SurfaceType, TextureType::TextureType,
         },
         Lib::IO::DatBTree::DatBTreeFileFlags::DatBTreeFileFlags,
     };
@@ -704,9 +738,7 @@ fn foundational_wire_types_roundtrip_cleanly() {
     use dat_ruster_writer::{
         DBObjs::Palette::Palette,
         Generated::Enums::DBObjHeaderFlags::DBObjHeaderFlags,
-        Lib::IO::DatBTree::{
-            DatBTreeFile::DatBTreeFile, DatBTreeFileFlags::DatBTreeFileFlags,
-        },
+        Lib::IO::DatBTree::{DatBTreeFile::DatBTreeFile, DatBTreeFileFlags::DatBTreeFileFlags},
         Types::{ColorARGB::ColorARGB, PStringBase::PStringBase, QualifiedDataId::QualifiedDataId},
     };
 
@@ -753,12 +785,8 @@ fn foundational_wire_types_roundtrip_cleanly() {
     };
     let mut unpacked_byte_string = PStringBase::<u8>::default();
     let mut unpacked_wide_string = PStringBase::<u16>::default();
-    assert!(unpacked_byte_string.unpack(&mut DatBinReader::new(
-        &byte_string_bytes[..byte_used]
-    )));
-    assert!(unpacked_wide_string.unpack(&mut DatBinReader::new(
-        &wide_string_bytes[..wide_used]
-    )));
+    assert!(unpacked_byte_string.unpack(&mut DatBinReader::new(&byte_string_bytes[..byte_used])));
+    assert!(unpacked_wide_string.unpack(&mut DatBinReader::new(&wide_string_bytes[..wide_used])));
     assert_eq!(byte_string, unpacked_byte_string);
     assert_eq!(wide_string, unpacked_wide_string);
 
@@ -1870,8 +1898,14 @@ fn dat_database_can_write_master_property_and_read_it_back() {
         ..DatDatabaseOptions::default()
     })
     .unwrap();
-    let read_reopened = reopened.try_get::<MasterProperty>(0x3900_0001).unwrap().unwrap();
-    assert_eq!(BasePropertyType::Integer, read_reopened.properties.get(&1).unwrap().property_type);
+    let read_reopened = reopened
+        .try_get::<MasterProperty>(0x3900_0001)
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        BasePropertyType::Integer,
+        read_reopened.properties.get(&1).unwrap().property_type
+    );
     match read_reopened
         .properties
         .get(&1)
@@ -1899,9 +1933,10 @@ fn dat_database_can_write_and_read_compressed_file_bytes() {
         .unwrap();
 
     let payload = b"PortalPortalPortalPortalPortalPortalPortalPortalPortalPortal".repeat(32);
-    assert!(db
-        .try_write_compressed_bytes(0x0400_0010, &payload, payload.len(), 2)
-        .unwrap());
+    assert!(
+        db.try_write_compressed_bytes(0x0400_0010, &payload, payload.len(), 2)
+            .unwrap()
+    );
 
     let entry = db.try_get_file_entry(0x0400_0010).unwrap().unwrap();
     assert!(entry.flags.contains(
@@ -1910,7 +1945,10 @@ fn dat_database_can_write_and_read_compressed_file_bytes() {
     assert_eq!(2, entry.iteration);
 
     let compressed = db.try_get_file_bytes(0x0400_0010, false).unwrap().unwrap();
-    assert_eq!(payload.len() as u32, u32::from_le_bytes(compressed[0..4].try_into().unwrap()));
+    assert_eq!(
+        payload.len() as u32,
+        u32::from_le_bytes(compressed[0..4].try_into().unwrap())
+    );
 
     let decompressed = db.try_get_file_bytes(0x0400_0010, true).unwrap().unwrap();
     assert_eq!(payload, decompressed);
@@ -1953,9 +1991,7 @@ fn dat_database_can_write_with_template_metadata() {
         ..Default::default()
     };
 
-    assert!(db
-        .try_write_file_with_template(&palette, template)
-        .unwrap());
+    assert!(db.try_write_file_with_template(&palette, template).unwrap());
 
     let entry = db.try_get_file_entry(0x0400_0042).unwrap().unwrap();
     assert_eq!(7, entry.version);
@@ -1970,21 +2006,24 @@ fn dat_database_can_write_with_template_metadata() {
         ..Default::default()
     };
 
-    assert!(db
-        .try_write_compressed_bytes_with_template(
+    assert!(
+        db.try_write_compressed_bytes_with_template(
             0x0500_0042,
             &compressed_payload,
             compressed_payload.len(),
             compressed_template,
         )
-        .unwrap());
+        .unwrap()
+    );
 
     let compressed_entry = db.try_get_file_entry(0x0500_0042).unwrap().unwrap();
     assert_eq!(5, compressed_entry.version);
     assert_eq!(11, compressed_entry.iteration);
-    assert!(compressed_entry
-        .flags
-        .contains(DatBTreeFileFlags::IsCompressed));
+    assert!(
+        compressed_entry
+            .flags
+            .contains(DatBTreeFileFlags::IsCompressed)
+    );
 
     let read_bytes = db.try_get_file_bytes(0x0500_0042, true).unwrap().unwrap();
     assert_eq!(compressed_payload, read_bytes);
@@ -2004,17 +2043,19 @@ fn dat_database_async_file_byte_paths_match_sync_behavior() {
         .unwrap();
 
     let payload = b"AsyncPortalPayloadAsyncPortalPayload".repeat(24);
-    assert!(block_on(db.try_write_compressed_bytes_with_template_async(
-        0x0500_0099,
-        &payload,
-        payload.len(),
-        dat_ruster_writer::Lib::IO::DatBTree::DatBTreeFile::DatBTreeFile {
-            version: 3,
-            iteration: 4,
-            ..Default::default()
-        },
-    ))
-    .unwrap());
+    assert!(
+        block_on(db.try_write_compressed_bytes_with_template_async(
+            0x0500_0099,
+            &payload,
+            payload.len(),
+            dat_ruster_writer::Lib::IO::DatBTree::DatBTreeFile::DatBTreeFile {
+                version: 3,
+                iteration: 4,
+                ..Default::default()
+            },
+        ))
+        .unwrap()
+    );
 
     let entry = db.try_get_file_entry(0x0500_0099).unwrap().unwrap();
     assert_eq!(3, entry.version);
@@ -2989,15 +3030,29 @@ fn dat_database_can_read_master_input_map() {
     input_maps.insert(
         1,
         CInputMap {
-            mappings: vec![QualifiedControl {
-                key: dat_ruster_writer::Types::ControlSpecification::ControlSpecification {
-                    key: 0x41,
-                    modifier: 0x02,
+            bindings: vec![dat_ruster_writer::Types::InputMapBinding::InputMapBinding {
+                control: QualifiedControl {
+                    key: dat_ruster_writer::Types::ControlSpecification::ControlSpecification {
+                        raw_key: 0x001E_0000,
+                    },
+                    meta_mode: 0x02,
+                    activation: 3,
                 },
-                activation: 3,
-                unknown: 4,
+                action_id: 0x29,
             }],
         },
+    );
+
+    let mut meta_keys =
+        dat_ruster_writer::Types::HashTable::HashTable::<
+            dat_ruster_writer::Types::ControlSpecification::ControlSpecification,
+            u32,
+        >::default();
+    meta_keys.insert(
+        dat_ruster_writer::Types::ControlSpecification::ControlSpecification {
+            raw_key: 0x002A_0000,
+        },
+        0x02,
     );
 
     let master_input_map = MasterInputMap {
@@ -3007,12 +3062,7 @@ fn dat_database_can_read_master_input_map() {
             device_type: DeviceType::KEYBOARD,
             guid: Uuid::from_u128(0x0102030405060708090A0B0C0D0E0F10),
         }],
-        meta_keys: vec![
-            dat_ruster_writer::Types::ControlSpecification::ControlSpecification {
-                key: 0x11,
-                modifier: 0x22,
-            },
-        ],
+        meta_keys,
         input_maps,
         ..Default::default()
     };
@@ -3040,9 +3090,16 @@ fn dat_database_can_read_master_input_map() {
     assert_eq!(1, read_input_map.devices.len());
     assert_eq!(DeviceType::KEYBOARD, read_input_map.devices[0].device_type);
     assert_eq!(1, read_input_map.input_maps.len());
-    let mapping = &read_input_map.input_maps.get(&1).unwrap().mappings[0];
-    assert_eq!(0x41, mapping.key.key);
-    assert_eq!(3, mapping.activation);
+    assert_eq!(1, read_input_map.meta_keys.len());
+    let shift_key = dat_ruster_writer::Types::ControlSpecification::ControlSpecification {
+        raw_key: 0x002A_0000,
+    };
+    assert_eq!(Some(&0x02), read_input_map.meta_keys.get(&shift_key));
+    let binding = &read_input_map.input_maps.get(&1).unwrap().bindings[0];
+    assert_eq!(0x001E_0000, binding.control.key.raw_key);
+    assert_eq!(0x02, binding.control.meta_mode);
+    assert_eq!(3, binding.control.activation);
+    assert_eq!(0x29, binding.action_id);
 }
 
 #[test]
@@ -3318,7 +3375,9 @@ fn hash_table_roundtrip_reads_string_and_primitive_entries() {
 
 #[test]
 fn hash_table_helpers_match_reference_bucket_selection_rules() {
-    use dat_ruster_writer::Lib::HashTableHelpers::{BUCKET_SIZES, get_bucket_size, get_bucket_size_index};
+    use dat_ruster_writer::Lib::HashTableHelpers::{
+        BUCKET_SIZES, get_bucket_size, get_bucket_size_index,
+    };
 
     assert_eq!(11, get_bucket_size(1, false));
     assert_eq!(23, get_bucket_size(12, false));

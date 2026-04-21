@@ -3,21 +3,21 @@ use crate::{
         DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, IPackable::IPackable,
         IUnpackable::IUnpackable,
     },
-    Types::QualifiedControl::QualifiedControl,
+    Types::InputMapBinding::InputMapBinding,
 };
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct CInputMap {
-    pub mappings: Vec<QualifiedControl>,
+    pub bindings: Vec<InputMapBinding>,
 }
 
 impl IUnpackable for CInputMap {
     fn unpack(&mut self, reader: &mut DatBinReader<'_>) -> bool {
         let count = reader.read_u32() as usize;
-        self.mappings.clear();
-        self.mappings.reserve(count);
+        self.bindings.clear();
+        self.bindings.reserve(count);
         for _ in 0..count {
-            self.mappings.push(reader.read_item::<QualifiedControl>());
+            self.bindings.push(reader.read_item::<InputMapBinding>());
         }
         true
     }
@@ -25,8 +25,8 @@ impl IUnpackable for CInputMap {
 
 impl IPackable for CInputMap {
     fn pack(&self, writer: &mut DatBinWriter<'_>) -> bool {
-        writer.write_u32(self.mappings.len() as u32);
-        for item in &self.mappings {
+        writer.write_u32(self.bindings.len() as u32);
+        for item in &self.bindings {
             writer.write_item(item);
         }
         true

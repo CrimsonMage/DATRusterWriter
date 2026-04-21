@@ -2,10 +2,7 @@ use std::io;
 
 use uuid::Uuid;
 
-use crate::{
-    Generated::Enums::DatFileType::DatFileType,
-    Lib::IO::DatHeader::DatHeader,
-};
+use crate::{Generated::Enums::DatFileType::DatFileType, Lib::IO::DatHeader::DatHeader};
 
 pub struct BaseBlockAllocator;
 

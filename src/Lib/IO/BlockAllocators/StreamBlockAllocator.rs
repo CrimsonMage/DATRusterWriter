@@ -14,8 +14,11 @@ use crate::{
         BlockAllocators::{
             BaseBlockAllocator::BaseBlockAllocator, IDatBlockAllocator::IDatBlockAllocator,
         },
-        DatBinReader::DatBinReader, DatBinWriter::DatBinWriter, DatHeader::DatHeader,
-        IPackable::IPackable, IUnpackable::IUnpackable,
+        DatBinReader::DatBinReader,
+        DatBinWriter::DatBinWriter,
+        DatHeader::DatHeader,
+        IPackable::IPackable,
+        IUnpackable::IUnpackable,
     },
     Options::DatDatabaseOptions::DatDatabaseOptions,
 };
@@ -298,7 +301,9 @@ impl IDatBlockAllocator for StreamBlockAllocator {
 
             while buffer_index < num_bytes {
                 let size = ((state.header.block_size - 4) as usize).min(num_bytes - buffer_index);
-                state.file.seek(SeekFrom::Start((current_block + 4) as u64))?;
+                state
+                    .file
+                    .seek(SeekFrom::Start((current_block + 4) as u64))?;
                 state
                     .file
                     .write_all(&buffer[buffer_index..buffer_index + size])?;
@@ -384,7 +389,9 @@ impl IDatBlockAllocator for StreamBlockAllocator {
             while current_block != 0 && total_read < buffer.len() {
                 let bytes_to_read =
                     ((state.header.block_size - 4) as usize).min(buffer.len() - total_read);
-                state.file.seek(SeekFrom::Start((current_block + 4) as u64))?;
+                state
+                    .file
+                    .seek(SeekFrom::Start((current_block + 4) as u64))?;
                 state
                     .file
                     .read_exact(&mut buffer[total_read..total_read + bytes_to_read])?;

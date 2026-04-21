@@ -52,5 +52,8 @@ fn dat_collection_options_honors_overrides() {
         IndexCachingStrategy::OnDemand,
         options.portal_index_caching_strategy()
     );
-    assert_eq!(8 * 1024 * 1024, options.portal_typed_object_cache_budget_bytes());
+    assert_eq!(
+        8 * 1024 * 1024,
+        options.portal_typed_object_cache_budget_bytes()
+    );
 }

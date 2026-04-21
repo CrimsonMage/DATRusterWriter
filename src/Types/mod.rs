@@ -134,6 +134,8 @@ pub mod HashTable;
 pub mod HeritageGroupCG;
 #[path = "InputsConflictsValue.rs"]
 pub mod InputsConflictsValue;
+#[path = "InputMapBinding.rs"]
+pub mod InputMapBinding;
 #[path = "InstanceIdBaseProperty.rs"]
 pub mod InstanceIdBaseProperty;
 #[path = "IntegerBaseProperty.rs"]

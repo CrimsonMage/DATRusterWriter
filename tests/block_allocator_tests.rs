@@ -7,8 +7,7 @@ use std::{
 use dat_ruster_writer::{
     Generated::Enums::DatFileType::DatFileType,
     Lib::IO::BlockAllocators::{
-        BaseBlockAllocator::BaseBlockAllocator,
-        IDatBlockAllocator::IDatBlockAllocator,
+        BaseBlockAllocator::BaseBlockAllocator, IDatBlockAllocator::IDatBlockAllocator,
         MemoryMappedBlockAllocator::MemoryMappedBlockAllocator,
         StreamBlockAllocator::StreamBlockAllocator,
     },
@@ -174,7 +173,9 @@ fn memory_mapped_allocator_reads_existing_blocks_sync_and_async() {
     assert!(allocator.has_header_data());
 
     let mut sync_read = vec![0u8; payload.len()];
-    allocator.read_block(&mut sync_read, start as usize).unwrap();
+    allocator
+        .read_block(&mut sync_read, start as usize)
+        .unwrap();
     assert_eq!(payload, sync_read);
 
     let mut async_read = vec![0u8; payload.len()];

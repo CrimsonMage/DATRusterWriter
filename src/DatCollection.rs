@@ -370,10 +370,13 @@ impl DatCollection {
                 if high_res.is_some() {
                     return Ok(high_res);
                 }
-                let local = self.local.inner.get_cached_shared_with_base_property_types(
-                    file_id,
-                    self.portal.inner.base_property_types()?,
-                )?;
+                let local = self
+                    .local
+                    .inner
+                    .get_cached_shared_with_base_property_types(
+                        file_id,
+                        self.portal.inner.base_property_types()?,
+                    )?;
                 if local.is_some() {
                     return Ok(local);
                 }
@@ -514,15 +517,21 @@ impl DatCollection {
         }
 
         match self.type_to_dat_file_type::<T>() {
-            DatFileType::Cell => self.cell.try_write_file_with_template_async(value, template).await,
-            DatFileType::Portal => self
-                .portal
-                .try_write_file_with_template_async(value, template)
-                .await,
-            DatFileType::Local => self
-                .local
-                .try_write_file_with_template_async(value, template)
-                .await,
+            DatFileType::Cell => {
+                self.cell
+                    .try_write_file_with_template_async(value, template)
+                    .await
+            }
+            DatFileType::Portal => {
+                self.portal
+                    .try_write_file_with_template_async(value, template)
+                    .await
+            }
+            DatFileType::Local => {
+                self.local
+                    .try_write_file_with_template_async(value, template)
+                    .await
+            }
             DatFileType::Undefined => Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 "unable to determine dat file type for write",
@@ -590,9 +599,15 @@ impl DatCollection {
         }
 
         match self.type_to_dat_file_type::<T>() {
-            DatFileType::Cell => self.cell.try_write_compressed_with_template(value, template),
-            DatFileType::Portal => self.portal.try_write_compressed_with_template(value, template),
-            DatFileType::Local => self.local.try_write_compressed_with_template(value, template),
+            DatFileType::Cell => self
+                .cell
+                .try_write_compressed_with_template(value, template),
+            DatFileType::Portal => self
+                .portal
+                .try_write_compressed_with_template(value, template),
+            DatFileType::Local => self
+                .local
+                .try_write_compressed_with_template(value, template),
             DatFileType::Undefined => Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 "unable to determine dat file type for write",
@@ -616,18 +631,21 @@ impl DatCollection {
         }
 
         match self.type_to_dat_file_type::<T>() {
-            DatFileType::Cell => self
-                .cell
-                .try_write_compressed_with_template_async(value, template)
-                .await,
-            DatFileType::Portal => self
-                .portal
-                .try_write_compressed_with_template_async(value, template)
-                .await,
-            DatFileType::Local => self
-                .local
-                .try_write_compressed_with_template_async(value, template)
-                .await,
+            DatFileType::Cell => {
+                self.cell
+                    .try_write_compressed_with_template_async(value, template)
+                    .await
+            }
+            DatFileType::Portal => {
+                self.portal
+                    .try_write_compressed_with_template_async(value, template)
+                    .await
+            }
+            DatFileType::Local => {
+                self.local
+                    .try_write_compressed_with_template_async(value, template)
+                    .await
+            }
             DatFileType::Undefined => Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 "unable to determine dat file type for write",

@@ -153,7 +153,8 @@ impl DatBTreeReaderWriter {
                     .try_get_node_async(self.block_allocator.header().root_block)
                     .await?;
                 if let Some(root) = root {
-                    if let Some(replaced) = self.try_find_parent_and_update_async(root, file).await?
+                    if let Some(replaced) =
+                        self.try_find_parent_and_update_async(root, file).await?
                     {
                         if let Some(index) = &mut *self.flat_index.lock().unwrap() {
                             index.insert(file.id, file);
@@ -489,7 +490,9 @@ impl DatBTreeReaderWriter {
                     i as usize
                 };
                 if branch_index < node.branch_count {
-                    if let Some(child) = self.try_get_node_async(node.branches[branch_index]).await? {
+                    if let Some(child) =
+                        self.try_get_node_async(node.branches[branch_index]).await?
+                    {
                         return self.try_find_parent_and_update_async(child, file).await;
                     }
                 }
@@ -763,7 +766,8 @@ impl DatBTreeReaderWriter {
                     None
                 };
                 let right_sibling = if subtree_index_in_node < parent_node.branch_count - 1 {
-                    self.try_get_node_async(parent_node.branches[right_index]).await?
+                    self.try_get_node_async(parent_node.branches[right_index])
+                        .await?
                 } else {
                     None
                 };
@@ -982,7 +986,8 @@ impl DatBTreeReaderWriter {
                     self.write_node_async(&mut node).await?;
                     self.write_node_async(&mut predecessor_child).await?;
 
-                    self.delete_internal_async(predecessor_child, key_to_delete).await
+                    self.delete_internal_async(predecessor_child, key_to_delete)
+                        .await
                 }
             }
         })
@@ -1052,9 +1057,12 @@ impl DatBTreeReaderWriter {
                 return Ok(result);
             }
 
-            let successor = self.try_get_node_async(node.branches[0]).await?.ok_or_else(|| {
-                io::Error::new(io::ErrorKind::NotFound, "failed to look up successor")
-            })?;
+            let successor = self
+                .try_get_node_async(node.branches[0])
+                .await?
+                .ok_or_else(|| {
+                    io::Error::new(io::ErrorKind::NotFound, "failed to look up successor")
+                })?;
             self.delete_successor_async(successor).await
         })
     }

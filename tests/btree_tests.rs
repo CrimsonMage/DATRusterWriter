@@ -388,7 +388,8 @@ fn block_allocator_async_wrappers_match_sync_behavior() {
 
     let write_allocator = WritableMockBlockAllocator::empty();
     let payload = [0x11, 0x22, 0x33, 0x44];
-    let written_offset = block_on(write_allocator.write_block_async(&payload, payload.len(), 0)).unwrap();
+    let written_offset =
+        block_on(write_allocator.write_block_async(&payload, payload.len(), 0)).unwrap();
     assert!(written_offset > 0);
 
     let mut roundtrip = vec![0u8; payload.len()];

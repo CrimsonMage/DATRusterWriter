@@ -10,7 +10,7 @@ use std::{
 };
 
 use flate2::read::ZlibDecoder;
-use flate2::{write::ZlibEncoder, Compression};
+use flate2::{Compression, write::ZlibEncoder};
 
 use crate::{
     DBObjs::MasterProperty::MasterProperty,
@@ -101,7 +101,10 @@ impl DecodedFileCache {
 
     fn evict_to_budget(&mut self, budget_bytes: usize) {
         while self.current_bytes > budget_bytes {
-            let Some((&evict_id, _)) = self.entries.iter().min_by_key(|(_, entry)| entry.last_access)
+            let Some((&evict_id, _)) = self
+                .entries
+                .iter()
+                .min_by_key(|(_, entry)| entry.last_access)
             else {
                 break;
             };
@@ -388,9 +391,8 @@ impl DatDatabase {
         };
 
         self.try_write_bytes_core(value.id(), &buffer, bytes_to_write, false, |entry| {
-            entry.flags =
-                (template.flags & !DatBTreeFileFlags::IsCompressed)
-                    | (entry.flags & DatBTreeFileFlags::IsCompressed);
+            entry.flags = (template.flags & !DatBTreeFileFlags::IsCompressed)
+                | (entry.flags & DatBTreeFileFlags::IsCompressed);
             entry.version = template.version;
             entry.iteration = template.iteration;
         })
@@ -448,9 +450,8 @@ impl DatDatabase {
         };
 
         self.try_write_bytes_core(value.id(), &buffer, bytes_to_write, true, |entry| {
-            entry.flags =
-                (template.flags & !DatBTreeFileFlags::IsCompressed)
-                    | (entry.flags & DatBTreeFileFlags::IsCompressed);
+            entry.flags = (template.flags & !DatBTreeFileFlags::IsCompressed)
+                | (entry.flags & DatBTreeFileFlags::IsCompressed);
             entry.version = template.version;
             entry.iteration = template.iteration;
         })
@@ -519,9 +520,8 @@ impl DatDatabase {
         template: DatBTreeFile,
     ) -> io::Result<bool> {
         self.try_write_bytes_core(id, buffer, bytes_to_write, false, |entry| {
-            entry.flags =
-                (template.flags & !DatBTreeFileFlags::IsCompressed)
-                    | (entry.flags & DatBTreeFileFlags::IsCompressed);
+            entry.flags = (template.flags & !DatBTreeFileFlags::IsCompressed)
+                | (entry.flags & DatBTreeFileFlags::IsCompressed);
             entry.version = template.version;
             entry.iteration = template.iteration;
         })
@@ -545,9 +545,8 @@ impl DatDatabase {
         template: DatBTreeFile,
     ) -> io::Result<bool> {
         self.try_write_bytes_core(id, buffer, bytes_to_write, true, |entry| {
-            entry.flags =
-                (template.flags & !DatBTreeFileFlags::IsCompressed)
-                    | (entry.flags & DatBTreeFileFlags::IsCompressed);
+            entry.flags = (template.flags & !DatBTreeFileFlags::IsCompressed)
+                | (entry.flags & DatBTreeFileFlags::IsCompressed);
             entry.version = template.version;
             entry.iteration = template.iteration;
         })
@@ -706,7 +705,7 @@ impl DatDatabase {
         Ok(output)
     }
 
-fn attempt_to_compress(data: &[u8]) -> io::Result<Option<Vec<u8>>> {
+    fn attempt_to_compress(data: &[u8]) -> io::Result<Option<Vec<u8>>> {
         if data.len() < 16 {
             return Ok(None);
         }
@@ -800,7 +799,10 @@ mod tests {
         let value = palette(0x0400_0100, 2, 1);
         assert!(database.try_write_file(&value).unwrap());
 
-        let _ = database.get_cached::<Palette>(value.base.id).unwrap().unwrap();
+        let _ = database
+            .get_cached::<Palette>(value.base.id)
+            .unwrap()
+            .unwrap();
         let cache = database.decoded_file_cache.lock().unwrap();
         assert!(cache.entries.is_empty());
         assert_eq!(0, cache.current_bytes);
@@ -861,9 +863,11 @@ mod tests {
     #[test]
     fn malformed_reads_do_not_populate_decoded_object_cache() {
         let (database, path) = new_portal_database(FileCachingStrategy::OnDemand, 1024);
-        assert!(database
-            .try_write_file_bytes(0x0400_0130, &[0xAA, 0xBB], 2, 1)
-            .unwrap());
+        assert!(
+            database
+                .try_write_file_bytes(0x0400_0130, &[0xAA, 0xBB], 2, 1)
+                .unwrap()
+        );
 
         let result = database.get_cached::<Palette>(0x0400_0130).unwrap();
         assert!(result.is_none());
@@ -884,10 +888,24 @@ mod tests {
             .unwrap()
             .unwrap();
         let _ = database.base_property_types().unwrap();
-        assert!(!database.decoded_file_cache.lock().unwrap().entries.is_empty());
+        assert!(
+            !database
+                .decoded_file_cache
+                .lock()
+                .unwrap()
+                .entries
+                .is_empty()
+        );
 
         database.clear_cache();
-        assert!(database.decoded_file_cache.lock().unwrap().entries.is_empty());
+        assert!(
+            database
+                .decoded_file_cache
+                .lock()
+                .unwrap()
+                .entries
+                .is_empty()
+        );
         assert!(database.base_property_types_cache.lock().unwrap().is_none());
 
         let _ = fs::remove_file(path);
